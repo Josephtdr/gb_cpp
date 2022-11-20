@@ -10,13 +10,12 @@ const unsigned int c_CARRY_FLAG_BYTE_POS{ 4 };
 
 class FlagsRegister 
 {
-private: 
+public:
     bool zero{};
     bool subtract{};
     bool half_carry{};
     bool carry{};
     
-public:
     FlagsRegister() = default;
 
     FlagsRegister(byte_t value);

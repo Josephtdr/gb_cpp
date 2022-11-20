@@ -12,10 +12,10 @@ private:
     Registers registers{};
     word_t pc{};
     word_t sp{};
+    bool halted{};
     
 public:
     CPU();
-
     void cycle();
 
 
@@ -26,11 +26,47 @@ private:
     opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
     opcodeFnPtr prefixedInstructionTable[c_INSTRUCTION_TABLE_SIZE]{};
     
+    word_t readNextWord();
+    byte_t readNextByte();
 
-    //Operation Types
-    word_t jump(bool valid);
-    word_t load();
+    
+    void push(word_t value);
+    word_t pop();
+    word_t call(bool valid);
+    word_t return_(bool valid);
+    word_t noOperation();
+    void halt();
 
+    enum class JumpTest 
+    {
+        NotZero,
+        Zero,
+        NotCarry,
+        Carry,
+        Always
+    };
+    word_t jump(JumpTest type);
+
+
+
+
+
+    enum class ByteLoadTarget
+    {
+        A, B, C, D, E, H, L, HLI
+    };
+    enum class ByteLoadSource
+    {
+        A, B, C, D, E, H, L, D8, HLI
+    };
+    word_t byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource);
+
+    word_t wordLoad();
+    //Other loads---
+    //AFromIndirect
+    //IndirectFromA
+    //AFromByteAddress
+    //ByteAddressFromA
 
 
     //Opcodes

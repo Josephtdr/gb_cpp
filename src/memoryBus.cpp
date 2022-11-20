@@ -9,6 +9,11 @@ byte_t MemoryBus::readByte(word_t address) const
         throw std::runtime_error("Trying to read from invalid memory address!");
     }
 
+    if (0xFEA0u <= address || address <= 0xFEFFu)
+    {
+        return 0u;
+    }
+
 
     return memory[address];
 }
@@ -23,7 +28,8 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     
     if (0xFEA0u <= address || address <= 0xFEFFu)
     {
-        throw std::runtime_error("Trying to write to non useable memory address!");
+        return;
+        // throw std::runtime_error("Trying to write to non useable memory address!");
     }
 
     //echo from echo ram
