@@ -7,21 +7,33 @@
 
 class CPU
 {
-public:
+private:
+    MemoryBus memory{};
     Registers registers{};
     word_t pc{};
-    MemoryBus memory{};
+    word_t sp{};
+    
+public:
+    CPU();
 
     void cycle();
 
-    void execute();
 
 private:
-    using opcodeFnPtr = word_t(CPU::*)();
+    word_t execute(byte_t instructionByte, bool prefixed);
 
+    using opcodeFnPtr = word_t(CPU::*)();
     opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
-    opcodeFnPtr alternateInstructionTable[c_INSTRUCTION_TABLE_SIZE]{};
+    opcodeFnPtr prefixedInstructionTable[c_INSTRUCTION_TABLE_SIZE]{};
     
+
+    //Operation Types
+    word_t jump(bool valid);
+    word_t load();
+
+
+
+    //Opcodes
 
     word_t OP_0x00();
 
