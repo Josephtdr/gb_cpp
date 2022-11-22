@@ -282,56 +282,36 @@ void CPU::wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource)
             throw std::runtime_error("Invalid load target!");
     }
 }
+
 /**
- * @brief Add a byte to register A, 
+ * @brief add a byte to the given reg, 
  * Zero flag set if result is 0, subtract flag is reset, 
- * Carry flag set if carry from bit 7, Half Carry flag set if carry from bit 3. 
- * @param addSource the byte to add
- * @param withCarry include the carry flag in the addition
+ * Carry flag set if carry from bit 7, Half Carry flag set if carry from bit 3.
+ * @param reg the reg being altered
+ * @param addValue the value to add with
+ * @param withCarry include the carry flag in the subtraction
  */
-void CPU::byteAdd(ByteAluSource source, bool withCarry)
+void CPU::byteAdd(byte_t& reg, const byte_t& addValue, bool withCarry=false)
 {
-    word_t value{};
-    switch (source)
-    {
-    case ByteAluSource::A:
-        value = registers.a; break;
-    case ByteAluSource::B:
-        value = registers.b; break;
-    case ByteAluSource::C:
-        value = registers.c; break;
-    case ByteAluSource::D:
-        value = registers.d; break;
-    case ByteAluSource::E:
-        value = registers.e; break;
-    case ByteAluSource::H:
-        value = registers.h; break;
-    case ByteAluSource::L:
-        value = registers.l; break;
-    case ByteAluSource::HLI:
-        value = memory.readByte(registers.get_hl()); break;
-    case ByteAluSource::D8:
-        value = readNextByte(); break;
-    default:
-        throw std::runtime_error("Invalid add source!");
-    }
+    byte_t unchanged{ reg };
+    byte_t value{ addValue };
     if (withCarry)
         { value += static_cast<byte_t>(registers.f.carry); }
 
-    unsigned int v{ static_cast<unsigned int>(registers.a)+static_cast<unsigned int>(value) };
-    registers.f.carry = v > 0xFF;
-    registers.f.half_carry = (((registers.a & 0xF) + (value & 0xF)) > 0xF);
+    unsigned int htest{ static_cast<unsigned int>(registers.a)+static_cast<unsigned int>(value) };
 
-    registers.a += value;
-
-    registers.f.zero = !registers.a;
+    reg += value;
+    
+    registers.f.zero = !reg;
     registers.f.subtract = false;
+    registers.f.carry = htest > 0xFF;
+    registers.f.half_carry = ((unchanged & 0xF) + (value & 0xF)) > 0xF;
 }
-
+    
 /**
  * @brief subtract a byte from the given reg, 
- * Zero flag set if result is 0, subtract flag is reset, 
- * Carry flag set if carry from bit 7, Half Carry flag set if carry from bit 3.
+ * Zero flag set if result is 0, subtract flag is set, 
+ * Carry flag set if no borrow, Half Carry flag set if borrow from bit 4.
  * @param reg the reg being altered
  * @param subValue the value to subtract with
  * @param withCarry include the carry flag in the subtraction

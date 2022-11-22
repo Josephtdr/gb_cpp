@@ -546,93 +546,93 @@ int CPU::OP_0xE1()
 //ADD A,n
 int CPU::OP_0x87()
 {
-    byteAdd(ByteAluSource::A);
+    byteAdd(registers.a,registers.a);
     return 4;
 }
 int CPU::OP_0x80()
 {
-    byteAdd(ByteAluSource::B);
+    byteAdd(registers.a,registers.b);
     return 4;
 }
 int CPU::OP_0x81()
 {
-    byteAdd(ByteAluSource::C);
+    byteAdd(registers.a,registers.c);
     return 4;
 }
 int CPU::OP_0x82()
 {
-    byteAdd(ByteAluSource::D);
+    byteAdd(registers.a,registers.d);
     return 4;
 }
 int CPU::OP_0x83()
 {
-    byteAdd(ByteAluSource::E);
+    byteAdd(registers.a,registers.e);
     return 4;
 }
 int CPU::OP_0x84()
 {
-    byteAdd(ByteAluSource::H);
+    byteAdd(registers.a,registers.h);
     return 4;
 }
 int CPU::OP_0x85()
 {
-    byteAdd(ByteAluSource::L);
+    byteAdd(registers.a,registers.l);
     return 4;
 }
 int CPU::OP_0x86()
 {
-    byteAdd(ByteAluSource::HLI);
+    byteAdd(registers.a, memory.readByte(registers.get_hl()));
     return 8;
 }
 int CPU::OP_0xC6()
 {
-    byteAdd(ByteAluSource::D8);
+    byteAdd(registers.a, readNextByte());
     return 8;
 }
 //ADC A,n
 int CPU::OP_0x8F()
 {
-    byteAdd(ByteAluSource::A, true);
+    byteAdd(registers.a,registers.a, true);
     return 4;
 }
 int CPU::OP_0x88()
 {
-    byteAdd(ByteAluSource::B, true);
+    byteAdd(registers.a,registers.b, true);
     return 4;
 }
 int CPU::OP_0x89()
 {
-    byteAdd(ByteAluSource::C, true);
+    byteAdd(registers.a,registers.c, true);
     return 4;
 }
 int CPU::OP_0x8A()
 {
-    byteAdd(ByteAluSource::D, true);
+    byteAdd(registers.a,registers.d, true);
     return 4;
 }
 int CPU::OP_0x8B()
 {
-    byteAdd(ByteAluSource::E, true);
+    byteAdd(registers.a,registers.e, true);
     return 4;
 }
 int CPU::OP_0x8C()
 {
-    byteAdd(ByteAluSource::H, true);
+    byteAdd(registers.a,registers.h, true);
     return 4;
 }
 int CPU::OP_0x8D()
 {
-    byteAdd(ByteAluSource::L, true);
+    byteAdd(registers.a,registers.l, true);
     return 4;
 }
 int CPU::OP_0x8E()
 {
-    byteAdd(ByteAluSource::HLI, true);
+    byteAdd(registers.a, memory.readByte(registers.get_hl()), true);
     return 8;
 }
 int CPU::OP_0xCE()
 {
-    byteAdd(ByteAluSource::D8, true);
+    byteAdd(registers.a, readNextByte(), true);
     return 8;
 }
 //SUB A, n
