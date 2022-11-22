@@ -142,7 +142,6 @@ private:
     int OP_0xFA();
     int OP_0x3E();
     //LD n,A
-    int OP_0x7F();
     int OP_0x47();
     int OP_0x4F();
     int OP_0x57();

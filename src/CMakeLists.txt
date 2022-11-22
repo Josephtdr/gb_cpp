@@ -9,7 +9,14 @@ project(gbemu)
 #     ${SDL2_INCLUDE_DIRS}
 # )
 
-add_executable(${PROJECT_NAME} main.cpp registers.cpp)
+add_executable(${PROJECT_NAME} 
+    main.cpp 
+    registers.cpp
+    memoryBus.cpp
+    cpu.cpp
+    opcodes.cpp
+    gpu.cpp
+)
 
 # target_link_libraries(${PROJECT_NAME} 
 #     ${SDL2_LIBRARIES}

@@ -18,7 +18,7 @@ int CPU::execute(byte_t instructionByte, bool prefixed)
 int CPU::cycle()
 {
     if (halted)
-        return;
+        return 1; //not sure what return value should be here, check interupts
 
     byte_t instructionByte{ memory.readByte(pc) };
 
@@ -68,7 +68,7 @@ word_t CPU::pop()
 }
 word_t CPU::call(bool valid)
 {
-    word_t nextPC{ pc + 2u };
+    word_t nextPC{ static_cast<word_t>(pc + 2u) };
     if (valid)
     {
         push(nextPC);
