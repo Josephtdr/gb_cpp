@@ -411,41 +411,25 @@ void CPU::byteAND(ByteAluSource source)
     registers.f.subtract = false;
     registers.f.zero = !registers.a;
 }
-
-void CPU::byteOR(ByteAluSource source)
+/**
+ * @brief ors the passed reg with the given orValue
+ * 
+ * @param reg the reg being altered
+ * @param xorValue the value to or with
+ * @param directByte if true uses the immediate byte from memory instead of cmpValue
+ */
+void CPU::byteOR(byte_t& reg, const byte_t& orValue, bool directByte)
 {
-    word_t value{};
-    switch (source)
-    {
-    case ByteAluSource::A:
-        value = registers.a; break;
-    case ByteAluSource::B:
-        value = registers.b; break;
-    case ByteAluSource::C:
-        value = registers.c; break;
-    case ByteAluSource::D:
-        value = registers.d; break;
-    case ByteAluSource::E:
-        value = registers.e; break;
-    case ByteAluSource::H:
-        value = registers.h; break;
-    case ByteAluSource::L:
-        value = registers.l; break;
-    case ByteAluSource::HLI:
-        value = memory.readByte(registers.get_hl()); break;
-    case ByteAluSource::D8:
-        value = readNextByte(); break;
-    default:
-        throw std::runtime_error("Invalid add source!");
-    }
+    byte_t value{directByte ? readNextByte() : orValue};
 
-    registers.a |= value;
+    reg |= value;
 
     registers.f.carry = false;
     registers.f.half_carry = false;
     registers.f.subtract = false;
     registers.f.zero = !registers.a;
 }
+
 /**
  * @brief xors the passed reg with the given xorValue
  * 

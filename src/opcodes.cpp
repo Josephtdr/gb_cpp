@@ -771,47 +771,47 @@ int CPU::OP_0xE6()
 //OR A, n
 int CPU::OP_0xB7()
 {
-    byteOR(ByteAluSource::A);
+    byteOR(registers.a,registers.a);
     return 4;
 }
 int CPU::OP_0xB0()
 {
-    byteOR(ByteAluSource::B);
+    byteOR(registers.a,registers.b);
     return 4;
 }
 int CPU::OP_0xB1()
 {
-    byteOR(ByteAluSource::C);
+    byteOR(registers.a,registers.c);
     return 4;
 }
 int CPU::OP_0xB2()
 {
-    byteOR(ByteAluSource::D);
+    byteOR(registers.a,registers.d);
     return 4;
 }
 int CPU::OP_0xB3()
 {
-    byteOR(ByteAluSource::E);
+    byteOR(registers.a,registers.e);
     return 4;
 }
 int CPU::OP_0xB4()
 {
-    byteOR(ByteAluSource::H);
+    byteOR(registers.a,registers.h);
     return 4;
 }
 int CPU::OP_0xB5()
 {
-    byteOR(ByteAluSource::L);
+    byteOR(registers.a,registers.l);
     return 4;
 }
 int CPU::OP_0xB6()
 {
-    byteOR(ByteAluSource::HLI);
+    byteOR(registers.a,memory.readByte(registers.get_hl()));
     return 8;
 }
 int CPU::OP_0xF6()
 {
-    byteOR(ByteAluSource::D8);
+    byteOR(registers.a,0,true);
     return 8;
 }
 //XOR A, n
