@@ -185,6 +185,52 @@ void CPU::byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource)
         case ByteLoadTarget::FF00pD8:
             memory.writeByte(0xFF00u+readNextByte(), value); break;
         default:
+            throw std::runtime_error("Invalid load target!");
+    }
+}
+
+void CPU::wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource)
+{
+    word_t value{};
+    switch(ldSource)
+    {   
+        case WordLoadSource::HL:
+            value = registers.get_hl(); break;
+        case WordLoadSource::SP:
+            value = sp; break;
+        case WordLoadSource::SPpD8:
+            byte_t d8{ readNextByte() };
+            registers.f.zero = false;
+            registers.f.subtract = false;
+
+            unsigned int v{ sp + d8 };
+            bool carry{ v > 0xFFFF };
+            registers.f.carry = v > 0xFFFF;
+
+            bool half_carry{ ((sp & 0xF) + (d8 & 0xF)) > 0xF };
+            registers.f.half_carry = half_carry;
+
+            value = sp+d8; 
+            break;
+        case WordLoadSource::D16:
+            value = readNextWord(); break;
+        default:
             throw std::runtime_error("Invalid load source!");
+    } 
+
+    switch(ldTarget)
+    {
+        case WordLoadTarget::BC:
+            registers.set_bc(value); break;
+        case WordLoadTarget::DE:
+            registers.set_de(value); break;
+        case WordLoadTarget::HL:
+            registers.set_hl(value); break;
+        case WordLoadTarget::SP:
+            sp = value; break;
+        case WordLoadTarget::D16I:
+            memory.writeByte(readNextWord(), value); break;
+        default:
+            throw std::runtime_error("Invalid load target!");
     }
 }

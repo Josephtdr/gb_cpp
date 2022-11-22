@@ -451,8 +451,98 @@ int CPU::OP_0xF0()
     return 12;
 }
 
+//*********************************************************//
 
+//WordLoads
+//LD n,nn
+int CPU::OP_0x01()
+{
+    wordLoad(WordLoadTarget::BC, WordLoadSource::D16);
+    return 12;
+}
+int CPU::OP_0x11()
+{
+    wordLoad(WordLoadTarget::DE, WordLoadSource::D16);
+    return 12;
+}
+int CPU::OP_0x21()
+{
+    wordLoad(WordLoadTarget::HL, WordLoadSource::D16);
+    return 12;
+}
+int CPU::OP_0x31()
+{
+    wordLoad(WordLoadTarget::SP, WordLoadSource::D16);
+    return 12;
+}
+//LD SP,HL
+int CPU::OP_0xF9()
+{
+    wordLoad(WordLoadTarget::SP, WordLoadSource::HL);
+    return 8;
+}
+//LD HL,SP+n
+//LDHL SP,n
+int CPU::OP_0xF8()
+{
+    wordLoad(WordLoadTarget::HL, WordLoadSource::SPpD8);
 
+    registers.f.zero = false;
+    registers.f.subtract = false;
+
+    registers.f.carry;
+    registers.f.half_carry;
+
+    return 12;
+}
+//LD (nn),SP
+int CPU::OP_0x08()
+{
+    wordLoad(WordLoadTarget::D16I, WordLoadSource::SP);
+    return 20;
+}
+//PUSH nn
+int CPU::OP_0xF5()
+{
+    push(registers.get_af());
+    return 16;
+}
+int CPU::OP_0xC5()
+{
+    push(registers.get_bc());
+    return 16;
+}
+int CPU::OP_0xD5()
+{
+    push(registers.get_de());
+    return 16;
+}
+int CPU::OP_0xE5()
+{
+    push(registers.get_hl());
+    return 16;
+}
+//POP nn
+int CPU::OP_0xF1()
+{
+    registers.set_af(pop());
+    return 12;
+}
+int CPU::OP_0xC1()
+{
+    registers.set_bc(pop());
+    return 12;
+}
+int CPU::OP_0xD1()
+{
+    registers.set_de(pop());
+    return 12;
+}
+int CPU::OP_0xE1()
+{
+    registers.set_hl(pop());
+    return 12;
+}
 
 ///////////////
 int CPU::OP_OxF1()

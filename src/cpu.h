@@ -28,7 +28,6 @@ private:
     
     word_t readNextWord();
     byte_t readNextByte();
-
     
     void push(word_t value);
     word_t pop();
@@ -60,6 +59,19 @@ private:
         A, B, C, D, E, H, L, D8, D16I, BCI, DEI, HLI, FF00pC, FF00pD8,
     };
     void byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource);
+    
+    enum class WordLoadTarget
+    {
+        BC, DE, HL, SP, D16I,
+    };
+    enum class WordLoadSource
+    {
+        HL, SP, D16, SPpD8,
+    };
+    void wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource);
+
+
+
 
     word_t wordLoad();
     //Other loads---
@@ -177,8 +189,29 @@ private:
     //LDH A,(n)
     int OP_0xF0();
 
-    //////////
-    int OP_0x00();
+    //WordLoads
+    //LD n,nn
+    int OP_0x01();
+    int OP_0x11();
+    int OP_0x21();
+    int OP_0x31();
+    //LD SP,HL
+    int OP_0xF9();
+    //LD HL,SP+n
+    //LDHL SP,n
+    int OP_0xF8();
+    //LD (nn),SP
+    int OP_0x08();
+    //PUSH nn
+    int OP_0xF5();
+    int OP_0xC5();
+    int OP_0xD5();
+    int OP_0xE5();
+    //POP nn
+    int OP_0xF1();
+    int OP_0xC1();
+    int OP_0xD1();
+    int OP_0xE1();
 
     //nn Pop
     int OP_OxF1(); //POP AF
