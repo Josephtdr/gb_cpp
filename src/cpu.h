@@ -67,6 +67,11 @@ private:
     };
     void wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource);
 
+    enum class ByteAddSource
+    {
+        A, B, C, D, E, H, L, HLI, D8, 
+    };
+    void byteAdd(ByteAddSource addSource, bool withCarry=false);
 
     //Opcodes
     //byte Loads
@@ -199,6 +204,29 @@ private:
     int OP_0xC1();
     int OP_0xD1();
     int OP_0xE1();
+    
+    //Byte arithmetic with reg A
+    //ADD A,n
+    int OP_0x87();
+    int OP_0x80();
+    int OP_0x81();
+    int OP_0x82();
+    int OP_0x83();
+    int OP_0x84();
+    int OP_0x85();
+    int OP_0x86();
+    int OP_0xC6();
+    //ADC A,n
+    int OP_0x8F();
+    int OP_0x88();
+    int OP_0x89();
+    int OP_0x8A();
+    int OP_0x8B();
+    int OP_0x8C();
+    int OP_0x8D();
+    int OP_0x8E();
+    int OP_0xCE();
+
 
     //nn Pop
     int OP_OxF1(); //POP AF

@@ -282,3 +282,53 @@ void CPU::wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource)
             throw std::runtime_error("Invalid load target!");
     }
 }
+/**
+ * @brief Add a byte to register A, 
+ * Zero flag set if result is 0, subtract flag is reset, 
+ * Carry flag set if carry from bit 7, Half Carry flag set if carry from bit 3. 
+ * @param addSource the byte to add
+ */
+void CPU::byteAdd(ByteAddSource addSource, bool withCarry=false)
+{
+    word_t value{};
+    switch (addSource)
+    {
+    case ByteAddSource::A:
+        value = registers.a; break;
+    case ByteAddSource::B:
+        value = registers.b; break;
+    case ByteAddSource::C:
+        value = registers.c; break;
+    case ByteAddSource::D:
+        value = registers.d; break;
+    case ByteAddSource::E:
+        value = registers.e; break;
+    case ByteAddSource::H:
+        value = registers.h; break;
+    case ByteAddSource::L:
+        value = registers.l; break;
+    case ByteAddSource::HLI:
+        value = memory.readByte(registers.get_hl()); break;
+    case ByteAddSource::D8:
+        value = readNextByte(); break;
+    default:
+        throw std::runtime_error("Invalid add source!");
+    }
+
+    if (withCarry)
+        { ++value; }
+
+    unsigned int v{ static_cast<unsigned int>(registers.a)+static_cast<unsigned int>(value) };
+    bool carry{ v > 0xFF };
+    registers.f.carry = carry;
+
+    bool half_carry{ ((registers.a & 0xF) + (value & 0xF)) > 0xF };
+    registers.f.half_carry = half_carry;
+
+    registers.a += value;
+
+    bool zero{ !registers.a };
+    registers.f.zero = zero;
+
+    registers.f.subtract = false;
+}

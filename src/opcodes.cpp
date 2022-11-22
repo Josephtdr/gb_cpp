@@ -543,6 +543,102 @@ int CPU::OP_0xE1()
     registers.set_hl(pop());
     return 12;
 }
+//ADD A,n
+int CPU::OP_0x87()
+{
+    byteAdd(ByteAddSource::A);
+    return 4;
+}
+int CPU::OP_0x80()
+{
+    byteAdd(ByteAddSource::B);
+    return 4;
+}
+int CPU::OP_0x81()
+{
+    byteAdd(ByteAddSource::C);
+    return 4;
+}
+int CPU::OP_0x82()
+{
+    byteAdd(ByteAddSource::D);
+    return 4;
+}
+int CPU::OP_0x83()
+{
+    byteAdd(ByteAddSource::E);
+    return 4;
+}
+int CPU::OP_0x84()
+{
+    byteAdd(ByteAddSource::H);
+    return 4;
+}
+int CPU::OP_0x85()
+{
+    byteAdd(ByteAddSource::L);
+    return 4;
+}
+int CPU::OP_0x86()
+{
+    byteAdd(ByteAddSource::HLI);
+    return 8;
+}
+int CPU::OP_0xC6()
+{
+    byteAdd(ByteAddSource::D8);
+    return 8;
+}
+//ADC A,n
+int CPU::OP_0x8F()
+{
+    byteAdd(ByteAddSource::A, true);
+    return 4;
+}
+int CPU::OP_0x88()
+{
+    byteAdd(ByteAddSource::B, true);
+    return 4;
+}
+int CPU::OP_0x89()
+{
+    byteAdd(ByteAddSource::C, true);
+    return 4;
+}
+int CPU::OP_0x8A()
+{
+    byteAdd(ByteAddSource::D, true);
+    return 4;
+}
+int CPU::OP_0x8B()
+{
+    byteAdd(ByteAddSource::E, true);
+    return 4;
+}
+int CPU::OP_0x8C()
+{
+    byteAdd(ByteAddSource::H, true);
+    return 4;
+}
+int CPU::OP_0x8D()
+{
+    byteAdd(ByteAddSource::L, true);
+    return 4;
+}
+int CPU::OP_0x8E()
+{
+    byteAdd(ByteAddSource::HLI, true);
+    return 8;
+}
+int CPU::OP_0xCE()
+{
+    byteAdd(ByteAddSource::D8, true);
+    return 8;
+}
+
+
+
+
 
 ///////////////
 int CPU::OP_OxF1()
