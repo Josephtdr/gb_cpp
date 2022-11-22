@@ -75,7 +75,7 @@ private:
     void byteSub(ByteAluSource source, bool withCarry=false);
     void byteAND(ByteAluSource source);
     void byteOR(ByteAluSource source);
-    void byteXOR(ByteAluSource source);
+    void byteXOR(byte_t& reg, const byte_t& xorValue, bool directByte = false);
     void byteCP(const byte_t& reg, const byte_t& cmpValue, bool directByte = false); //compare
     void byteINC(byte_t& target); //increment
     void byteDEC(byte_t& target); //decrement
@@ -312,6 +312,7 @@ private:
     int OP_0x2D();
     int OP_0x35();
 
+    //Word alu
 
     //nn Pop
     int OP_OxF1(); //POP AF

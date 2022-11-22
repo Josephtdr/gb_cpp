@@ -817,47 +817,47 @@ int CPU::OP_0xF6()
 //XOR A, n
 int CPU::OP_0xAF()
 {
-    byteXOR(ByteAluSource::A);
+    byteXOR(registers.a,registers.a);
     return 4;
 }
 int CPU::OP_0xA8()
 {
-    byteXOR(ByteAluSource::B);
+    byteXOR(registers.a,registers.b);
     return 4;
 }
 int CPU::OP_0xA9()
 {
-    byteXOR(ByteAluSource::C);
+    byteXOR(registers.a,registers.c);
     return 4;
 }
 int CPU::OP_0xAA()
 {
-    byteXOR(ByteAluSource::D);
+    byteXOR(registers.a,registers.d);
     return 4;
 }
 int CPU::OP_0xAB()
 {
-    byteXOR(ByteAluSource::E);
+    byteXOR(registers.a,registers.e);
     return 4;
 }
 int CPU::OP_0xAC()
 {
-    byteXOR(ByteAluSource::H);
+    byteXOR(registers.a,registers.h);
     return 4;
 }
 int CPU::OP_0xAD()
 {
-    byteXOR(ByteAluSource::L);
+    byteXOR(registers.a,registers.l);
     return 4;
 }
 int CPU::OP_0xAE()
 {
-    byteXOR(ByteAluSource::HLI);
+    byteXOR(registers.a,memory.readByte(registers.get_hl()));
     return 8;
 }
 int CPU::OP_0xEE()
 {
-    byteXOR(ByteAluSource::D8);
+    byteXOR(registers.a,0,true);
     return 8;
 }
 //CP A, n
