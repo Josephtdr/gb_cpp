@@ -289,7 +289,7 @@ void CPU::wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource)
  * @param addSource the byte to add
  * @param withCarry include the carry flag in the addition
  */
-void CPU::byteAdd(ByteAluSource source, bool withCarry=false)
+void CPU::byteAdd(ByteAluSource source, bool withCarry)
 {
     word_t value{};
     switch (source)
@@ -335,7 +335,7 @@ void CPU::byteAdd(ByteAluSource source, bool withCarry=false)
  * @param subSource the byte to subtract
  * @param withCarry include the carry flag in the subtraction
  */
-void CPU::byteSub(ByteAluSource source, bool withCarry=false)
+void CPU::byteSub(ByteAluSource source, bool withCarry)
 {
     word_t value{};
     switch (source)
@@ -453,7 +453,7 @@ void CPU::byteOR(ByteAluSource source)
  * @param xorValue the value to xor with
  * @param directByte if true uses the immediate byte from memory instead of cmpValue
  */
-void CPU::byteXOR(byte_t& reg, const byte_t& xorValue, bool directByte = false)
+void CPU::byteXOR(byte_t& reg, const byte_t& xorValue, bool directByte)
 {
     byte_t value{directByte ? readNextByte() : xorValue};
 
@@ -473,7 +473,7 @@ void CPU::byteXOR(byte_t& reg, const byte_t& xorValue, bool directByte = false)
  * @param cmpValue the value to compare with
  * @param directByte if true uses the immediate byte from memory instead of cmpValue
  */
-void CPU::byteCP(const byte_t& reg, const byte_t& cmpValue, bool directByte = false)
+void CPU::byteCP(const byte_t& reg, const byte_t& cmpValue, bool directByte)
 {
     byte_t value{directByte ? readNextByte() : cmpValue};
 
