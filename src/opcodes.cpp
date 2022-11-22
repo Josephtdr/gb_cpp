@@ -318,13 +318,143 @@ int CPU::OP_0x36()
     byteLoad(ByteLoadTarget::HLI, ByteLoadSource::D8);
     return 12;
 }
+//LD A,n
+int CPU::OP_0x0A()
+{
+    byteLoad(ByteLoadTarget::A, ByteLoadSource::BCI);
+    return 8;
+}
+int CPU::OP_0x1A()
+{
+    byteLoad(ByteLoadTarget::A, ByteLoadSource::DEI);
+    return 8;
+}
+int CPU::OP_0xFA()
+{
+    byteLoad(ByteLoadTarget::A, ByteLoadSource::D16I);
+    return 16;
+}
+int CPU::OP_0x3E()
+{
+    byteLoad(ByteLoadTarget::A, ByteLoadSource::D8);
+    return 8;
+}
+//LD n,A
+int CPU::OP_0x47()
+{
+    byteLoad(ByteLoadTarget::B, ByteLoadSource::A);
+    return  4;
+}
+int CPU::OP_0x4F()
+{
+    byteLoad(ByteLoadTarget::C, ByteLoadSource::A);
+    return  4;
+}
+int CPU::OP_0x57()
+{
+    byteLoad(ByteLoadTarget::D, ByteLoadSource::A);
+    return  4;
+}
+int CPU::OP_0x5F()
+{
+    byteLoad(ByteLoadTarget::E, ByteLoadSource::A);
+    return  4;
+}
+int CPU::OP_0x67()
+{
+    byteLoad(ByteLoadTarget::H, ByteLoadSource::A);
+    return  4;
+}
+int CPU::OP_0x6F()
+{
+    byteLoad(ByteLoadTarget::L, ByteLoadSource::A);
+    return  4;
+}
+int CPU::OP_0x02()
+{
+    byteLoad(ByteLoadTarget::BCI, ByteLoadSource::A);
+    return  8;
+}
+int CPU::OP_0x12()
+{
+    byteLoad(ByteLoadTarget::DEI, ByteLoadSource::A);
+    return  8;
+}
+int CPU::OP_0x77()
+{
+    byteLoad(ByteLoadTarget::HLI, ByteLoadSource::A);
+    return  8;
+}
+int CPU::OP_0xEA()
+{
+    byteLoad(ByteLoadTarget::D16I, ByteLoadSource::A);
+    return  16;
+}
+//LD A,(C)
+int CPU::OP_0xF2()
+{
+    byteLoad(ByteLoadTarget::A, ByteLoadSource::FF00pC);
+    return 8;
+}
+//LD (C),A
+int CPU::OP_0xE2()
+{
+    byteLoad(ByteLoadTarget::FF00pC, ByteLoadSource::A);
+    return 8;
+}
+//LD A,(HLD)
+//LD A,(HL-)
+//LDD A,(HL)
+int CPU::OP_0x3A()
+{
+    byteLoad(ByteLoadTarget::A, ByteLoadSource::HLI);
+    registers.set_hl( registers.get_hl()-1u );
+    return 8;
+}
+//LD (HLD),A
+//LD (HL-),A
+//LDD (HL),A
+int CPU::OP_0x32()
+{
+    byteLoad(ByteLoadTarget::HLI, ByteLoadSource::A);
+    registers.set_hl( registers.get_hl()-1u );
+    return 8;
+}
+//LD A,(HLI)
+//LD A,(HL+)
+//LDI A,(HL)
+int CPU::OP_0x2A()
+{
+    byteLoad(ByteLoadTarget::A, ByteLoadSource::HLI);
+    registers.set_hl( registers.get_hl()+1u );
+    return 8;
+}
+//LD (HLI),A
+//LD (HL+),A
+//LDI (HL),A
+int CPU::OP_0x22()
+{
+    byteLoad(ByteLoadTarget::HLI, ByteLoadSource::A);
+    registers.set_hl( registers.get_hl()+1u );
+    return 8;
+}
+//LDH (n),A
+int CPU::OP_0xE0()
+{
+    byteLoad(ByteLoadTarget::FF00pD8, ByteLoadSource::A);
+    return 12;
+}
+//LDH A,(n)
+int CPU::OP_0xF0()
+{
+    byteLoad(ByteLoadTarget::A, ByteLoadSource::FF00pD8);
+    return 12;
+}
 
 
 
 
-
-
-
+///////////////
 int CPU::OP_OxF1()
 {
     registers.set_af( pop() );

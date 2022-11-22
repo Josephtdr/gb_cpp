@@ -53,11 +53,11 @@ private:
 
     enum class ByteLoadTarget
     {
-        A, B, C, D, E, H, L, HLI
+        A, B, C, D, E, H, L, D16I, BCI, DEI, HLI, FF00pC, FF00pD8,
     };
     enum class ByteLoadSource
     {
-        A, B, C, D, E, H, L, D8, HLI
+        A, B, C, D, E, H, L, D8, D16I, BCI, DEI, HLI, FF00pC, FF00pD8,
     };
     void byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource);
 
@@ -137,13 +137,48 @@ private:
     int OP_0x75();
     int OP_0x36();
     //LD A,n
-    
-    //LD n,A    
-    
+    int OP_0x0A();
+    int OP_0x1A();
+    int OP_0xFA();
+    int OP_0x3E();
+    //LD n,A
+    int OP_0x7F();
+    int OP_0x47();
+    int OP_0x4F();
+    int OP_0x57();
+    int OP_0x5F();
+    int OP_0x67();
+    int OP_0x6F();
+    int OP_0x02();
+    int OP_0x12();
+    int OP_0x77();
+    int OP_0xEA();
     //LD A,(C)
-
+    int OP_0xF2();
     //LD (C),A
+    int OP_0xE2();
+    //LD A,(HLD)
+    //LD A,(HL-)
+    //LDD A,(HL)
+    int OP_0x3A();
+    //LD (HLD),A
+    //LD (HL-),A
+    //LDD (HL),A
+    int OP_0x32();
+    //LD A,(HLI)
+    //LD A,(HL+)
+    //LDI A,(HL)
+    int OP_0x2A();
+    //LD (HLI),A
+    //LD (HL+),A
+    //LDI (HL),A
+    int OP_0x22();
+    //LDH (n),A
+    int OP_0xE0();
+    //LDH A,(n)
+    int OP_0xF0();
 
+    //////////
     int OP_0x00();
 
     //nn Pop

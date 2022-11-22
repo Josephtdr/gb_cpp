@@ -122,7 +122,6 @@ word_t CPU::jump(JumpTest type)
 void CPU::byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource)
 {
     byte_t value{};
-
     switch (ldSource)
     {
         case ByteLoadSource::A:
@@ -141,12 +140,22 @@ void CPU::byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource)
             value = registers.l; break;
         case ByteLoadSource::D8:
             value = readNextByte(); break;
+        case ByteLoadSource::BCI:
+            value = memory.readByte(registers.get_bc()); break;
+        case ByteLoadSource::DEI:
+            value = memory.readByte(registers.get_de()); break;
         case ByteLoadSource::HLI:
             value = memory.readByte(registers.get_hl()); break;
+        case ByteLoadSource::D16I:
+            value = memory.readByte(readNextWord()); break;
+        case ByteLoadSource::FF00pC:
+            value = memory.readByte(0xFF00u+registers.c); break;
+        case ByteLoadSource::FF00pD8:
+            value = memory.readByte(0xFF00u+readNextByte()); break;
         default:
             throw std::runtime_error("Invalid load source!");
     }
-
+    //D16I, BCI, DEI, HLI,
     switch (ldTarget)
     {
         case ByteLoadTarget::A:
@@ -163,8 +172,18 @@ void CPU::byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource)
             registers.h = value; break;
         case ByteLoadTarget::L:
             registers.l = value; break;
+        case ByteLoadTarget::BCI:
+            memory.writeByte(registers.get_bc(), value); break;
+        case ByteLoadTarget::DEI:
+            memory.writeByte(registers.get_de(), value); break;
         case ByteLoadTarget::HLI:
             memory.writeByte(registers.get_hl(), value); break;
+        case ByteLoadTarget::D16I:
+            memory.writeByte(readNextWord(), value); break;
+        case ByteLoadTarget::FF00pC:
+            memory.writeByte(0xFF00u+registers.c, value); break;
+        case ByteLoadTarget::FF00pD8:
+            memory.writeByte(0xFF00u+readNextByte(), value); break;
         default:
             throw std::runtime_error("Invalid load source!");
     }
