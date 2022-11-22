@@ -67,7 +67,8 @@ private:
     };
     void wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource);
 
-    //ALU
+
+    //Byte Arithmetic
     void byteAdd(byte_t& reg, const byte_t& addValue, bool withCarry=false);
     void byteSub(byte_t& reg, const byte_t& subValue, bool withCarry=false);
     void byteAND(byte_t& reg, const byte_t& andValue);
@@ -76,6 +77,9 @@ private:
     void byteCP(const byte_t& reg, const byte_t& cmpValue); //compare
     void byteINC(byte_t& target); //increment
     void byteDEC(byte_t& target); //decrement
+    //Word Arithmetic
+    void wordAdd(word_t& reg, const word_t& addValue);
+    
 
     //Opcodes
     //byte Loads
@@ -309,13 +313,25 @@ private:
     int OP_0x2D();
     int OP_0x35();
 
-    //Word alu
+    //Word arithmatic
+    //ADD HL,n
+    int OP_0x09();
+    int OP_0x19();
+    int OP_0x29();
+    int OP_0x39();
+    //ADD SP,n
+    int OP_0xE8();
+    //INC nn
+    int OP_0x03();
+    int OP_0x13();
+    int OP_0x23();
+    int OP_0x33();
+    //DEC nn
+    int OP_0x0B();
+    int OP_0x1B();
+    int OP_0x2B();
+    int OP_0x3B();
 
-    //nn Pop
-    int OP_OxF1(); //POP AF
-    int OP_OxC1(); //POP BC
-    int OP_OxD1(); //POP DE
-    int OP_OxE1(); //POP HL
 
     int OP_OxCB(); //Prefix Instruction
 };

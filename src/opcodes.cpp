@@ -486,13 +486,6 @@ int CPU::OP_0xF9()
 int CPU::OP_0xF8()
 {
     wordLoad(WordLoadTarget::HL, WordLoadSource::SPpD8);
-
-    registers.f.zero = false;
-    registers.f.subtract = false;
-
-    registers.f.carry;
-    registers.f.half_carry;
-
     return 12;
 }
 //LD (nn),SP
@@ -992,27 +985,81 @@ int CPU::OP_0x35()
     memory.writeByte(registers.get_hl(), hli);
     return 12;
 }
-
-
-
-///////////////
-int CPU::OP_OxF1()
+//Word arithmatic
+//ADD HL,n
+int CPU::OP_0x09()
 {
-    registers.set_af( pop() );
-    return 12;
-} //POP AF
-int CPU::OP_OxC1()
+    word_t HL{ registers.get_hl() };
+    wordAdd(HL, registers.get_bc());
+    registers.set_hl(HL);
+    return 8;
+}
+int CPU::OP_0x19()
 {
-    registers.set_bc( pop() );
-    return 12;
-} //POP BC
-int CPU::OP_OxD1()
+    word_t HL{ registers.get_hl() };
+    wordAdd(HL, registers.get_de());
+    registers.set_hl(HL);
+    return 8;
+}
+int CPU::OP_0x29()
 {
-    registers.set_de( pop() );
-    return 12;
-} //POP DE
-int CPU::OP_OxE1()
+    word_t HL{ registers.get_hl() };
+    wordAdd(HL, registers.get_hl());
+    registers.set_hl(HL);
+    return 8;
+}
+int CPU::OP_0x39()
 {
-    registers.set_hl( pop() );
-    return 12;
-} //POP HL
+    word_t HL{ registers.get_hl() };
+    wordAdd(HL, sp);
+    registers.set_hl(HL);
+    return 8;
+}
+//ADD SP,n
+int CPU::OP_0xE8()
+{
+    wordAdd(sp, readNextWord());
+    return 16;
+}
+//INC nn
+int CPU::OP_0x03()
+{
+    registers.set_bc(registers.get_bc() + 1);
+    return 8;
+}
+int CPU::OP_0x13()
+{
+    registers.set_de(registers.get_de() + 1);
+    return 8;
+}
+int CPU::OP_0x23()
+{
+    registers.set_hl(registers.get_hl() + 1);
+    return 8;
+}
+int CPU::OP_0x33()
+{
+    ++sp;
+    return 8;
+}
+//DEC nn
+int CPU::OP_0x0B()
+{
+    registers.set_bc(registers.get_bc() - 1);
+    return 8;
+}
+int CPU::OP_0x1B()
+{
+    registers.set_de(registers.get_de() - 1);
+    return 8;
+}
+int CPU::OP_0x2B()
+{
+    registers.set_hl(registers.get_hl() - 1);
+    return 8;
+}
+int CPU::OP_0x3B()
+{
+    --sp;
+    return 8;
+}

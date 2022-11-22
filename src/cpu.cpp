@@ -293,19 +293,19 @@ void CPU::wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource)
  */
 void CPU::byteAdd(byte_t& reg, const byte_t& addValue, bool withCarry=false)
 {
-    byte_t unchanged{ reg };
     byte_t value{ addValue };
     if (withCarry)
         { value += static_cast<byte_t>(registers.f.carry); }
 
-    unsigned int htest{ static_cast<unsigned int>(registers.a)+static_cast<unsigned int>(value) };
-
+    unsigned int ctest{ static_cast<unsigned int>(reg)+static_cast<unsigned int>(value) };
+    word_t htest{ (reg & 0xFu) + (value & 0xFu) };
+    
     reg += value;
     
     registers.f.zero = !reg;
     registers.f.subtract = false;
-    registers.f.carry = htest > 0xFF;
-    registers.f.half_carry = ((unchanged & 0xF) + (value & 0xF)) > 0xF;
+    registers.f.carry = ctest > 0xFFu;
+    registers.f.half_carry = htest > 0xFu;
 }
     
 /**
@@ -347,7 +347,7 @@ void CPU::byteAND(byte_t& reg, const byte_t& andValue)
     registers.f.carry = false;
     registers.f.half_carry = true;
     registers.f.subtract = false;
-    registers.f.zero = !registers.a;
+    registers.f.zero = !reg;
 }
 
 /**
@@ -363,7 +363,7 @@ void CPU::byteOR(byte_t& reg, const byte_t& orValue)
     registers.f.carry = false;
     registers.f.half_carry = false;
     registers.f.subtract = false;
-    registers.f.zero = !registers.a;
+    registers.f.zero = !reg;
 }
 
 /**
@@ -379,7 +379,7 @@ void CPU::byteXOR(byte_t& reg, const byte_t& xorValue)
     registers.f.carry = false;
     registers.f.half_carry = false;
     registers.f.subtract = false;
-    registers.f.zero = !registers.a;
+    registers.f.zero = !reg;
 }
 
 /**
@@ -424,12 +424,30 @@ void CPU::byteINC(byte_t& reg)
  */
 void CPU::byteDEC(byte_t& reg)
 {
-    byte_t unchanged{ reg };
+    signed int htest{ reg & 0xF };
     --reg;
 
     registers.f.zero = !reg;
     registers.f.subtract = true;
-
-    signed int htest{ unchanged & 0xF };
     registers.f.half_carry = htest - 1 < 0;
 }
+
+/**
+ * @brief add a word to the given reg, 
+ * Subtract flag is reset, 
+ * Carry flag set if carry from bit 15, Half Carry flag set if carry from bit 11.
+ * @param reg the reg being altered
+ * @param addValue the value to add with
+ */
+void CPU::wordAdd(word_t& reg, const word_t& addValue)
+{
+    unsigned int ctest{ static_cast<unsigned int>(reg)+static_cast<unsigned int>(addValue) };
+    word_t htest{ (reg & 0xFFF) + (addValue & 0xFFF) };
+    
+    reg += addValue;
+    
+    registers.f.subtract = false;
+    registers.f.carry = ctest > 0xFFFF;
+    registers.f.half_carry = htest > 0xFFF;
+}
+
