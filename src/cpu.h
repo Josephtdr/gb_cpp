@@ -76,8 +76,8 @@ private:
     void byteAND(ByteAluSource source);
     void byteOR(ByteAluSource source);
     void byteXOR(ByteAluSource source);
-    void byteCP(ByteAluSource source); //compare
-
+    void byteCP(const byte_t& reg, const byte_t& cmpValue, bool directByte = false); //compare
+    void byteINC(byte_t& target); //increment
 
     //Opcodes
     //byte Loads
@@ -282,6 +282,29 @@ private:
     int OP_0xAD();
     int OP_0xAE();
     int OP_0xEE();
+    //CP A, n
+    int OP_0xBF();
+    int OP_0xB8();
+    int OP_0xB9();
+    int OP_0xBA();
+    int OP_0xBB();
+    int OP_0xBC();
+    int OP_0xBD();
+    int OP_0xBE();
+    int OP_0xFE();
+
+    //INC n
+    int OP_0x3C();
+    int OP_0x04();
+    int OP_0x0C();
+    int OP_0x14();
+    int OP_0x1C();
+    int OP_0x24();
+    int OP_0x2C();
+    int OP_0x34();
+    //DEC n
+
+
 
     //nn Pop
     int OP_OxF1(); //POP AF

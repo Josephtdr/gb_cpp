@@ -365,8 +365,7 @@ void CPU::byteSub(ByteAluSource source, bool withCarry=false)
     if (withCarry)
         { value += static_cast<byte_t>(registers.f.carry); }
     
-    unsigned int v{ static_cast<unsigned int>(registers.a)-static_cast<unsigned int>(value) };
-    registers.f.carry = v < 0 ;
+    registers.f.carry = registers.a < value ;
 
     signed int htest{ registers.a & 0xF };
     htest -= static_cast<signed int>(value & 0xF);
@@ -481,4 +480,41 @@ void CPU::byteXOR(ByteAluSource source)
     registers.f.half_carry = false;
     registers.f.subtract = false;
     registers.f.zero = !registers.a;
+}
+
+/**
+ * @brief compares passed values, 
+ * effectively performs a subtraction of (reg - cmpValue) 
+ *  and sets the appropriate flags
+ * @param reg the reg being compared
+ * @param cmpValue the value to compare with
+ * @param directByte if true uses the immediate byte from memory instead of cmpValue
+ */
+void CPU::byteCP(const byte_t& reg, const byte_t& cmpValue, bool directByte = false)
+{
+    byte_t value{directByte ? readNextByte() : cmpValue};
+
+    signed int htest{ reg & 0xF };
+    htest -= static_cast<signed int>(value & 0xF);
+
+    registers.f.half_carry = htest < 0;
+    registers.f.carry = reg < value;
+    registers.f.zero = reg == value;
+    registers.f.subtract = true;
+}
+/**
+ * @brief Increments a passed byte, 
+ * sets zero flag if zero, resets subtract flag,
+ *  and sets half carry flag if carry from bit 3 occurs.
+ * 
+ * @param reg the byte to be incremented
+ */
+void CPU::byteINC(byte_t& reg)
+{
+    byte_t unchanged{ reg };
+    ++reg;
+
+    registers.f.zero = !reg;
+    registers.f.subtract = false;
+    registers.f.half_carry = unchanged==0xFu;
 }

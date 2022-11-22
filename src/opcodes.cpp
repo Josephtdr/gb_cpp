@@ -860,8 +860,95 @@ int CPU::OP_0xEE()
     byteXOR(ByteAluSource::D8);
     return 8;
 }
-
-
+//CP A, n
+int CPU::OP_0xBF()
+{
+    byteCP(registers.a, registers.a);
+    return 4;
+}
+int CPU::OP_0xB8()
+{
+    byteCP(registers.a, registers.b);
+    return 4;
+}
+int CPU::OP_0xB9()
+{
+    byteCP(registers.a, registers.c);
+    return 4;
+}
+int CPU::OP_0xBA()
+{
+    byteCP(registers.a, registers.d);
+    return 4;
+}
+int CPU::OP_0xBB()
+{
+    byteCP(registers.a, registers.e);
+    return 4;
+}
+int CPU::OP_0xBC()
+{
+    byteCP(registers.a, registers.h);
+    return 4;
+}
+int CPU::OP_0xBD()
+{
+    byteCP(registers.a, registers.l);
+    return 4;
+}
+int CPU::OP_0xBE()
+{
+    byteCP(registers.a, memory.readByte(registers.get_hl()));
+    return 8;
+}
+int CPU::OP_0xFE()
+{
+    byteCP(registers.a, 0, true);
+    return 8;
+}
+//INC n
+int CPU::OP_0x3C()
+{
+    byteINC(registers.a);
+    return 4;
+}
+int CPU::OP_0x04()
+{
+    byteINC(registers.b);
+    return 4;
+}
+int CPU::OP_0x0C()
+{
+    byteINC(registers.c);
+    return 4;
+}
+int CPU::OP_0x14()
+{
+    byteINC(registers.d);
+    return 4;
+}
+int CPU::OP_0x1C()
+{
+    byteINC(registers.e);
+    return 4;
+}
+int CPU::OP_0x24()
+{
+    byteINC(registers.h);
+    return 4;
+}
+int CPU::OP_0x2C()
+{
+    byteINC(registers.l);
+    return 4;
+}
+int CPU::OP_0x34()
+{
+    byte_t hli{ memory.readByte(registers.get_hl()) };
+    byteINC(hli);
+    memory.writeByte(registers.get_hl(), hli);
+    return 12;
+}
 
 
 
