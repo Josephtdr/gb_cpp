@@ -378,7 +378,6 @@ void CPU::byteSub(ByteAluSource source, bool withCarry=false)
     registers.f.subtract = true;
 }
 
-
 void CPU::byteAND(ByteAluSource source)
 {
     word_t value{};
@@ -410,6 +409,76 @@ void CPU::byteAND(ByteAluSource source)
 
     registers.f.carry = false;
     registers.f.half_carry = true;
+    registers.f.subtract = false;
+    registers.f.zero = !registers.a;
+}
+
+void CPU::byteOR(ByteAluSource source)
+{
+    word_t value{};
+    switch (source)
+    {
+    case ByteAluSource::A:
+        value = registers.a; break;
+    case ByteAluSource::B:
+        value = registers.b; break;
+    case ByteAluSource::C:
+        value = registers.c; break;
+    case ByteAluSource::D:
+        value = registers.d; break;
+    case ByteAluSource::E:
+        value = registers.e; break;
+    case ByteAluSource::H:
+        value = registers.h; break;
+    case ByteAluSource::L:
+        value = registers.l; break;
+    case ByteAluSource::HLI:
+        value = memory.readByte(registers.get_hl()); break;
+    case ByteAluSource::D8:
+        value = readNextByte(); break;
+    default:
+        throw std::runtime_error("Invalid add source!");
+    }
+
+    registers.a |= value;
+
+    registers.f.carry = false;
+    registers.f.half_carry = false;
+    registers.f.subtract = false;
+    registers.f.zero = !registers.a;
+}
+
+void CPU::byteXOR(ByteAluSource source)
+{
+    word_t value{};
+    switch (source)
+    {
+    case ByteAluSource::A:
+        value = registers.a; break;
+    case ByteAluSource::B:
+        value = registers.b; break;
+    case ByteAluSource::C:
+        value = registers.c; break;
+    case ByteAluSource::D:
+        value = registers.d; break;
+    case ByteAluSource::E:
+        value = registers.e; break;
+    case ByteAluSource::H:
+        value = registers.h; break;
+    case ByteAluSource::L:
+        value = registers.l; break;
+    case ByteAluSource::HLI:
+        value = memory.readByte(registers.get_hl()); break;
+    case ByteAluSource::D8:
+        value = readNextByte(); break;
+    default:
+        throw std::runtime_error("Invalid add source!");
+    }
+
+    registers.a ^= value;
+
+    registers.f.carry = false;
+    registers.f.half_carry = false;
     registers.f.subtract = false;
     registers.f.zero = !registers.a;
 }

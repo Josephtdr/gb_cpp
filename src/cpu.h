@@ -262,7 +262,26 @@ private:
     int OP_0xA5();
     int OP_0xA6();
     int OP_0xE6();
-    
+    //OR A, n
+    int OP_0xB7();
+    int OP_0xB0();
+    int OP_0xB1();
+    int OP_0xB2();
+    int OP_0xB3();
+    int OP_0xB4();
+    int OP_0xB5();
+    int OP_0xB6();
+    int OP_0xF6();
+    //XOR A, n
+    int OP_0xAF();
+    int OP_0xA8();
+    int OP_0xA9();
+    int OP_0xAA();
+    int OP_0xAB();
+    int OP_0xAC();
+    int OP_0xAD();
+    int OP_0xAE();
+    int OP_0xEE();
 
     //nn Pop
     int OP_OxF1(); //POP AF

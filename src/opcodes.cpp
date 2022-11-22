@@ -768,6 +768,101 @@ int CPU::OP_0xE6()
     byteAND(ByteAluSource::D8);
     return 8;
 }
+//OR A, n
+int CPU::OP_0xB7()
+{
+    byteOR(ByteAluSource::A);
+    return 4;
+}
+int CPU::OP_0xB0()
+{
+    byteOR(ByteAluSource::B);
+    return 4;
+}
+int CPU::OP_0xB1()
+{
+    byteOR(ByteAluSource::C);
+    return 4;
+}
+int CPU::OP_0xB2()
+{
+    byteOR(ByteAluSource::D);
+    return 4;
+}
+int CPU::OP_0xB3()
+{
+    byteOR(ByteAluSource::E);
+    return 4;
+}
+int CPU::OP_0xB4()
+{
+    byteOR(ByteAluSource::H);
+    return 4;
+}
+int CPU::OP_0xB5()
+{
+    byteOR(ByteAluSource::L);
+    return 4;
+}
+int CPU::OP_0xB6()
+{
+    byteOR(ByteAluSource::HLI);
+    return 8;
+}
+int CPU::OP_0xF6()
+{
+    byteOR(ByteAluSource::D8);
+    return 8;
+}
+//XOR A, n
+int CPU::OP_0xAF()
+{
+    byteXOR(ByteAluSource::A);
+    return 4;
+}
+int CPU::OP_0xA8()
+{
+    byteXOR(ByteAluSource::B);
+    return 4;
+}
+int CPU::OP_0xA9()
+{
+    byteXOR(ByteAluSource::C);
+    return 4;
+}
+int CPU::OP_0xAA()
+{
+    byteXOR(ByteAluSource::D);
+    return 4;
+}
+int CPU::OP_0xAB()
+{
+    byteXOR(ByteAluSource::E);
+    return 4;
+}
+int CPU::OP_0xAC()
+{
+    byteXOR(ByteAluSource::H);
+    return 4;
+}
+int CPU::OP_0xAD()
+{
+    byteXOR(ByteAluSource::L);
+    return 4;
+}
+int CPU::OP_0xAE()
+{
+    byteXOR(ByteAluSource::HLI);
+    return 8;
+}
+int CPU::OP_0xEE()
+{
+    byteXOR(ByteAluSource::D8);
+    return 8;
+}
+
+
+
 
 
 
