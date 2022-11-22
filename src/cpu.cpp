@@ -198,22 +198,24 @@ void CPU::wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource)
             value = registers.get_hl(); break;
         case WordLoadSource::SP:
             value = sp; break;
-        case WordLoadSource::SPpD8:
-            byte_t d8{ readNextByte() };
-            registers.f.zero = false;
-            registers.f.subtract = false;
-
-            unsigned int v{ sp + d8 };
-            bool carry{ v > 0xFFFF };
-            registers.f.carry = v > 0xFFFF;
-
-            bool half_carry{ ((sp & 0xF) + (d8 & 0xF)) > 0xF };
-            registers.f.half_carry = half_carry;
-
-            value = sp+d8; 
-            break;
         case WordLoadSource::D16:
             value = readNextWord(); break;
+        case WordLoadSource::SPpD8:
+            {
+                byte_t d8{ readNextByte() };
+                registers.f.zero = false;
+                registers.f.subtract = false;
+
+                unsigned int v{ static_cast<unsigned int>(sp)+static_cast<unsigned int>(d8) };
+                bool carry{ v > 0xFFFF };
+                registers.f.carry = carry;
+
+                bool half_carry{ ((sp & 0xF) + (d8 & 0xF)) > 0xF };
+                registers.f.half_carry = half_carry;
+                
+                value = sp+d8; 
+                break;
+            }
         default:
             throw std::runtime_error("Invalid load source!");
     } 
