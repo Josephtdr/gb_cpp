@@ -329,60 +329,36 @@ void CPU::byteAdd(ByteAluSource source, bool withCarry)
 }
 
 /**
- * @brief subtract a byte to register A, 
+ * @brief subtract a byte from the given reg, 
  * Zero flag set if result is 0, subtract flag is reset, 
- * Carry flag set if carry from bit 7, Half Carry flag set if carry from bit 3. 
- * @param subSource the byte to subtract
+ * Carry flag set if carry from bit 7, Half Carry flag set if carry from bit 3.
+ * @param reg the reg being altered
+ * @param subValue the value to subtract with
  * @param withCarry include the carry flag in the subtraction
  */
-void CPU::byteSub(ByteAluSource source, bool withCarry)
+void CPU::byteSub(byte_t& reg, const byte_t& subValue, bool withCarry=false)
 {
-    word_t value{};
-    switch (source)
-    {
-    case ByteAluSource::A:
-        value = registers.a; break;
-    case ByteAluSource::B:
-        value = registers.b; break;
-    case ByteAluSource::C:
-        value = registers.c; break;
-    case ByteAluSource::D:
-        value = registers.d; break;
-    case ByteAluSource::E:
-        value = registers.e; break;
-    case ByteAluSource::H:
-        value = registers.h; break;
-    case ByteAluSource::L:
-        value = registers.l; break;
-    case ByteAluSource::HLI:
-        value = memory.readByte(registers.get_hl()); break;
-    case ByteAluSource::D8:
-        value = readNextByte(); break;
-    default:
-        throw std::runtime_error("Invalid add source!");
-    }
-
+    byte_t unchanged{ reg };
+    byte_t value{ subValue };
     if (withCarry)
         { value += static_cast<byte_t>(registers.f.carry); }
-    
-    registers.f.carry = registers.a < value ;
 
-    signed int htest{ registers.a & 0xF };
+    signed int htest{ reg & 0xF };
     htest -= static_cast<signed int>(value & 0xF);
-    registers.f.half_carry = htest < 0;
-
-    registers.a -= value;
-
-    registers.f.zero = !registers.a;
+    reg -= value;
+    
+    registers.f.zero = !reg;
     registers.f.subtract = true;
+    registers.f.carry = unchanged < value ;
+    registers.f.half_carry = htest < 0;
 }
+
 
 /**
  * @brief ands the passed reg with the given andValue
  * 
  * @param reg the reg being altered
- * @param xorValue the value to and with
- * @param directByte if true uses the immediate byte from memory instead of cmpValue
+ * @param andValue the value to and with
  */
 void CPU::byteAND(byte_t& reg, const byte_t& andValue)
 {
@@ -398,8 +374,7 @@ void CPU::byteAND(byte_t& reg, const byte_t& andValue)
  * @brief ors the passed reg with the given orValue
  * 
  * @param reg the reg being altered
- * @param xorValue the value to or with
- * @param directByte if true uses the immediate byte from memory instead of cmpValue
+ * @param orValue the value to or with
  */
 void CPU::byteOR(byte_t& reg, const byte_t& orValue)
 {
@@ -416,7 +391,6 @@ void CPU::byteOR(byte_t& reg, const byte_t& orValue)
  * 
  * @param reg the reg being altered
  * @param xorValue the value to xor with
- * @param directByte if true uses the immediate byte from memory instead of cmpValue
  */
 void CPU::byteXOR(byte_t& reg, const byte_t& xorValue)
 {
@@ -434,7 +408,6 @@ void CPU::byteXOR(byte_t& reg, const byte_t& xorValue)
  *  and sets the appropriate flags
  * @param reg the reg being compared
  * @param cmpValue the value to compare with
- * @param directByte if true uses the immediate byte from memory instead of cmpValue
  */
 void CPU::byteCP(const byte_t& reg, const byte_t& cmpValue)
 {

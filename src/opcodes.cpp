@@ -638,88 +638,88 @@ int CPU::OP_0xCE()
 //SUB A, n
 int CPU::OP_0x97()
 {
-    byteSub(ByteAluSource::A);
+    byteSub(registers.a,registers.a);
     return 4;
 }
 int CPU::OP_0x90()
 {
-    byteSub(ByteAluSource::B);
+    byteSub(registers.a,registers.b);
     return 4;
 }
 int CPU::OP_0x91()
 {
-    byteSub(ByteAluSource::C);
+    byteSub(registers.a,registers.c);
     return 4;
 }
 int CPU::OP_0x92()
 {
-    byteSub(ByteAluSource::D);
+    byteSub(registers.a,registers.d);
     return 4;
 }
 int CPU::OP_0x93()
 {
-    byteSub(ByteAluSource::E);
+    byteSub(registers.a,registers.e);
     return 4;
 }
 int CPU::OP_0x94()
 {
-    byteSub(ByteAluSource::H);
+    byteSub(registers.a,registers.h);
     return 4;
 }
 int CPU::OP_0x95()
 {
-    byteSub(ByteAluSource::L);
+    byteSub(registers.a,registers.l);
     return 4;
 }
 int CPU::OP_0x96()
 {
-    byteSub(ByteAluSource::HLI);
+    byteSub(registers.a, memory.readByte(registers.get_hl()));
     return 8;
 }
 int CPU::OP_0xD6()
 {
-    byteSub(ByteAluSource::D8);
+    byteSub(registers.a, readNextByte());
     return 8;
 }
 //SBC A,n
 int CPU::OP_0x9F()
 {
-    byteSub(ByteAluSource::A, true);
+    byteSub(registers.a,registers.a, true);
     return 4;
 }
 int CPU::OP_0x98()
 {
-    byteSub(ByteAluSource::B, true);
+    byteSub(registers.a,registers.b, true);
     return 4;
 }
 int CPU::OP_0x99()
 {
-    byteSub(ByteAluSource::C, true);
+    byteSub(registers.a,registers.c, true);
     return 4;
 }
 int CPU::OP_0x9A()
 {
-    byteSub(ByteAluSource::D, true);
+    byteSub(registers.a,registers.d, true);
     return 4;
 }
 int CPU::OP_0x9B()
 {
-    byteSub(ByteAluSource::E, true);
+    byteSub(registers.a,registers.e, true);
     return 4;
 }
 int CPU::OP_0x9C()
 {
-    byteSub(ByteAluSource::H, true);
+    byteSub(registers.a,registers.h, true);
     return 4;
 }
 int CPU::OP_0x9D()
 {
-    byteSub(ByteAluSource::L, true);
+    byteSub(registers.a,registers.l, true);
     return 4;
 }
 int CPU::OP_0x9E()
 {
-    byteSub(ByteAluSource::HLI, true);
+    byteSub(registers.a, memory.readByte(registers.get_hl()), true);
     return 8;
 }
 //AND A, n

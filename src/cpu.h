@@ -72,7 +72,7 @@ private:
         A, B, C, D, E, H, L, HLI, D8, 
     };
     void byteAdd(ByteAluSource source, bool withCarry=false);
-    void byteSub(ByteAluSource source, bool withCarry=false);
+    void byteSub(byte_t& reg, const byte_t& subValue, bool withCarry=false);
     void byteAND(byte_t& reg, const byte_t& andValue);
     void byteOR(byte_t& reg, const byte_t& orValue);
     void byteXOR(byte_t& reg, const byte_t& xorValue);
