@@ -316,7 +316,7 @@ void CPU::byteAdd(ByteAddSource addSource, bool withCarry=false)
     }
 
     if (withCarry)
-        { ++value; }
+        { value += static_cast<byte_t>(registers.f.carry); }
 
     unsigned int v{ static_cast<unsigned int>(registers.a)+static_cast<unsigned int>(value) };
     bool carry{ v > 0xFF };
