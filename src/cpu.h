@@ -47,9 +47,6 @@ private:
     word_t jump(JumpTest type);
 
 
-
-
-
     enum class ByteLoadTarget
     {
         A, B, C, D, E, H, L, D16I, BCI, DEI, HLI, FF00pC, FF00pD8,
@@ -69,16 +66,6 @@ private:
         HL, SP, D16, SPpD8,
     };
     void wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource);
-
-
-
-
-    word_t wordLoad();
-    //Other loads---
-    //AFromIndirect
-    //IndirectFromA
-    //AFromByteAddress
-    //ByteAddressFromA
 
 
     //Opcodes

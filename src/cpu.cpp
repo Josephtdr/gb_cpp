@@ -33,13 +33,22 @@ int CPU::cycle()
 
     return nCycles;
 }
-
+/**
+ * @brief Reads the next word from memory according to the pc, 
+ * lsb first, also increments the pc twice.
+ * @return byte_t 
+ */
 word_t CPU::readNextWord()
 {
     byte_t lsb{ memory.readByte(pc++) };
     byte_t msb{ memory.readByte(pc++) };
     return (msb << 8) | lsb;
 }
+/**
+ * @brief Reads the next byte from memory according to the pc, 
+ * also increments the pc.
+ * @return byte_t 
+ */
 byte_t CPU::readNextByte()
 {
     return memory.readByte(pc++);
@@ -51,6 +60,11 @@ void CPU::halt()
     halted = true;
 }
 
+/**
+ * @brief Adds the given value to the stack, a byte at a time, msb first, 
+ * also decrements the sp twice.
+ * @param value the value to be added to the stack
+ */
 void CPU::push(word_t value)
 {
     --sp;
@@ -58,6 +72,11 @@ void CPU::push(word_t value)
     --sp;
     memory.writeByte(sp, (value & 0xFFu));
 }
+/**
+ * @brief Pops a value of the top of the stack 
+ * and increments the sp twice
+ * @return word_t the value from the top of the stack
+ */
 word_t CPU::pop()
 {
     byte_t lsb{ memory.readByte(sp) };
@@ -77,15 +96,28 @@ word_t CPU::call(bool valid)
     else
         { return nextPC; }
 }
+/**
+ * @brief Checks if the return is valid, if so 
+ * pops the value from the top of the stack and returns it
+ * otherwise returns the current pc such that the return is ignored.
+ * 
+ * @param valid boolean indicating if the return is valid
+ * @return the address to return to
+ */
 word_t CPU::return_(bool valid)
 {
     if (valid)
         { return pop(); }
     else
-        { return pc + 1u; }
+        { return pc; }
 }
 
-
+/**
+ * @brief 
+ * Check if the pc should jump, if so returns the word stores in the next two bytes of memory, otherwise skips those bytes
+ * @param type The type of test to use, to determine wether to jump or not
+ * @return the address to jump to
+ */
 word_t CPU::jump(JumpTest type)
 {   
     bool valid{};
@@ -104,8 +136,8 @@ word_t CPU::jump(JumpTest type)
         default:
             throw std::runtime_error("Invalid jump type!");
     }
-    // Gameboy is little endian so read pc + 2 as most significant bit
-    // and pc + 1 as least significant bit
+    // Gameboy is little endian hance pc + 1 is most significant byte
+    // and pc is least significant byte
     if (valid)
     {
         byte_t msb{ memory.readByte(pc+1u) };
@@ -113,12 +145,19 @@ word_t CPU::jump(JumpTest type)
         
         return (msb << 8) | lsb;
     }
-    else //skip the jump
+    else //skip the jump address
     { 
         return (pc + 2u); 
     }
 }
-
+/**
+ * @brief Loads a byte value from the source into the target.
+ * HCI etc. means the address location of the value stored in HC,
+ * D8 and D16 mean the next byte or word read from memory
+ * A lowercase p indicates plus, FF00pC means 0xFF00 + the value in register C.
+ * @param ldTarget where the value is loaded into.
+ * @param ldSource where the value is taken from.
+ */
 void CPU::byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource)
 {
     byte_t value{};
@@ -188,7 +227,14 @@ void CPU::byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource)
             throw std::runtime_error("Invalid load target!");
     }
 }
-
+/**
+ * @brief Loads a word value from the source into the target.
+ * D16I etc. means the address location of the value from D16,
+ * D8 and D16 mean the next byte or word read from memory
+ * A lowercase p indicates plus, SPpD8 means the stack pointer + D8.
+ * @param ldTarget where the value is loaded into.
+ * @param ldSource where the value is taken from.
+ */
 void CPU::wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource)
 {
     word_t value{};
@@ -212,7 +258,7 @@ void CPU::wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource)
 
                 bool half_carry{ ((sp & 0xF) + (d8 & 0xF)) > 0xF };
                 registers.f.half_carry = half_carry;
-                
+
                 value = sp+d8; 
                 break;
             }
