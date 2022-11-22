@@ -949,7 +949,49 @@ int CPU::OP_0x34()
     memory.writeByte(registers.get_hl(), hli);
     return 12;
 }
-
+//DEC n
+int CPU::OP_0x3D()
+{
+    byteDEC(registers.a);
+    return 4;
+}
+int CPU::OP_0x05()
+{
+    byteDEC(registers.b);
+    return 4;
+}
+int CPU::OP_0x0D()
+{
+    byteDEC(registers.c);
+    return 4;
+}
+int CPU::OP_0x15()
+{
+    byteDEC(registers.d);
+    return 4;
+}
+int CPU::OP_0x1D()
+{
+    byteDEC(registers.e);
+    return 4;
+}
+int CPU::OP_0x25()
+{
+    byteDEC(registers.h);
+    return 4;
+}
+int CPU::OP_0x2D()
+{
+    byteDEC(registers.l);
+    return 4;
+}
+int CPU::OP_0x35()
+{
+    byte_t hli{ memory.readByte(registers.get_hl()) };
+    byteDEC(hli);
+    memory.writeByte(registers.get_hl(), hli);
+    return 12;
+}
 
 
 

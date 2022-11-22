@@ -518,3 +518,21 @@ void CPU::byteINC(byte_t& reg)
     registers.f.subtract = false;
     registers.f.half_carry = unchanged==0xFu;
 }
+/**
+ * @brief Decrements a passed byte, 
+ * sets zero flag if zero, sets subtract flag,
+ *  and sets half carry flag if borrow from bit 3 occurs.
+ * 
+ * @param reg the byte to be decremented
+ */
+void CPU::byteDEC(byte_t& reg)
+{
+    byte_t unchanged{ reg };
+    --reg;
+
+    registers.f.zero = !reg;
+    registers.f.subtract = true;
+
+    signed int htest{ unchanged & 0xF };
+    registers.f.half_carry = htest - 1 < 0;
+}
