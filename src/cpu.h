@@ -67,11 +67,17 @@ private:
     };
     void wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource);
 
-    enum class ByteAddSource
+    enum class ByteAluSource
     {
         A, B, C, D, E, H, L, HLI, D8, 
     };
-    void byteAdd(ByteAddSource addSource, bool withCarry=false);
+    void byteAdd(ByteAluSource source, bool withCarry=false);
+    void byteSub(ByteAluSource source, bool withCarry=false);
+    void byteAND(ByteAluSource source);
+    void byteOR(ByteAluSource source);
+    void byteXOR(ByteAluSource source);
+    void byteCP(ByteAluSource source); //compare
+
 
     //Opcodes
     //byte Loads
@@ -226,7 +232,37 @@ private:
     int OP_0x8D();
     int OP_0x8E();
     int OP_0xCE();
-
+    //SUB A, n
+    int OP_0x97();
+    int OP_0x90();
+    int OP_0x91();
+    int OP_0x92();
+    int OP_0x93();
+    int OP_0x94();
+    int OP_0x95();
+    int OP_0x96();
+    int OP_0xD6();
+    //SBC A,n
+    int OP_0x9F();
+    int OP_0x98();
+    int OP_0x99();
+    int OP_0x9A();
+    int OP_0x9B();
+    int OP_0x9C();
+    int OP_0x9D();
+    int OP_0x9E();
+    // int OP_0x??(); rip D8
+    //AND A, n
+    int OP_0xA7();
+    int OP_0xA0();
+    int OP_0xA1();
+    int OP_0xA2();
+    int OP_0xA3();
+    int OP_0xA4();
+    int OP_0xA5();
+    int OP_0xA6();
+    int OP_0xE6();
+    
 
     //nn Pop
     int OP_OxF1(); //POP AF

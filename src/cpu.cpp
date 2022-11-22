@@ -287,29 +287,76 @@ void CPU::wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource)
  * Zero flag set if result is 0, subtract flag is reset, 
  * Carry flag set if carry from bit 7, Half Carry flag set if carry from bit 3. 
  * @param addSource the byte to add
+ * @param withCarry include the carry flag in the addition
  */
-void CPU::byteAdd(ByteAddSource addSource, bool withCarry=false)
+void CPU::byteAdd(ByteAluSource source, bool withCarry=false)
 {
     word_t value{};
-    switch (addSource)
+    switch (source)
     {
-    case ByteAddSource::A:
+    case ByteAluSource::A:
         value = registers.a; break;
-    case ByteAddSource::B:
+    case ByteAluSource::B:
         value = registers.b; break;
-    case ByteAddSource::C:
+    case ByteAluSource::C:
         value = registers.c; break;
-    case ByteAddSource::D:
+    case ByteAluSource::D:
         value = registers.d; break;
-    case ByteAddSource::E:
+    case ByteAluSource::E:
         value = registers.e; break;
-    case ByteAddSource::H:
+    case ByteAluSource::H:
         value = registers.h; break;
-    case ByteAddSource::L:
+    case ByteAluSource::L:
         value = registers.l; break;
-    case ByteAddSource::HLI:
+    case ByteAluSource::HLI:
         value = memory.readByte(registers.get_hl()); break;
-    case ByteAddSource::D8:
+    case ByteAluSource::D8:
+        value = readNextByte(); break;
+    default:
+        throw std::runtime_error("Invalid add source!");
+    }
+    if (withCarry)
+        { value += static_cast<byte_t>(registers.f.carry); }
+
+    unsigned int v{ static_cast<unsigned int>(registers.a)+static_cast<unsigned int>(value) };
+    registers.f.carry = v > 0xFF;
+    registers.f.half_carry = (((registers.a & 0xF) + (value & 0xF)) > 0xF);
+
+    registers.a += value;
+
+    registers.f.zero = !registers.a;
+    registers.f.subtract = false;
+}
+
+/**
+ * @brief subtract a byte to register A, 
+ * Zero flag set if result is 0, subtract flag is reset, 
+ * Carry flag set if carry from bit 7, Half Carry flag set if carry from bit 3. 
+ * @param subSource the byte to subtract
+ * @param withCarry include the carry flag in the subtraction
+ */
+void CPU::byteSub(ByteAluSource source, bool withCarry=false)
+{
+    word_t value{};
+    switch (source)
+    {
+    case ByteAluSource::A:
+        value = registers.a; break;
+    case ByteAluSource::B:
+        value = registers.b; break;
+    case ByteAluSource::C:
+        value = registers.c; break;
+    case ByteAluSource::D:
+        value = registers.d; break;
+    case ByteAluSource::E:
+        value = registers.e; break;
+    case ByteAluSource::H:
+        value = registers.h; break;
+    case ByteAluSource::L:
+        value = registers.l; break;
+    case ByteAluSource::HLI:
+        value = memory.readByte(registers.get_hl()); break;
+    case ByteAluSource::D8:
         value = readNextByte(); break;
     default:
         throw std::runtime_error("Invalid add source!");
@@ -317,18 +364,52 @@ void CPU::byteAdd(ByteAddSource addSource, bool withCarry=false)
 
     if (withCarry)
         { value += static_cast<byte_t>(registers.f.carry); }
+    
+    unsigned int v{ static_cast<unsigned int>(registers.a)-static_cast<unsigned int>(value) };
+    registers.f.carry = v < 0 ;
 
-    unsigned int v{ static_cast<unsigned int>(registers.a)+static_cast<unsigned int>(value) };
-    bool carry{ v > 0xFF };
-    registers.f.carry = carry;
+    signed int htest{ registers.a & 0xF };
+    htest -= static_cast<signed int>(value & 0xF);
+    registers.f.half_carry = htest < 0;
 
-    bool half_carry{ ((registers.a & 0xF) + (value & 0xF)) > 0xF };
-    registers.f.half_carry = half_carry;
+    registers.a -= value;
 
-    registers.a += value;
+    registers.f.zero = !registers.a;
+    registers.f.subtract = true;
+}
 
-    bool zero{ !registers.a };
-    registers.f.zero = zero;
 
+void CPU::byteAND(ByteAluSource source)
+{
+    word_t value{};
+    switch (source)
+    {
+    case ByteAluSource::A:
+        value = registers.a; break;
+    case ByteAluSource::B:
+        value = registers.b; break;
+    case ByteAluSource::C:
+        value = registers.c; break;
+    case ByteAluSource::D:
+        value = registers.d; break;
+    case ByteAluSource::E:
+        value = registers.e; break;
+    case ByteAluSource::H:
+        value = registers.h; break;
+    case ByteAluSource::L:
+        value = registers.l; break;
+    case ByteAluSource::HLI:
+        value = memory.readByte(registers.get_hl()); break;
+    case ByteAluSource::D8:
+        value = readNextByte(); break;
+    default:
+        throw std::runtime_error("Invalid add source!");
+    }
+
+    registers.a &= value;
+
+    registers.f.carry = false;
+    registers.f.half_carry = true;
     registers.f.subtract = false;
+    registers.f.zero = !registers.a;
 }

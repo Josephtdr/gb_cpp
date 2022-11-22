@@ -546,97 +546,228 @@ int CPU::OP_0xE1()
 //ADD A,n
 int CPU::OP_0x87()
 {
-    byteAdd(ByteAddSource::A);
+    byteAdd(ByteAluSource::A);
     return 4;
 }
 int CPU::OP_0x80()
 {
-    byteAdd(ByteAddSource::B);
+    byteAdd(ByteAluSource::B);
     return 4;
 }
 int CPU::OP_0x81()
 {
-    byteAdd(ByteAddSource::C);
+    byteAdd(ByteAluSource::C);
     return 4;
 }
 int CPU::OP_0x82()
 {
-    byteAdd(ByteAddSource::D);
+    byteAdd(ByteAluSource::D);
     return 4;
 }
 int CPU::OP_0x83()
 {
-    byteAdd(ByteAddSource::E);
+    byteAdd(ByteAluSource::E);
     return 4;
 }
 int CPU::OP_0x84()
 {
-    byteAdd(ByteAddSource::H);
+    byteAdd(ByteAluSource::H);
     return 4;
 }
 int CPU::OP_0x85()
 {
-    byteAdd(ByteAddSource::L);
+    byteAdd(ByteAluSource::L);
     return 4;
 }
 int CPU::OP_0x86()
 {
-    byteAdd(ByteAddSource::HLI);
+    byteAdd(ByteAluSource::HLI);
     return 8;
 }
 int CPU::OP_0xC6()
 {
-    byteAdd(ByteAddSource::D8);
+    byteAdd(ByteAluSource::D8);
     return 8;
 }
 //ADC A,n
 int CPU::OP_0x8F()
 {
-    byteAdd(ByteAddSource::A, true);
+    byteAdd(ByteAluSource::A, true);
     return 4;
 }
 int CPU::OP_0x88()
 {
-    byteAdd(ByteAddSource::B, true);
+    byteAdd(ByteAluSource::B, true);
     return 4;
 }
 int CPU::OP_0x89()
 {
-    byteAdd(ByteAddSource::C, true);
+    byteAdd(ByteAluSource::C, true);
     return 4;
 }
 int CPU::OP_0x8A()
 {
-    byteAdd(ByteAddSource::D, true);
+    byteAdd(ByteAluSource::D, true);
     return 4;
 }
 int CPU::OP_0x8B()
 {
-    byteAdd(ByteAddSource::E, true);
+    byteAdd(ByteAluSource::E, true);
     return 4;
 }
 int CPU::OP_0x8C()
 {
-    byteAdd(ByteAddSource::H, true);
+    byteAdd(ByteAluSource::H, true);
     return 4;
 }
 int CPU::OP_0x8D()
 {
-    byteAdd(ByteAddSource::L, true);
+    byteAdd(ByteAluSource::L, true);
     return 4;
 }
 int CPU::OP_0x8E()
 {
-    byteAdd(ByteAddSource::HLI, true);
+    byteAdd(ByteAluSource::HLI, true);
     return 8;
 }
 int CPU::OP_0xCE()
 {
-    byteAdd(ByteAddSource::D8, true);
+    byteAdd(ByteAluSource::D8, true);
     return 8;
 }
-
-
+//SUB A, n
+int CPU::OP_0x97()
+{
+    byteSub(ByteAluSource::A);
+    return 4;
+}
+int CPU::OP_0x90()
+{
+    byteSub(ByteAluSource::B);
+    return 4;
+}
+int CPU::OP_0x91()
+{
+    byteSub(ByteAluSource::C);
+    return 4;
+}
+int CPU::OP_0x92()
+{
+    byteSub(ByteAluSource::D);
+    return 4;
+}
+int CPU::OP_0x93()
+{
+    byteSub(ByteAluSource::E);
+    return 4;
+}
+int CPU::OP_0x94()
+{
+    byteSub(ByteAluSource::H);
+    return 4;
+}
+int CPU::OP_0x95()
+{
+    byteSub(ByteAluSource::L);
+    return 4;
+}
+int CPU::OP_0x96()
+{
+    byteSub(ByteAluSource::HLI);
+    return 8;
+}
+int CPU::OP_0xD6()
+{
+    byteSub(ByteAluSource::D8);
+    return 8;
+}
+//SBC A,n
+int CPU::OP_0x9F()
+{
+    byteSub(ByteAluSource::A, true);
+    return 4;
+}
+int CPU::OP_0x98()
+{
+    byteSub(ByteAluSource::B, true);
+    return 4;
+}
+int CPU::OP_0x99()
+{
+    byteSub(ByteAluSource::C, true);
+    return 4;
+}
+int CPU::OP_0x9A()
+{
+    byteSub(ByteAluSource::D, true);
+    return 4;
+}
+int CPU::OP_0x9B()
+{
+    byteSub(ByteAluSource::E, true);
+    return 4;
+}
+int CPU::OP_0x9C()
+{
+    byteSub(ByteAluSource::H, true);
+    return 4;
+}
+int CPU::OP_0x9D()
+{
+    byteSub(ByteAluSource::L, true);
+    return 4;
+}
+int CPU::OP_0x9E()
+{
+    byteSub(ByteAluSource::HLI, true);
+    return 8;
+}
+//AND A, n
+int CPU::OP_0xA7()
+{
+    byteAND(ByteAluSource::A);
+    return 4;
+}
+int CPU::OP_0xA0()
+{
+    byteAND(ByteAluSource::B);
+    return 4;
+}
+int CPU::OP_0xA1()
+{
+    byteAND(ByteAluSource::C);
+    return 4;
+}
+int CPU::OP_0xA2()
+{
+    byteAND(ByteAluSource::D);
+    return 4;
+}
+int CPU::OP_0xA3()
+{
+    byteAND(ByteAluSource::E);
+    return 4;
+}
+int CPU::OP_0xA4()
+{
+    byteAND(ByteAluSource::H);
+    return 4;
+}
+int CPU::OP_0xA5()
+{
+    byteAND(ByteAluSource::L);
+    return 4;
+}
+int CPU::OP_0xA6()
+{
+    byteAND(ByteAluSource::HLI);
+    return 8;
+}
+int CPU::OP_0xE6()
+{
+    byteAND(ByteAluSource::D8);
+    return 8;
+}
 
 
 
