@@ -725,47 +725,47 @@ int CPU::OP_0x9E()
 //AND A, n
 int CPU::OP_0xA7()
 {
-    byteAND(ByteAluSource::A);
+    byteAND(registers.a,registers.a);
     return 4;
 }
 int CPU::OP_0xA0()
 {
-    byteAND(ByteAluSource::B);
+    byteAND(registers.a,registers.b);
     return 4;
 }
 int CPU::OP_0xA1()
 {
-    byteAND(ByteAluSource::C);
+    byteAND(registers.a,registers.c);
     return 4;
 }
 int CPU::OP_0xA2()
 {
-    byteAND(ByteAluSource::D);
+    byteAND(registers.a,registers.d);
     return 4;
 }
 int CPU::OP_0xA3()
 {
-    byteAND(ByteAluSource::E);
+    byteAND(registers.a,registers.e);
     return 4;
 }
 int CPU::OP_0xA4()
 {
-    byteAND(ByteAluSource::H);
+    byteAND(registers.a,registers.h);
     return 4;
 }
 int CPU::OP_0xA5()
 {
-    byteAND(ByteAluSource::L);
+    byteAND(registers.a,registers.l);
     return 4;
 }
 int CPU::OP_0xA6()
 {
-    byteAND(ByteAluSource::HLI);
+    byteAND(registers.a,memory.readByte(registers.get_hl()));
     return 8;
 }
 int CPU::OP_0xE6()
 {
-    byteAND(ByteAluSource::D8);
+    byteAND(registers.a,readNextByte());
     return 8;
 }
 //OR A, n
@@ -811,7 +811,7 @@ int CPU::OP_0xB6()
 }
 int CPU::OP_0xF6()
 {
-    byteOR(registers.a,0,true);
+    byteOR(registers.a,readNextByte());
     return 8;
 }
 //XOR A, n
@@ -857,7 +857,7 @@ int CPU::OP_0xAE()
 }
 int CPU::OP_0xEE()
 {
-    byteXOR(registers.a,0,true);
+    byteXOR(registers.a,readNextByte());
     return 8;
 }
 //CP A, n
@@ -903,7 +903,7 @@ int CPU::OP_0xBE()
 }
 int CPU::OP_0xFE()
 {
-    byteCP(registers.a, 0, true);
+    byteCP(registers.a,readNextByte());
     return 8;
 }
 //INC n

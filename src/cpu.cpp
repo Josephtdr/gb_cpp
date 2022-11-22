@@ -377,40 +377,23 @@ void CPU::byteSub(ByteAluSource source, bool withCarry)
     registers.f.subtract = true;
 }
 
-void CPU::byteAND(ByteAluSource source)
+/**
+ * @brief ands the passed reg with the given andValue
+ * 
+ * @param reg the reg being altered
+ * @param xorValue the value to and with
+ * @param directByte if true uses the immediate byte from memory instead of cmpValue
+ */
+void CPU::byteAND(byte_t& reg, const byte_t& andValue)
 {
-    word_t value{};
-    switch (source)
-    {
-    case ByteAluSource::A:
-        value = registers.a; break;
-    case ByteAluSource::B:
-        value = registers.b; break;
-    case ByteAluSource::C:
-        value = registers.c; break;
-    case ByteAluSource::D:
-        value = registers.d; break;
-    case ByteAluSource::E:
-        value = registers.e; break;
-    case ByteAluSource::H:
-        value = registers.h; break;
-    case ByteAluSource::L:
-        value = registers.l; break;
-    case ByteAluSource::HLI:
-        value = memory.readByte(registers.get_hl()); break;
-    case ByteAluSource::D8:
-        value = readNextByte(); break;
-    default:
-        throw std::runtime_error("Invalid add source!");
-    }
-
-    registers.a &= value;
+    reg &= andValue;
 
     registers.f.carry = false;
     registers.f.half_carry = true;
     registers.f.subtract = false;
     registers.f.zero = !registers.a;
 }
+
 /**
  * @brief ors the passed reg with the given orValue
  * 
@@ -418,11 +401,9 @@ void CPU::byteAND(ByteAluSource source)
  * @param xorValue the value to or with
  * @param directByte if true uses the immediate byte from memory instead of cmpValue
  */
-void CPU::byteOR(byte_t& reg, const byte_t& orValue, bool directByte)
+void CPU::byteOR(byte_t& reg, const byte_t& orValue)
 {
-    byte_t value{directByte ? readNextByte() : orValue};
-
-    reg |= value;
+    reg |= orValue;
 
     registers.f.carry = false;
     registers.f.half_carry = false;
@@ -437,11 +418,9 @@ void CPU::byteOR(byte_t& reg, const byte_t& orValue, bool directByte)
  * @param xorValue the value to xor with
  * @param directByte if true uses the immediate byte from memory instead of cmpValue
  */
-void CPU::byteXOR(byte_t& reg, const byte_t& xorValue, bool directByte)
+void CPU::byteXOR(byte_t& reg, const byte_t& xorValue)
 {
-    byte_t value{directByte ? readNextByte() : xorValue};
-
-    reg ^= value;
+    reg ^= xorValue;
 
     registers.f.carry = false;
     registers.f.half_carry = false;
@@ -457,16 +436,14 @@ void CPU::byteXOR(byte_t& reg, const byte_t& xorValue, bool directByte)
  * @param cmpValue the value to compare with
  * @param directByte if true uses the immediate byte from memory instead of cmpValue
  */
-void CPU::byteCP(const byte_t& reg, const byte_t& cmpValue, bool directByte)
+void CPU::byteCP(const byte_t& reg, const byte_t& cmpValue)
 {
-    byte_t value{directByte ? readNextByte() : cmpValue};
-
     signed int htest{ reg & 0xF };
-    htest -= static_cast<signed int>(value & 0xF);
+    htest -= static_cast<signed int>(cmpValue & 0xF);
 
     registers.f.half_carry = htest < 0;
-    registers.f.carry = reg < value;
-    registers.f.zero = reg == value;
+    registers.f.carry = reg < cmpValue;
+    registers.f.zero = reg == cmpValue;
     registers.f.subtract = true;
 }
 /**

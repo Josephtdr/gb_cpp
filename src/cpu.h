@@ -73,10 +73,10 @@ private:
     };
     void byteAdd(ByteAluSource source, bool withCarry=false);
     void byteSub(ByteAluSource source, bool withCarry=false);
-    void byteAND(ByteAluSource source);
-    void byteOR(byte_t& reg, const byte_t& orValue, bool directByte = false);
-    void byteXOR(byte_t& reg, const byte_t& xorValue, bool directByte = false);
-    void byteCP(const byte_t& reg, const byte_t& cmpValue, bool directByte = false); //compare
+    void byteAND(byte_t& reg, const byte_t& andValue);
+    void byteOR(byte_t& reg, const byte_t& orValue);
+    void byteXOR(byte_t& reg, const byte_t& xorValue);
+    void byteCP(const byte_t& reg, const byte_t& cmpValue); //compare
     void byteINC(byte_t& target); //increment
     void byteDEC(byte_t& target); //decrement
 
