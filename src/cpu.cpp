@@ -2,7 +2,12 @@
 
 #include <stdexcept> // for std::runtime_error
 
-word_t CPU::execute(byte_t instructionByte, bool prefixed)
+CPU::CPU()
+ : pc{ c_INITIAL_PC_VALUE }, sp{ c_TOP_OF_STACK }
+{
+}
+
+int CPU::execute(byte_t instructionByte, bool prefixed)
 {
     if (!prefixed)
         { return ((*this).*(instructionTable[instructionByte]))(); }
@@ -10,40 +15,37 @@ word_t CPU::execute(byte_t instructionByte, bool prefixed)
         { return ((*this).*(prefixedInstructionTable[instructionByte]))(); }
 }
 
-void CPU::cycle()
+int CPU::cycle()
 {
     if (halted)
         return;
 
-    byte_t instructionByte = memory.readByte(pc);
+    byte_t instructionByte{ memory.readByte(pc) };
 
     bool prefixed{ instructionByte == c_PREFIXED_INSTRUCTION_BYTE };
     if (prefixed)
-        { instructionByte = memory.readByte(pc+1u); }
+    { 
+        ++pc;
+        instructionByte = memory.readByte(pc); 
+    }
+    ++pc;
+    int nCycles{ execute(instructionByte, prefixed) };
 
-    word_t nextPC{ execute(instructionByte, prefixed) };
-
-    pc = nextPC;
+    return nCycles;
 }
 
 word_t CPU::readNextWord()
-{   
-    ++pc;
-    byte_t lsb{ memory.readByte(pc) };
-    ++pc;
-    byte_t msb{ memory.readByte(pc) };
+{
+    byte_t lsb{ memory.readByte(pc++) };
+    byte_t msb{ memory.readByte(pc++) };
     return (msb << 8) | lsb;
 }
 byte_t CPU::readNextByte()
 {
-    ++pc;
-    return memory.readByte(pc);
+    return memory.readByte(pc++);
 }
 
-word_t CPU::noOperation()
-{
-    return pc+1u;
-}
+void CPU::noOperation() {}
 void CPU::halt()
 {
     halted = true;
@@ -66,7 +68,7 @@ word_t CPU::pop()
 }
 word_t CPU::call(bool valid)
 {
-    word_t nextPC{ pc + 3u };
+    word_t nextPC{ pc + 2u };
     if (valid)
     {
         push(nextPC);
@@ -106,18 +108,18 @@ word_t CPU::jump(JumpTest type)
     // and pc + 1 as least significant bit
     if (valid)
     {
-        byte_t msb{ memory.readByte(pc+2u) };
-        byte_t lsb{ memory.readByte(pc+1u) };
+        byte_t msb{ memory.readByte(pc+1u) };
+        byte_t lsb{ memory.readByte(pc) };
         
         return (msb << 8) | lsb;
     }
     else //skip the jump
     { 
-        return (pc + 3u); 
+        return (pc + 2u); 
     }
 }
 
-word_t CPU::byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource)
+void CPU::byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource)
 {
     byte_t value{};
 
@@ -166,8 +168,4 @@ word_t CPU::byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource)
         default:
             throw std::runtime_error("Invalid load source!");
     }
-    if (ldSource==ByteLoadSource::D8)
-        { return pc+2u; }
-    else
-        { return pc+1u; }
 }

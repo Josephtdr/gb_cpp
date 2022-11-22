@@ -16,11 +16,11 @@ private:
     
 public:
     CPU();
-    void cycle();
+    int cycle();
 
 
 private:
-    word_t execute(byte_t instructionByte, bool prefixed);
+    int execute(byte_t instructionByte, bool prefixed);
 
     using opcodeFnPtr = word_t(CPU::*)();
     opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
@@ -34,7 +34,7 @@ private:
     word_t pop();
     word_t call(bool valid);
     word_t return_(bool valid);
-    word_t noOperation();
+    void noOperation();
     void halt();
 
     enum class JumpTest 
@@ -59,7 +59,7 @@ private:
     {
         A, B, C, D, E, H, L, D8, HLI
     };
-    word_t byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource);
+    void byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource);
 
     word_t wordLoad();
     //Other loads---
@@ -71,10 +71,14 @@ private:
 
     //Opcodes
 
-    word_t OP_0x00();
+    int OP_0x00();
 
+    int OP_OxF1(); //POP AF
+    int OP_OxC1(); //POP BC
+    int OP_OxD1(); //POP DE
+    int OP_OxE1(); //POP HL
 
-    word_t OP_OxCB(); //Prefix Instruction
+    int OP_OxCB(); //Prefix Instruction
 };
 
 
