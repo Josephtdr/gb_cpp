@@ -292,14 +292,14 @@ void CPU::wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource)
  * @param addValue the value to add with
  * @param withCarry include the carry flag in the subtraction
  */
-void CPU::byteAdd(byte_t& reg, const byte_t& addValue, bool withCarry=false)
+void CPU::byteAdd(byte_t& reg, const byte_t& addValue, bool withCarry)
 {
     byte_t value{ addValue };
     if (withCarry)
         { value += static_cast<byte_t>(registers.f.carry); }
 
     unsigned int ctest{ static_cast<unsigned int>(reg)+static_cast<unsigned int>(value) };
-    word_t htest{ (reg & 0xFu) + (value & 0xFu) };
+    word_t htest{ static_cast<word_t>((reg & 0xFu) + (value & 0xFu)) };
     
     reg += value;
     
@@ -317,7 +317,7 @@ void CPU::byteAdd(byte_t& reg, const byte_t& addValue, bool withCarry=false)
  * @param subValue the value to subtract with
  * @param withCarry include the carry flag in the subtraction
  */
-void CPU::byteSub(byte_t& reg, const byte_t& subValue, bool withCarry=false)
+void CPU::byteSub(byte_t& reg, const byte_t& subValue, bool withCarry)
 {
     byte_t unchanged{ reg };
     byte_t value{ subValue };
@@ -443,7 +443,7 @@ void CPU::byteDEC(byte_t& reg)
 void CPU::wordAdd(word_t& reg, const word_t& addValue)
 {
     unsigned int ctest{ static_cast<unsigned int>(reg)+static_cast<unsigned int>(addValue) };
-    word_t htest{ (reg & 0xFFF) + (addValue & 0xFFF) };
+    word_t htest{ static_cast<word_t>((reg & 0xFFF) + (addValue & 0xFFF)) };
     
     reg += addValue;
     
