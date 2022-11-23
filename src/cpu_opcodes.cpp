@@ -408,7 +408,7 @@ int CPU::OP_0xE2()
 int CPU::OP_0x3A()
 {
     byteLoad(ByteLoadTarget::A, ByteLoadSource::HLI);
-    registers.set_hl( registers.get_hl()-1u );
+    m_Registers.set_hl( m_Registers.get_hl()-1u );
     return 8;
 }
 //LD (HLD),A
@@ -417,7 +417,7 @@ int CPU::OP_0x3A()
 int CPU::OP_0x32()
 {
     byteLoad(ByteLoadTarget::HLI, ByteLoadSource::A);
-    registers.set_hl( registers.get_hl()-1u );
+    m_Registers.set_hl( m_Registers.get_hl()-1u );
     return 8;
 }
 //LD A,(HLI)
@@ -426,7 +426,7 @@ int CPU::OP_0x32()
 int CPU::OP_0x2A()
 {
     byteLoad(ByteLoadTarget::A, ByteLoadSource::HLI);
-    registers.set_hl( registers.get_hl()+1u );
+    m_Registers.set_hl( m_Registers.get_hl()+1u );
     return 8;
 }
 //LD (HLI),A
@@ -435,7 +435,7 @@ int CPU::OP_0x2A()
 int CPU::OP_0x22()
 {
     byteLoad(ByteLoadTarget::HLI, ByteLoadSource::A);
-    registers.set_hl( registers.get_hl()+1u );
+    m_Registers.set_hl( m_Registers.get_hl()+1u );
     return 8;
 }
 //LDH (n),A
@@ -497,570 +497,570 @@ int CPU::OP_0x08()
 //PUSH nn
 int CPU::OP_0xF5()
 {
-    push(registers.get_af());
+    push(m_Registers.get_af());
     return 16;
 }
 int CPU::OP_0xC5()
 {
-    push(registers.get_bc());
+    push(m_Registers.get_bc());
     return 16;
 }
 int CPU::OP_0xD5()
 {
-    push(registers.get_de());
+    push(m_Registers.get_de());
     return 16;
 }
 int CPU::OP_0xE5()
 {
-    push(registers.get_hl());
+    push(m_Registers.get_hl());
     return 16;
 }
 //POP nn
 int CPU::OP_0xF1()
 {
-    registers.set_af(pop());
+    m_Registers.set_af(pop());
     return 12;
 }
 int CPU::OP_0xC1()
 {
-    registers.set_bc(pop());
+    m_Registers.set_bc(pop());
     return 12;
 }
 int CPU::OP_0xD1()
 {
-    registers.set_de(pop());
+    m_Registers.set_de(pop());
     return 12;
 }
 int CPU::OP_0xE1()
 {
-    registers.set_hl(pop());
+    m_Registers.set_hl(pop());
     return 12;
 }
 //ADD A,n
 int CPU::OP_0x87()
 {
-    byteAdd(registers.a,registers.a);
+    byteAdd(m_Registers.a,m_Registers.a);
     return 4;
 }
 int CPU::OP_0x80()
 {
-    byteAdd(registers.a,registers.b);
+    byteAdd(m_Registers.a,m_Registers.b);
     return 4;
 }
 int CPU::OP_0x81()
 {
-    byteAdd(registers.a,registers.c);
+    byteAdd(m_Registers.a,m_Registers.c);
     return 4;
 }
 int CPU::OP_0x82()
 {
-    byteAdd(registers.a,registers.d);
+    byteAdd(m_Registers.a,m_Registers.d);
     return 4;
 }
 int CPU::OP_0x83()
 {
-    byteAdd(registers.a,registers.e);
+    byteAdd(m_Registers.a,m_Registers.e);
     return 4;
 }
 int CPU::OP_0x84()
 {
-    byteAdd(registers.a,registers.h);
+    byteAdd(m_Registers.a,m_Registers.h);
     return 4;
 }
 int CPU::OP_0x85()
 {
-    byteAdd(registers.a,registers.l);
+    byteAdd(m_Registers.a,m_Registers.l);
     return 4;
 }
 int CPU::OP_0x86()
 {
-    byteAdd(registers.a, memory.readByte(registers.get_hl()));
+    byteAdd(m_Registers.a, m_Memory.readByte(m_Registers.get_hl()));
     return 8;
 }
 int CPU::OP_0xC6()
 {
-    byteAdd(registers.a, readNextByte());
+    byteAdd(m_Registers.a, readNextByte());
     return 8;
 }
 //ADC A,n
 int CPU::OP_0x8F()
 {
-    byteAdd(registers.a,registers.a, true);
+    byteAdd(m_Registers.a,m_Registers.a, true);
     return 4;
 }
 int CPU::OP_0x88()
 {
-    byteAdd(registers.a,registers.b, true);
+    byteAdd(m_Registers.a,m_Registers.b, true);
     return 4;
 }
 int CPU::OP_0x89()
 {
-    byteAdd(registers.a,registers.c, true);
+    byteAdd(m_Registers.a,m_Registers.c, true);
     return 4;
 }
 int CPU::OP_0x8A()
 {
-    byteAdd(registers.a,registers.d, true);
+    byteAdd(m_Registers.a,m_Registers.d, true);
     return 4;
 }
 int CPU::OP_0x8B()
 {
-    byteAdd(registers.a,registers.e, true);
+    byteAdd(m_Registers.a,m_Registers.e, true);
     return 4;
 }
 int CPU::OP_0x8C()
 {
-    byteAdd(registers.a,registers.h, true);
+    byteAdd(m_Registers.a,m_Registers.h, true);
     return 4;
 }
 int CPU::OP_0x8D()
 {
-    byteAdd(registers.a,registers.l, true);
+    byteAdd(m_Registers.a,m_Registers.l, true);
     return 4;
 }
 int CPU::OP_0x8E()
 {
-    byteAdd(registers.a, memory.readByte(registers.get_hl()), true);
+    byteAdd(m_Registers.a, m_Memory.readByte(m_Registers.get_hl()), true);
     return 8;
 }
 int CPU::OP_0xCE()
 {
-    byteAdd(registers.a, readNextByte(), true);
+    byteAdd(m_Registers.a, readNextByte(), true);
     return 8;
 }
 //SUB A, n
 int CPU::OP_0x97()
 {
-    byteSub(registers.a,registers.a);
+    byteSub(m_Registers.a,m_Registers.a);
     return 4;
 }
 int CPU::OP_0x90()
 {
-    byteSub(registers.a,registers.b);
+    byteSub(m_Registers.a,m_Registers.b);
     return 4;
 }
 int CPU::OP_0x91()
 {
-    byteSub(registers.a,registers.c);
+    byteSub(m_Registers.a,m_Registers.c);
     return 4;
 }
 int CPU::OP_0x92()
 {
-    byteSub(registers.a,registers.d);
+    byteSub(m_Registers.a,m_Registers.d);
     return 4;
 }
 int CPU::OP_0x93()
 {
-    byteSub(registers.a,registers.e);
+    byteSub(m_Registers.a,m_Registers.e);
     return 4;
 }
 int CPU::OP_0x94()
 {
-    byteSub(registers.a,registers.h);
+    byteSub(m_Registers.a,m_Registers.h);
     return 4;
 }
 int CPU::OP_0x95()
 {
-    byteSub(registers.a,registers.l);
+    byteSub(m_Registers.a,m_Registers.l);
     return 4;
 }
 int CPU::OP_0x96()
 {
-    byteSub(registers.a, memory.readByte(registers.get_hl()));
+    byteSub(m_Registers.a, m_Memory.readByte(m_Registers.get_hl()));
     return 8;
 }
 int CPU::OP_0xD6()
 {
-    byteSub(registers.a, readNextByte());
+    byteSub(m_Registers.a, readNextByte());
     return 8;
 }
 //SBC A,n
 int CPU::OP_0x9F()
 {
-    byteSub(registers.a,registers.a, true);
+    byteSub(m_Registers.a,m_Registers.a, true);
     return 4;
 }
 int CPU::OP_0x98()
 {
-    byteSub(registers.a,registers.b, true);
+    byteSub(m_Registers.a,m_Registers.b, true);
     return 4;
 }
 int CPU::OP_0x99()
 {
-    byteSub(registers.a,registers.c, true);
+    byteSub(m_Registers.a,m_Registers.c, true);
     return 4;
 }
 int CPU::OP_0x9A()
 {
-    byteSub(registers.a,registers.d, true);
+    byteSub(m_Registers.a,m_Registers.d, true);
     return 4;
 }
 int CPU::OP_0x9B()
 {
-    byteSub(registers.a,registers.e, true);
+    byteSub(m_Registers.a,m_Registers.e, true);
     return 4;
 }
 int CPU::OP_0x9C()
 {
-    byteSub(registers.a,registers.h, true);
+    byteSub(m_Registers.a,m_Registers.h, true);
     return 4;
 }
 int CPU::OP_0x9D()
 {
-    byteSub(registers.a,registers.l, true);
+    byteSub(m_Registers.a,m_Registers.l, true);
     return 4;
 }
 int CPU::OP_0x9E()
 {
-    byteSub(registers.a, memory.readByte(registers.get_hl()), true);
+    byteSub(m_Registers.a, m_Memory.readByte(m_Registers.get_hl()), true);
     return 8;
 }
 //AND A, n
 int CPU::OP_0xA7()
 {
-    byteAND(registers.a,registers.a);
+    byteAND(m_Registers.a,m_Registers.a);
     return 4;
 }
 int CPU::OP_0xA0()
 {
-    byteAND(registers.a,registers.b);
+    byteAND(m_Registers.a,m_Registers.b);
     return 4;
 }
 int CPU::OP_0xA1()
 {
-    byteAND(registers.a,registers.c);
+    byteAND(m_Registers.a,m_Registers.c);
     return 4;
 }
 int CPU::OP_0xA2()
 {
-    byteAND(registers.a,registers.d);
+    byteAND(m_Registers.a,m_Registers.d);
     return 4;
 }
 int CPU::OP_0xA3()
 {
-    byteAND(registers.a,registers.e);
+    byteAND(m_Registers.a,m_Registers.e);
     return 4;
 }
 int CPU::OP_0xA4()
 {
-    byteAND(registers.a,registers.h);
+    byteAND(m_Registers.a,m_Registers.h);
     return 4;
 }
 int CPU::OP_0xA5()
 {
-    byteAND(registers.a,registers.l);
+    byteAND(m_Registers.a,m_Registers.l);
     return 4;
 }
 int CPU::OP_0xA6()
 {
-    byteAND(registers.a,memory.readByte(registers.get_hl()));
+    byteAND(m_Registers.a,m_Memory.readByte(m_Registers.get_hl()));
     return 8;
 }
 int CPU::OP_0xE6()
 {
-    byteAND(registers.a,readNextByte());
+    byteAND(m_Registers.a,readNextByte());
     return 8;
 }
 //OR A, n
 int CPU::OP_0xB7()
 {
-    byteOR(registers.a,registers.a);
+    byteOR(m_Registers.a,m_Registers.a);
     return 4;
 }
 int CPU::OP_0xB0()
 {
-    byteOR(registers.a,registers.b);
+    byteOR(m_Registers.a,m_Registers.b);
     return 4;
 }
 int CPU::OP_0xB1()
 {
-    byteOR(registers.a,registers.c);
+    byteOR(m_Registers.a,m_Registers.c);
     return 4;
 }
 int CPU::OP_0xB2()
 {
-    byteOR(registers.a,registers.d);
+    byteOR(m_Registers.a,m_Registers.d);
     return 4;
 }
 int CPU::OP_0xB3()
 {
-    byteOR(registers.a,registers.e);
+    byteOR(m_Registers.a,m_Registers.e);
     return 4;
 }
 int CPU::OP_0xB4()
 {
-    byteOR(registers.a,registers.h);
+    byteOR(m_Registers.a,m_Registers.h);
     return 4;
 }
 int CPU::OP_0xB5()
 {
-    byteOR(registers.a,registers.l);
+    byteOR(m_Registers.a,m_Registers.l);
     return 4;
 }
 int CPU::OP_0xB6()
 {
-    byteOR(registers.a,memory.readByte(registers.get_hl()));
+    byteOR(m_Registers.a,m_Memory.readByte(m_Registers.get_hl()));
     return 8;
 }
 int CPU::OP_0xF6()
 {
-    byteOR(registers.a,readNextByte());
+    byteOR(m_Registers.a,readNextByte());
     return 8;
 }
 //XOR A, n
 int CPU::OP_0xAF()
 {
-    byteXOR(registers.a,registers.a);
+    byteXOR(m_Registers.a,m_Registers.a);
     return 4;
 }
 int CPU::OP_0xA8()
 {
-    byteXOR(registers.a,registers.b);
+    byteXOR(m_Registers.a,m_Registers.b);
     return 4;
 }
 int CPU::OP_0xA9()
 {
-    byteXOR(registers.a,registers.c);
+    byteXOR(m_Registers.a,m_Registers.c);
     return 4;
 }
 int CPU::OP_0xAA()
 {
-    byteXOR(registers.a,registers.d);
+    byteXOR(m_Registers.a,m_Registers.d);
     return 4;
 }
 int CPU::OP_0xAB()
 {
-    byteXOR(registers.a,registers.e);
+    byteXOR(m_Registers.a,m_Registers.e);
     return 4;
 }
 int CPU::OP_0xAC()
 {
-    byteXOR(registers.a,registers.h);
+    byteXOR(m_Registers.a,m_Registers.h);
     return 4;
 }
 int CPU::OP_0xAD()
 {
-    byteXOR(registers.a,registers.l);
+    byteXOR(m_Registers.a,m_Registers.l);
     return 4;
 }
 int CPU::OP_0xAE()
 {
-    byteXOR(registers.a,memory.readByte(registers.get_hl()));
+    byteXOR(m_Registers.a,m_Memory.readByte(m_Registers.get_hl()));
     return 8;
 }
 int CPU::OP_0xEE()
 {
-    byteXOR(registers.a,readNextByte());
+    byteXOR(m_Registers.a,readNextByte());
     return 8;
 }
 //CP A, n
 int CPU::OP_0xBF()
 {
-    byteCP(registers.a, registers.a);
+    byteCP(m_Registers.a, m_Registers.a);
     return 4;
 }
 int CPU::OP_0xB8()
 {
-    byteCP(registers.a, registers.b);
+    byteCP(m_Registers.a, m_Registers.b);
     return 4;
 }
 int CPU::OP_0xB9()
 {
-    byteCP(registers.a, registers.c);
+    byteCP(m_Registers.a, m_Registers.c);
     return 4;
 }
 int CPU::OP_0xBA()
 {
-    byteCP(registers.a, registers.d);
+    byteCP(m_Registers.a, m_Registers.d);
     return 4;
 }
 int CPU::OP_0xBB()
 {
-    byteCP(registers.a, registers.e);
+    byteCP(m_Registers.a, m_Registers.e);
     return 4;
 }
 int CPU::OP_0xBC()
 {
-    byteCP(registers.a, registers.h);
+    byteCP(m_Registers.a, m_Registers.h);
     return 4;
 }
 int CPU::OP_0xBD()
 {
-    byteCP(registers.a, registers.l);
+    byteCP(m_Registers.a, m_Registers.l);
     return 4;
 }
 int CPU::OP_0xBE()
 {
-    byteCP(registers.a, memory.readByte(registers.get_hl()));
+    byteCP(m_Registers.a, m_Memory.readByte(m_Registers.get_hl()));
     return 8;
 }
 int CPU::OP_0xFE()
 {
-    byteCP(registers.a,readNextByte());
+    byteCP(m_Registers.a,readNextByte());
     return 8;
 }
 //INC n
 int CPU::OP_0x3C()
 {
-    byteINC(registers.a);
+    byteINC(m_Registers.a);
     return 4;
 }
 int CPU::OP_0x04()
 {
-    byteINC(registers.b);
+    byteINC(m_Registers.b);
     return 4;
 }
 int CPU::OP_0x0C()
 {
-    byteINC(registers.c);
+    byteINC(m_Registers.c);
     return 4;
 }
 int CPU::OP_0x14()
 {
-    byteINC(registers.d);
+    byteINC(m_Registers.d);
     return 4;
 }
 int CPU::OP_0x1C()
 {
-    byteINC(registers.e);
+    byteINC(m_Registers.e);
     return 4;
 }
 int CPU::OP_0x24()
 {
-    byteINC(registers.h);
+    byteINC(m_Registers.h);
     return 4;
 }
 int CPU::OP_0x2C()
 {
-    byteINC(registers.l);
+    byteINC(m_Registers.l);
     return 4;
 }
 int CPU::OP_0x34()
 {
-    byte_t hli{ memory.readByte(registers.get_hl()) };
+    byte_t hli{ m_Memory.readByte(m_Registers.get_hl()) };
     byteINC(hli);
-    memory.writeByte(registers.get_hl(), hli);
+    m_Memory.writeByte(m_Registers.get_hl(), hli);
     return 12;
 }
 //DEC n
 int CPU::OP_0x3D()
 {
-    byteDEC(registers.a);
+    byteDEC(m_Registers.a);
     return 4;
 }
 int CPU::OP_0x05()
 {
-    byteDEC(registers.b);
+    byteDEC(m_Registers.b);
     return 4;
 }
 int CPU::OP_0x0D()
 {
-    byteDEC(registers.c);
+    byteDEC(m_Registers.c);
     return 4;
 }
 int CPU::OP_0x15()
 {
-    byteDEC(registers.d);
+    byteDEC(m_Registers.d);
     return 4;
 }
 int CPU::OP_0x1D()
 {
-    byteDEC(registers.e);
+    byteDEC(m_Registers.e);
     return 4;
 }
 int CPU::OP_0x25()
 {
-    byteDEC(registers.h);
+    byteDEC(m_Registers.h);
     return 4;
 }
 int CPU::OP_0x2D()
 {
-    byteDEC(registers.l);
+    byteDEC(m_Registers.l);
     return 4;
 }
 int CPU::OP_0x35()
 {
-    byte_t hli{ memory.readByte(registers.get_hl()) };
+    byte_t hli{ m_Memory.readByte(m_Registers.get_hl()) };
     byteDEC(hli);
-    memory.writeByte(registers.get_hl(), hli);
+    m_Memory.writeByte(m_Registers.get_hl(), hli);
     return 12;
 }
 //Word arithmatic
 //ADD HL,n
 int CPU::OP_0x09()
 {
-    word_t HL{ registers.get_hl() };
-    wordAdd(HL, registers.get_bc());
-    registers.set_hl(HL);
+    word_t HL{ m_Registers.get_hl() };
+    wordAdd(HL, m_Registers.get_bc());
+    m_Registers.set_hl(HL);
     return 8;
 }
 int CPU::OP_0x19()
 {
-    word_t HL{ registers.get_hl() };
-    wordAdd(HL, registers.get_de());
-    registers.set_hl(HL);
+    word_t HL{ m_Registers.get_hl() };
+    wordAdd(HL, m_Registers.get_de());
+    m_Registers.set_hl(HL);
     return 8;
 }
 int CPU::OP_0x29()
 {
-    word_t HL{ registers.get_hl() };
-    wordAdd(HL, registers.get_hl());
-    registers.set_hl(HL);
+    word_t HL{ m_Registers.get_hl() };
+    wordAdd(HL, m_Registers.get_hl());
+    m_Registers.set_hl(HL);
     return 8;
 }
 int CPU::OP_0x39()
 {
-    word_t HL{ registers.get_hl() };
-    wordAdd(HL, sp);
-    registers.set_hl(HL);
+    word_t HL{ m_Registers.get_hl() };
+    wordAdd(HL, m_SP);
+    m_Registers.set_hl(HL);
     return 8;
 }
 //ADD SP,n
 int CPU::OP_0xE8()
 {
-    wordAdd(sp, readNextWord());
+    wordAdd(m_SP, readNextWord());
     return 16;
 }
 //INC nn
 int CPU::OP_0x03()
 {
-    registers.set_bc(registers.get_bc() + 1);
+    m_Registers.set_bc(m_Registers.get_bc() + 1);
     return 8;
 }
 int CPU::OP_0x13()
 {
-    registers.set_de(registers.get_de() + 1);
+    m_Registers.set_de(m_Registers.get_de() + 1);
     return 8;
 }
 int CPU::OP_0x23()
 {
-    registers.set_hl(registers.get_hl() + 1);
+    m_Registers.set_hl(m_Registers.get_hl() + 1);
     return 8;
 }
 int CPU::OP_0x33()
 {
-    ++sp;
+    ++m_SP;
     return 8;
 }
 //DEC nn
 int CPU::OP_0x0B()
 {
-    registers.set_bc(registers.get_bc() - 1);
+    m_Registers.set_bc(m_Registers.get_bc() - 1);
     return 8;
 }
 int CPU::OP_0x1B()
 {
-    registers.set_de(registers.get_de() - 1);
+    m_Registers.set_de(m_Registers.get_de() - 1);
     return 8;
 }
 int CPU::OP_0x2B()
 {
-    registers.set_hl(registers.get_hl() - 1);
+    m_Registers.set_hl(m_Registers.get_hl() - 1);
     return 8;
 }
 int CPU::OP_0x3B()
 {
-    --sp;
+    --m_SP;
     return 8;
 }
 
@@ -1094,34 +1094,34 @@ int CPU::OP_0xDA()
 //JP (HL)
 int CPU::OP_0xE9()
 {
-    jump(JumpTest::Always, registers.get_hl());
+    jump(JumpTest::Always, m_Registers.get_hl());
     return 4;
 }
 // JR n
 int CPU::OP_0x18()
 {
-    jump(JumpTest::Always, pc+readNextByte());
+    jump(JumpTest::Always, m_PC+readNextByte());
     return 8;
 }
 //JR cc,n
 int CPU::OP_0x20()
 {
-    jump(JumpTest::NotZero, pc+readNextByte());
+    jump(JumpTest::NotZero, m_PC+readNextByte());
     return 8;
 }
 int CPU::OP_0x28()
 {
-    jump(JumpTest::Zero,  pc+readNextByte());
+    jump(JumpTest::Zero,  m_PC+readNextByte());
     return 8;
 }
 int CPU::OP_0x30()
 {
-    jump(JumpTest::NotCarry,  pc+readNextByte());
+    jump(JumpTest::NotCarry,  m_PC+readNextByte());
     return 8;
 }
 int CPU::OP_0x38()
 {
-    jump(JumpTest::Carry,  pc+readNextByte());
+    jump(JumpTest::Carry,  m_PC+readNextByte());
     return 8;
 }
 //Calls
@@ -1221,10 +1221,113 @@ int CPU::OP_0xD8()
     return_(JumpTest::Carry);
     return 8;
 }
+/**********************vvvvvv****************************/
 //RETI
 int CPU::OP_0xD9()
 {
     return_(JumpTest::Always);
     //TODO: enable interupts here
     return 8;
+}
+
+//Miscellaneous
+//DAA
+int CPU::OP_0x27()
+{
+    //idk
+    return 4;
+}
+/********************^^^^^^^^^***************************/
+//CPL
+int CPU::OP_0x2F()
+{
+    m_Registers.a = ~m_Registers.a;
+    return 4;
+}
+//CCF
+int CPU::OP_0x3F()
+{
+    m_Registers.f.carry = !m_Registers.f.carry;
+    return 4;
+}
+//SCF
+int CPU::OP_0x37()
+{
+    m_Registers.f.carry = true;
+    return 4;
+}
+//NOP
+int CPU::OP_0x00()
+{
+    return 4;
+}
+/*********************vvvvvv************************/
+//HALT
+int CPU::OP_0x76()
+{
+
+    return 4;
+}
+//STOP
+int CPU::OP_0x10()
+{
+
+    return 4;
+}
+//DI disable interupts
+int CPU::OP_0xF3()
+{
+
+    return 4;
+}
+//EI enable interupts
+int CPU::OP_0xFB()
+{
+
+    return 4;
+}
+/***********************^^^^^^^************************/
+
+//SWAP n
+int CPU::OP_CB_0x37()
+{
+    swap(m_Registers.a);
+    return 8;
+}
+int CPU::OP_CB_0x30()
+{
+    swap(m_Registers.b);
+    return 8;
+}
+int CPU::OP_CB_0x31()
+{
+    swap(m_Registers.c);
+    return 8;
+}
+int CPU::OP_CB_0x32()
+{
+    swap(m_Registers.d);
+    return 8;
+}
+int CPU::OP_CB_0x33()
+{
+    swap(m_Registers.e);
+    return 8;
+}
+int CPU::OP_CB_0x34()
+{
+    swap(m_Registers.h);
+    return 8;
+}
+int CPU::OP_CB_0x35()
+{
+    swap(m_Registers.l);
+    return 8;
+}
+int CPU::OP_CB_0x36()
+{
+    byte_t val{ m_Memory.readByte( m_Registers.get_hl()) };
+    swap(val);
+    m_Memory.writeByte(m_Registers.get_hl(), val);
+    return 16;
 }

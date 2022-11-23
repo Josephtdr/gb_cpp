@@ -3,10 +3,28 @@
 #include <stdexcept> // for std::runtime_error
 
 CPU::CPU()
- : pc{ c_INITIAL_PC_VALUE }, sp{ c_TOP_OF_STACK }
+ : m_PC{ c_INITIAL_PC_VALUE }, m_SP{ c_TOP_OF_STACK }
 {
 }
 
+int CPU::cycle()
+{
+    if (halted)
+        return 1; //not sure what return value should be here, check interupts
+
+    byte_t instructionByte{ m_Memory.readByte(m_PC) };
+
+    bool prefixed{ instructionByte == c_PREFIXED_INSTRUCTION_BYTE };
+    if (prefixed)
+    { 
+        ++m_PC;
+        instructionByte = m_Memory.readByte(m_PC); 
+    }
+    ++m_PC;
+    int nCycles{ execute(instructionByte, prefixed) };
+
+    return nCycles;
+}
 int CPU::execute(byte_t instructionByte, bool prefixed)
 {
     if (!prefixed)
@@ -15,24 +33,6 @@ int CPU::execute(byte_t instructionByte, bool prefixed)
         { return ((*this).*(prefixedInstructionTable[instructionByte]))(); }
 }
 
-int CPU::cycle()
-{
-    if (halted)
-        return 1; //not sure what return value should be here, check interupts
-
-    byte_t instructionByte{ memory.readByte(pc) };
-
-    bool prefixed{ instructionByte == c_PREFIXED_INSTRUCTION_BYTE };
-    if (prefixed)
-    { 
-        ++pc;
-        instructionByte = memory.readByte(pc); 
-    }
-    ++pc;
-    int nCycles{ execute(instructionByte, prefixed) };
-
-    return nCycles;
-}
 /**
  * @brief Reads the next word from memory according to the pc, 
  * lsb first, also increments the pc twice.
@@ -40,8 +40,8 @@ int CPU::cycle()
  */
 word_t CPU::readNextWord()
 {
-    byte_t lsb{ memory.readByte(pc++) };
-    byte_t msb{ memory.readByte(pc++) };
+    byte_t lsb{ m_Memory.readByte(m_PC++) };
+    byte_t msb{ m_Memory.readByte(m_PC++) };
     return (msb << 8) | lsb;
 }
 /**
@@ -51,13 +51,25 @@ word_t CPU::readNextWord()
  */
 byte_t CPU::readNextByte()
 {
-    return memory.readByte(pc++);
+    return m_Memory.readByte(m_PC++);
 }
 
-void CPU::noOperation() {}
 void CPU::halt()
 {
     halted = true;
+}
+
+/**
+ * @brief swap the upper and lower nibbles of the given value
+ * 
+ * @param reg 
+ */
+void CPU::swap(byte_t& reg)
+{
+    byte_t lsn{ reg & 0xFu };
+    byte_t msn{ reg >> 4 };
+
+    reg = ((lsn << 4) | msn); 
 }
 
 /**
@@ -67,10 +79,10 @@ void CPU::halt()
  */
 void CPU::push(word_t value)
 {
-    --sp;
-    memory.writeByte(sp, ((value & 0xFF00u) >> 8));
-    --sp;
-    memory.writeByte(sp, (value & 0xFFu));
+    --m_SP;
+    m_Memory.writeByte(m_SP, ((value & 0xFF00u) >> 8));
+    --m_SP;
+    m_Memory.writeByte(m_SP, (value & 0xFFu));
 }
 /**
  * @brief Pops a value of the top of the stack 
@@ -79,12 +91,13 @@ void CPU::push(word_t value)
  */
 word_t CPU::pop()
 {
-    byte_t lsb{ memory.readByte(sp) };
-    ++sp;
-    byte_t msb{ memory.readByte(sp) };
-    ++sp;
+    byte_t lsb{ m_Memory.readByte(m_SP) };
+    ++m_SP;
+    byte_t msb{ m_Memory.readByte(m_SP) };
+    ++m_SP;
     return (msb << 8) | lsb;
 }
+
 /**
  * @brief 
  * 
@@ -95,8 +108,8 @@ void CPU::call(JumpTest type, const word_t& address)
 {
     if (testJumpTest(type))
     {
-        push(pc);
-        pc = address;
+        push(m_PC);
+        m_PC = address;
     }
 }
 /**
@@ -110,34 +123,42 @@ void CPU::call(JumpTest type, const word_t& address)
 void CPU::return_(JumpTest type)
 {
     if (testJumpTest(type))
-        { pc = pop(); }
+        { m_PC = pop(); }
 }
 
+/**
+ * @brief Resets the program counter to 0x0000 + the given address value
+ * 
+ * @param address a byte
+ */
 void CPU::restart(byte_t address)
 {
-    push(pc);
-    pc = (0x0000 + address);
+    push(m_PC);
+    m_PC = (0x0000 + address);
 }
 
+/**
+ * @brief return whether the given jumptest is currently valid or not
+ * 
+ * @param type the type of jump being tested
+ */
 bool CPU::testJumpTest(JumpTest type)
 {
-    bool valid{};
     switch (type)
     {
         case JumpTest::Zero:
-            valid = registers.f.zero; break;
+            return m_Registers.f.zero; break;
         case JumpTest::NotZero:
-            valid = !registers.f.zero; break;
+            return !m_Registers.f.zero; break;
         case JumpTest::Carry:
-            valid = registers.f.carry; break;
+            return m_Registers.f.carry; break;
         case JumpTest::NotCarry:
-            valid = !registers.f.carry; break;
+            return !m_Registers.f.carry; break;
         case JumpTest::Always:
-            valid = true; break;
+            return true; break;
         default:
             throw std::runtime_error("Invalid jump type!");
     }
-    return valid;
 }
 
 /**
@@ -149,8 +170,9 @@ bool CPU::testJumpTest(JumpTest type)
 void CPU::jump(JumpTest type, const word_t& address)
 {   
     if (testJumpTest(type))
-        { pc = address; }
+        { m_PC = address; }
 }
+
 /**
  * @brief Loads a byte value from the source into the target.
  * HCI etc. means the address location of the value stored in HC,
@@ -165,33 +187,33 @@ void CPU::byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource)
     switch (ldSource)
     {
         case ByteLoadSource::A:
-            value = registers.a; break;
+            value = m_Registers.a; break;
         case ByteLoadSource::B:
-            value = registers.b; break;
+            value = m_Registers.b; break;
         case ByteLoadSource::C:
-            value = registers.c; break;
+            value = m_Registers.c; break;
         case ByteLoadSource::D:
-            value = registers.d; break;
+            value = m_Registers.d; break;
         case ByteLoadSource::E:
-            value = registers.e; break;
+            value = m_Registers.e; break;
         case ByteLoadSource::H:
-            value = registers.h; break;
+            value = m_Registers.h; break;
         case ByteLoadSource::L:
-            value = registers.l; break;
+            value = m_Registers.l; break;
         case ByteLoadSource::D8:
             value = readNextByte(); break;
         case ByteLoadSource::BCI:
-            value = memory.readByte(registers.get_bc()); break;
+            value = m_Memory.readByte(m_Registers.get_bc()); break;
         case ByteLoadSource::DEI:
-            value = memory.readByte(registers.get_de()); break;
+            value = m_Memory.readByte(m_Registers.get_de()); break;
         case ByteLoadSource::HLI:
-            value = memory.readByte(registers.get_hl()); break;
+            value = m_Memory.readByte(m_Registers.get_hl()); break;
         case ByteLoadSource::D16I:
-            value = memory.readByte(readNextWord()); break;
+            value = m_Memory.readByte(readNextWord()); break;
         case ByteLoadSource::FF00pC:
-            value = memory.readByte(0xFF00u+registers.c); break;
+            value = m_Memory.readByte(0xFF00u+m_Registers.c); break;
         case ByteLoadSource::FF00pD8:
-            value = memory.readByte(0xFF00u+readNextByte()); break;
+            value = m_Memory.readByte(0xFF00u+readNextByte()); break;
         default:
             throw std::runtime_error("Invalid load source!");
     }
@@ -199,35 +221,36 @@ void CPU::byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource)
     switch (ldTarget)
     {
         case ByteLoadTarget::A:
-            registers.a = value; break;
+            m_Registers.a = value; break;
         case ByteLoadTarget::B:
-            registers.b = value; break;
+            m_Registers.b = value; break;
         case ByteLoadTarget::C:
-            registers.c = value; break;
+            m_Registers.c = value; break;
         case ByteLoadTarget::D:
-            registers.d = value; break;
+            m_Registers.d = value; break;
         case ByteLoadTarget::E:
-            registers.e = value; break;
+            m_Registers.e = value; break;
         case ByteLoadTarget::H:
-            registers.h = value; break;
+            m_Registers.h = value; break;
         case ByteLoadTarget::L:
-            registers.l = value; break;
+            m_Registers.l = value; break;
         case ByteLoadTarget::BCI:
-            memory.writeByte(registers.get_bc(), value); break;
+            m_Memory.writeByte(m_Registers.get_bc(), value); break;
         case ByteLoadTarget::DEI:
-            memory.writeByte(registers.get_de(), value); break;
+            m_Memory.writeByte(m_Registers.get_de(), value); break;
         case ByteLoadTarget::HLI:
-            memory.writeByte(registers.get_hl(), value); break;
+            m_Memory.writeByte(m_Registers.get_hl(), value); break;
         case ByteLoadTarget::D16I:
-            memory.writeByte(readNextWord(), value); break;
+            m_Memory.writeByte(readNextWord(), value); break;
         case ByteLoadTarget::FF00pC:
-            memory.writeByte(0xFF00u+registers.c, value); break;
+            m_Memory.writeByte(0xFF00u+m_Registers.c, value); break;
         case ByteLoadTarget::FF00pD8:
-            memory.writeByte(0xFF00u+readNextByte(), value); break;
+            m_Memory.writeByte(0xFF00u+readNextByte(), value); break;
         default:
             throw std::runtime_error("Invalid load target!");
     }
 }
+
 /**
  * @brief Loads a word value from the source into the target.
  * D16I etc. means the address location of the value from D16,
@@ -242,25 +265,25 @@ void CPU::wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource)
     switch(ldSource)
     {   
         case WordLoadSource::HL:
-            value = registers.get_hl(); break;
+            value = m_Registers.get_hl(); break;
         case WordLoadSource::SP:
-            value = sp; break;
+            value = m_SP; break;
         case WordLoadSource::D16:
             value = readNextWord(); break;
         case WordLoadSource::SPpD8:
             {
                 byte_t d8{ readNextByte() };
-                registers.f.zero = false;
-                registers.f.subtract = false;
+                m_Registers.f.zero = false;
+                m_Registers.f.subtract = false;
 
-                unsigned int v{ static_cast<unsigned int>(sp)+static_cast<unsigned int>(d8) };
+                unsigned int v{ static_cast<unsigned int>(m_SP)+static_cast<unsigned int>(d8) };
                 bool carry{ v > 0xFFFF };
-                registers.f.carry = carry;
+                m_Registers.f.carry = carry;
 
-                bool half_carry{ ((sp & 0xF) + (d8 & 0xF)) > 0xF };
-                registers.f.half_carry = half_carry;
+                bool half_carry{ ((m_SP & 0xF) + (d8 & 0xF)) > 0xF };
+                m_Registers.f.half_carry = half_carry;
 
-                value = sp+d8; 
+                value = m_SP+d8; 
                 break;
             }
         default:
@@ -270,15 +293,15 @@ void CPU::wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource)
     switch(ldTarget)
     {
         case WordLoadTarget::BC:
-            registers.set_bc(value); break;
+            m_Registers.set_bc(value); break;
         case WordLoadTarget::DE:
-            registers.set_de(value); break;
+            m_Registers.set_de(value); break;
         case WordLoadTarget::HL:
-            registers.set_hl(value); break;
+            m_Registers.set_hl(value); break;
         case WordLoadTarget::SP:
-            sp = value; break;
+            m_SP = value; break;
         case WordLoadTarget::D16I:
-            memory.writeByte(readNextWord(), value); break;
+            m_Memory.writeByte(readNextWord(), value); break;
         default:
             throw std::runtime_error("Invalid load target!");
     }
@@ -296,17 +319,17 @@ void CPU::byteAdd(byte_t& reg, const byte_t& addValue, bool withCarry)
 {
     byte_t value{ addValue };
     if (withCarry)
-        { value += static_cast<byte_t>(registers.f.carry); }
+        { value += static_cast<byte_t>(m_Registers.f.carry); }
 
     unsigned int ctest{ static_cast<unsigned int>(reg)+static_cast<unsigned int>(value) };
     word_t htest{ static_cast<word_t>((reg & 0xFu) + (value & 0xFu)) };
     
     reg += value;
     
-    registers.f.zero = !reg;
-    registers.f.subtract = false;
-    registers.f.carry = ctest > 0xFFu;
-    registers.f.half_carry = htest > 0xFu;
+    m_Registers.f.zero = !reg;
+    m_Registers.f.subtract = false;
+    m_Registers.f.carry = ctest > 0xFFu;
+    m_Registers.f.half_carry = htest > 0xFu;
 }
     
 /**
@@ -322,16 +345,16 @@ void CPU::byteSub(byte_t& reg, const byte_t& subValue, bool withCarry)
     byte_t unchanged{ reg };
     byte_t value{ subValue };
     if (withCarry)
-        { value += static_cast<byte_t>(registers.f.carry); }
+        { value += static_cast<byte_t>(m_Registers.f.carry); }
 
     signed int htest{ reg & 0xF };
     htest -= static_cast<signed int>(value & 0xF);
     reg -= value;
     
-    registers.f.zero = !reg;
-    registers.f.subtract = true;
-    registers.f.carry = unchanged < value ;
-    registers.f.half_carry = htest < 0;
+    m_Registers.f.zero = !reg;
+    m_Registers.f.subtract = true;
+    m_Registers.f.carry = unchanged < value ;
+    m_Registers.f.half_carry = htest < 0;
 }
 
 
@@ -345,10 +368,10 @@ void CPU::byteAND(byte_t& reg, const byte_t& andValue)
 {
     reg &= andValue;
 
-    registers.f.carry = false;
-    registers.f.half_carry = true;
-    registers.f.subtract = false;
-    registers.f.zero = !reg;
+    m_Registers.f.carry = false;
+    m_Registers.f.half_carry = true;
+    m_Registers.f.subtract = false;
+    m_Registers.f.zero = !reg;
 }
 
 /**
@@ -361,10 +384,10 @@ void CPU::byteOR(byte_t& reg, const byte_t& orValue)
 {
     reg |= orValue;
 
-    registers.f.carry = false;
-    registers.f.half_carry = false;
-    registers.f.subtract = false;
-    registers.f.zero = !reg;
+    m_Registers.f.carry = false;
+    m_Registers.f.half_carry = false;
+    m_Registers.f.subtract = false;
+    m_Registers.f.zero = !reg;
 }
 
 /**
@@ -377,10 +400,10 @@ void CPU::byteXOR(byte_t& reg, const byte_t& xorValue)
 {
     reg ^= xorValue;
 
-    registers.f.carry = false;
-    registers.f.half_carry = false;
-    registers.f.subtract = false;
-    registers.f.zero = !reg;
+    m_Registers.f.carry = false;
+    m_Registers.f.half_carry = false;
+    m_Registers.f.subtract = false;
+    m_Registers.f.zero = !reg;
 }
 
 /**
@@ -395,10 +418,10 @@ void CPU::byteCP(const byte_t& reg, const byte_t& cmpValue)
     signed int htest{ reg & 0xF };
     htest -= static_cast<signed int>(cmpValue & 0xF);
 
-    registers.f.half_carry = htest < 0;
-    registers.f.carry = reg < cmpValue;
-    registers.f.zero = reg == cmpValue;
-    registers.f.subtract = true;
+    m_Registers.f.half_carry = htest < 0;
+    m_Registers.f.carry = reg < cmpValue;
+    m_Registers.f.zero = reg == cmpValue;
+    m_Registers.f.subtract = true;
 }
 /**
  * @brief Increments a passed byte, 
@@ -412,9 +435,9 @@ void CPU::byteINC(byte_t& reg)
     byte_t unchanged{ reg };
     ++reg;
 
-    registers.f.zero = !reg;
-    registers.f.subtract = false;
-    registers.f.half_carry = unchanged==0xFu;
+    m_Registers.f.zero = !reg;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = unchanged==0xFu;
 }
 /**
  * @brief Decrements a passed byte, 
@@ -428,9 +451,9 @@ void CPU::byteDEC(byte_t& reg)
     signed int htest{ reg & 0xF };
     --reg;
 
-    registers.f.zero = !reg;
-    registers.f.subtract = true;
-    registers.f.half_carry = htest - 1 < 0;
+    m_Registers.f.zero = !reg;
+    m_Registers.f.subtract = true;
+    m_Registers.f.half_carry = htest - 1 < 0;
 }
 
 /**
@@ -447,8 +470,8 @@ void CPU::wordAdd(word_t& reg, const word_t& addValue)
     
     reg += addValue;
     
-    registers.f.subtract = false;
-    registers.f.carry = ctest > 0xFFFF;
-    registers.f.half_carry = htest > 0xFFF;
+    m_Registers.f.subtract = false;
+    m_Registers.f.carry = ctest > 0xFFFF;
+    m_Registers.f.half_carry = htest > 0xFFF;
 }
 

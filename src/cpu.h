@@ -8,16 +8,19 @@
 class CPU
 {
 private:
-    MemoryBus memory{};
-    Registers registers{};
-    word_t pc{};
-    word_t sp{};
+    MemoryBus m_Memory{};
+    Registers m_Registers{};
+    word_t m_PC{};
+    word_t m_SP{};
     bool halted{};
+    
     
 public:
     CPU();
     int cycle();
+    void swap(byte_t& reg);
 
+    
 
 private:
     int execute(byte_t instructionByte, bool prefixed);
@@ -32,8 +35,8 @@ private:
     void push(word_t value);
     word_t pop();
     
-    void noOperation();
     void halt();
+    
 
     //Jumps
     enum class JumpTest 
@@ -381,6 +384,37 @@ private:
     //RETI
     int OP_0xD9();
     
+    //Miscellaneous
+    //DAA Decimal adjust register A
+    int OP_0x27();
+    //CPL
+    int OP_0x2F();
+    //CCF
+    int OP_0x3F();
+    //SCF
+    int OP_0x37();
+    //NOP
+    int OP_0x00();
+    //HALT
+    int OP_0x76();
+    //STOP
+    int OP_0x10();
+    //DI disable interupts
+    int OP_0xF3();
+    //EI enable interupts
+    int OP_0xFB();
+    //SWAP n
+    int OP_CB_0x37();
+    int OP_CB_0x30();
+    int OP_CB_0x31();
+    int OP_CB_0x32();
+    int OP_CB_0x33();
+    int OP_CB_0x34();
+    int OP_CB_0x35();
+    int OP_CB_0x36();
+    
+    //RLCA
+
 
     int OP_OxCB(); //Prefix Instruction
 };
