@@ -1,12 +1,13 @@
 #include <iostream>
 
 #include "registers.h"
-
+#include "cpu.h"
 
 
 int main()
 {
     Registers reg{};
+    CPU cpu{};
 
     std::cout<< "yo! ";
     reg.b = 0xA1;
@@ -28,4 +29,9 @@ int main()
     // std::cout << "byte: " << +byte << " reg.f:" << +reg.f << "\n";
 
     std::cout << std::boolalpha << reg.f.zero << reg.f.subtract << reg.f.half_carry << reg.f.carry << "\n";
+
+
+    std::cout << "\n" << "a b4: " << +reg.a << "\n";
+    cpu.swap(reg.a);
+    std::cout << "\n" << "a a4: " << +reg.a << "\n";
 }
