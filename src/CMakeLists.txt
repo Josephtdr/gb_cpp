@@ -10,11 +10,12 @@ project(gbemu)
 # )
 
 add_executable(${PROJECT_NAME} 
-    main.cpp 
+    main.cpp
     registers.cpp
     memoryBus.cpp
     cpu.cpp
-    opcodes.cpp
+    cpu_operations.cpp
+    cpu_opcodes.cpp
     gpu.cpp
 )
 

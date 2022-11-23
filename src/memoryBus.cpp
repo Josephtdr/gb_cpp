@@ -4,6 +4,10 @@
 #include<cstring> //memset, 
 #include <fstream> //streams
 
+MemoryBus::MemoryBus(int& timerRef)
+    : m_timerCounter{ timerRef }
+{}
+
 byte_t MemoryBus::readByte(word_t address) const
 {
     // //initial rom bank
@@ -61,6 +65,28 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     else if (0xFEA0u <= address || address <= 0xFEFFu)
     {
         return;
+    }
+    //harcoded and hacky because of oop setup
+    else if (address == c_TMC)
+    {
+        byte_t currentfreq = m_Memory[c_TMC] & 0b11u;
+        m_Memory[c_TMC] = value;
+        byte_t newfreq = m_Memory[c_TMC] & 0b11u;
+
+        if (currentfreq != newfreq)
+        {
+            switch (newfreq)
+            {
+                case 0: m_timerCounter = 1024; break; // freq 4096
+                case 1: m_timerCounter = 16; break;// freq 262144
+                case 2: m_timerCounter = 64; break;// freq 65536
+                case 3: m_timerCounter = 256; break;// freq 16382
+            }
+        }
+    }
+    else if (c_DIV_REGISTER == address)
+    {
+        m_Memory[c_DIV_REGISTER] = 0 ;
     }
     else
     {
@@ -190,4 +216,9 @@ void MemoryBus::changeROMRAMMode(byte_t value)
     m_ROMBanking = newData == 0;
     if (m_ROMBanking)
         m_CurrentRAMBank = 0 ;
+}
+
+void MemoryBus::incrementDivRegister()
+{
+    ++m_Memory[c_DIV_REGISTER];
 }

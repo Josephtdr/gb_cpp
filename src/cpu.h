@@ -8,33 +8,38 @@
 class CPU
 {
 private:
-    MemoryBus m_Memory{};
+    int m_TimerCounter{};
+    int m_DividerCounter{};
+    MemoryBus m_Memory{m_TimerCounter};
     Registers m_Registers{};
     word_t m_PC{};
     word_t m_SP{};
+    
     bool halted{};
-    
-    
+
 public:
     CPU();
-    int cycle();
-    void swap(byte_t& reg);
-
-    
-
+    void frameUpdate();
+    void updateDividerRegister(int cycles);
 private:
+    int cycle();
     int execute(byte_t instructionByte, bool prefixed);
+    word_t readNextWord();
+    byte_t readNextByte();
+
+    void updateTimers(int cycles);
+    
+    bool isClockEnabled() const;
+    byte_t getClockFreq() const;
+    void setClockFreq();
 
     using opcodeFnPtr = int(CPU::*)();
     opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
     opcodeFnPtr prefixedInstructionTable[c_INSTRUCTION_TABLE_SIZE]{};
     
-    word_t readNextWord();
-    byte_t readNextByte();
-    
     void push(word_t value);
     word_t pop();
-    
+    void swap(byte_t& reg);
     void halt();
     
 
