@@ -1063,3 +1063,168 @@ int CPU::OP_0x3B()
     --sp;
     return 8;
 }
+
+//JP nn
+int CPU::OP_0xC3()
+{
+    jump(JumpTest::Always, readNextWord());
+    return 12;
+}
+//JP cc,nn
+int CPU::OP_0xC2()
+{
+    jump(JumpTest::NotZero, readNextWord());
+    return 12;
+}
+int CPU::OP_0xCA()
+{
+    jump(JumpTest::Zero, readNextWord());
+    return 12;
+}
+int CPU::OP_0xD2()
+{
+    jump(JumpTest::NotCarry, readNextWord());
+    return 12;
+}
+int CPU::OP_0xDA()
+{
+    jump(JumpTest::Carry, readNextWord());
+    return 12;
+}
+//JP (HL)
+int CPU::OP_0xE9()
+{
+    jump(JumpTest::Always, registers.get_hl());
+    return 4;
+}
+// JR n
+int CPU::OP_0x18()
+{
+    jump(JumpTest::Always, pc+readNextByte());
+    return 8;
+}
+//JR cc,n
+int CPU::OP_0x20()
+{
+    jump(JumpTest::NotZero, pc+readNextByte());
+    return 8;
+}
+int CPU::OP_0x28()
+{
+    jump(JumpTest::Zero,  pc+readNextByte());
+    return 8;
+}
+int CPU::OP_0x30()
+{
+    jump(JumpTest::NotCarry,  pc+readNextByte());
+    return 8;
+}
+int CPU::OP_0x38()
+{
+    jump(JumpTest::Carry,  pc+readNextByte());
+    return 8;
+}
+//Calls
+//Call nn
+int CPU::OP_0xCD()
+{
+    call(JumpTest::Always, readNextWord());
+    return 12;
+}
+//CALL cc,nn
+int CPU::OP_0xC4()
+{
+    call(JumpTest::NotZero, readNextWord());
+    return 12;
+}
+int CPU::OP_0xCC()
+{
+    call(JumpTest::Zero, readNextWord());
+    return 12;
+}
+int CPU::OP_0xD4()
+{
+    call(JumpTest::NotCarry, readNextWord());
+    return 12;
+}
+int CPU::OP_0xDC()
+{
+    call(JumpTest::Carry, readNextWord());
+    return 12;
+}
+//Restarts
+//RST n
+int CPU::OP_0xC7()
+{
+    restart(0x00);
+    return  32;
+}
+int CPU::OP_0xCF()
+{
+    restart(0x08);
+    return  32;
+}
+int CPU::OP_0xD7()
+{
+    restart(0x10);
+    return  32;
+}
+int CPU::OP_0xDF()
+{
+    restart(0x18);
+    return  32;
+}
+int CPU::OP_0xE7()
+{
+    restart(0x20);
+    return  32;
+}
+int CPU::OP_0xEF()
+{
+    restart(0x28);
+    return  32;
+}
+int CPU::OP_0xF7()
+{
+    restart(0x30);
+    return  32;
+}
+int CPU::OP_0xFF()
+{
+    restart(0x38);
+    return  32;
+}
+//RET
+int CPU::OP_0xC9()
+{
+    return_(JumpTest::Always);
+    return 8;
+}
+//RET cc
+int CPU::OP_0xC0()
+{
+    return_(JumpTest::NotZero);
+    return 8;
+}
+int CPU::OP_0xC8()
+{
+    return_(JumpTest::Zero);
+    return 8;
+}
+int CPU::OP_0xD0()
+{
+    return_(JumpTest::NotCarry);
+    return 8;
+}
+int CPU::OP_0xD8()
+{
+    return_(JumpTest::Carry);
+    return 8;
+}
+//RETI
+int CPU::OP_0xD9()
+{
+    return_(JumpTest::Always);
+    //TODO: enable interupts here
+    return 8;
+}

@@ -22,7 +22,7 @@ public:
 private:
     int execute(byte_t instructionByte, bool prefixed);
 
-    using opcodeFnPtr = word_t(CPU::*)();
+    using opcodeFnPtr = int(CPU::*)();
     opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
     opcodeFnPtr prefixedInstructionTable[c_INSTRUCTION_TABLE_SIZE]{};
     
@@ -31,11 +31,11 @@ private:
     
     void push(word_t value);
     word_t pop();
-    word_t call(bool valid);
-    word_t return_(bool valid);
+    
     void noOperation();
     void halt();
 
+    //Jumps
     enum class JumpTest 
     {
         NotZero,
@@ -44,9 +44,13 @@ private:
         Carry,
         Always
     };
-    word_t jump(JumpTest type);
+    bool testJumpTest(JumpTest type);
+    void jump(JumpTest type, const word_t& address);
+    void call(JumpTest type, const word_t& address);
+    void return_(JumpTest type);
+    void restart(byte_t address);
 
-
+    //Loads
     enum class ByteLoadTarget
     {
         A, B, C, D, E, H, L, D16I, BCI, DEI, HLI, FF00pC, FF00pD8,
@@ -66,7 +70,6 @@ private:
         HL, SP, D16, SPpD8,
     };
     void wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource);
-
 
     //Byte Arithmetic
     void byteAdd(byte_t& reg, const byte_t& addValue, bool withCarry=false);
@@ -332,6 +335,52 @@ private:
     int OP_0x2B();
     int OP_0x3B();
 
+    //Jumps
+    //JP nn
+    int OP_0xC3();
+    //JP cc,nn
+    int OP_0xC2();
+    int OP_0xCA();
+    int OP_0xD2();
+    int OP_0xDA();
+    //JP (HL)
+    int OP_0xE9();
+    // JR n
+    int OP_0x18();
+    //JR cc,n
+    int OP_0x20();
+    int OP_0x28();
+    int OP_0x30();
+    int OP_0x38();
+    //Calls
+    //Call nn
+    int OP_0xCD();
+    //CALL cc,nn
+    int OP_0xC4();
+    int OP_0xCC();
+    int OP_0xD4();
+    int OP_0xDC();
+    //Restarts
+    //RST n
+    int OP_0xC7();
+    int OP_0xCF();
+    int OP_0xD7();
+    int OP_0xDF();
+    int OP_0xE7();
+    int OP_0xEF();
+    int OP_0xF7();
+    int OP_0xFF();
+    //Returns
+    //RET
+    int OP_0xC9();
+    //RET cc
+    int OP_0xC0();
+    int OP_0xC8();
+    int OP_0xD0();
+    int OP_0xD8();
+    //RETI
+    int OP_0xD9();
+    
 
     int OP_OxCB(); //Prefix Instruction
 };

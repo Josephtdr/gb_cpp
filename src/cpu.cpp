@@ -85,16 +85,19 @@ word_t CPU::pop()
     ++sp;
     return (msb << 8) | lsb;
 }
-word_t CPU::call(bool valid)
+/**
+ * @brief 
+ * 
+ * @param type 
+ * @param address 
+ */
+void CPU::call(JumpTest type, const word_t& address)
 {
-    word_t nextPC{ static_cast<word_t>(pc + 2u) };
-    if (valid)
+    if (testJumpTest(type))
     {
-        push(nextPC);
-        return readNextWord();
+        push(pc);
+        pc = address;
     }
-    else
-        { return nextPC; }
 }
 /**
  * @brief Checks if the return is valid, if so 
@@ -104,22 +107,20 @@ word_t CPU::call(bool valid)
  * @param valid boolean indicating if the return is valid
  * @return the address to return to
  */
-word_t CPU::return_(bool valid)
+void CPU::return_(JumpTest type)
 {
-    if (valid)
-        { return pop(); }
-    else
-        { return pc; }
+    if (testJumpTest(type))
+        { pc = pop(); }
 }
 
-/**
- * @brief 
- * Check if the pc should jump, if so returns the word stores in the next two bytes of memory, otherwise skips those bytes
- * @param type The type of test to use, to determine wether to jump or not
- * @return the address to jump to
- */
-word_t CPU::jump(JumpTest type)
-{   
+void CPU::restart(byte_t address)
+{
+    push(pc);
+    pc = (0x0000 + address);
+}
+
+bool CPU::testJumpTest(JumpTest type)
+{
     bool valid{};
     switch (type)
     {
@@ -136,19 +137,19 @@ word_t CPU::jump(JumpTest type)
         default:
             throw std::runtime_error("Invalid jump type!");
     }
-    // Gameboy is little endian hance pc + 1 is most significant byte
-    // and pc is least significant byte
-    if (valid)
-    {
-        byte_t msb{ memory.readByte(pc+1u) };
-        byte_t lsb{ memory.readByte(pc) };
-        
-        return (msb << 8) | lsb;
-    }
-    else //skip the jump address
-    { 
-        return (pc + 2u); 
-    }
+    return valid;
+}
+
+/**
+ * @brief 
+ * Check if the pc should jump, and if so, does
+ * @param type The type of test to use, to determine wether to jump or not
+ * @param address the address to jump to
+ */
+void CPU::jump(JumpTest type, const word_t& address)
+{   
+    if (testJumpTest(type))
+        { pc = address; }
 }
 /**
  * @brief Loads a byte value from the source into the target.
