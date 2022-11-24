@@ -6,7 +6,39 @@
 
 MemoryBus::MemoryBus(int& timerRef)
     : m_timerCounterRef{ timerRef }
-{}
+{
+    m_Memory[0xFF05] = 0x00u; //   ; TIMA
+    m_Memory[0xFF06] = 0x00u; //   ; TMA
+    m_Memory[0xFF07] = 0x00u; //   ; TAC
+    m_Memory[0xFF10] = 0x80u; //   ; NR10
+    m_Memory[0xFF11] = 0xBFu; //   ; NR11
+    m_Memory[0xFF12] = 0xF3u; //   ; NR12
+    m_Memory[0xFF14] = 0xBFu; //   ; NR14
+    m_Memory[0xFF16] = 0x3Fu; //   ; NR21
+    m_Memory[0xFF17] = 0x00u; //   ; NR22
+    m_Memory[0xFF19] = 0xBFu; //   ; NR24
+    m_Memory[0xFF1A] = 0x7Fu; //   ; NR30
+    m_Memory[0xFF1B] = 0xFFu; //   ; NR31
+    m_Memory[0xFF1C] = 0x9Fu; //   ; NR32
+    m_Memory[0xFF1E] = 0xBFu; //   ; NR33
+    m_Memory[0xFF20] = 0xFFu; //   ; NR41
+    m_Memory[0xFF21] = 0x00u; //   ; NR42
+    m_Memory[0xFF22] = 0x00u; //   ; NR43
+    m_Memory[0xFF23] = 0xBFu; //   ; NR30
+    m_Memory[0xFF24] = 0x77u; //   ; NR50
+    m_Memory[0xFF25] = 0xF3u; //   ; NR51
+    m_Memory[0xFF26] = 0xF1u; //   ; NR52
+    m_Memory[0xFF40] = 0x91u; //   ; LCDC
+    m_Memory[0xFF42] = 0x00u; //   ; SCY
+    m_Memory[0xFF43] = 0x00u; //   ; SCX
+    m_Memory[0xFF45] = 0x00u; //   ; LYC
+    m_Memory[0xFF47] = 0xFCu; //   ; BGP
+    m_Memory[0xFF48] = 0xFFu; //   ; OBP0
+    m_Memory[0xFF49] = 0xFFu; //   ; OBP1
+    m_Memory[0xFF4A] = 0x00u; //   ; WY
+    m_Memory[0xFF4B] = 0x00u; //   ; WX
+    m_Memory[0xFFFF] = 0x00u; //   ; IE
+}
 
 byte_t MemoryBus::readByte(word_t address) const
 {

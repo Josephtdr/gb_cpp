@@ -5,6 +5,10 @@
 CPU::CPU()
  : m_PC{ c_INITIAL_PC_VALUE }, m_SP{ c_TOP_OF_STACK }
 {
+    m_Registers.set_af(0x01B0);
+    m_Registers.set_bc(0x0013);
+    m_Registers.set_de(0x00D8);
+    m_Registers.set_hl(0x014D);
 }
 
 int CPU::cycle()
