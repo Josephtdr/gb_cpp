@@ -1,5 +1,15 @@
 #include "cpu.h"
 
+CPU::CPU()
+ : m_PC{ c_INITIAL_PC_VALUE }, m_SP{ c_TOP_OF_STACK }
+{
+    m_Registers.set_af(0x01B0);
+    m_Registers.set_bc(0x0013);
+    m_Registers.set_de(0x00D8);
+    m_Registers.set_hl(0x014D);
+
+    setupTables();
+}
 
 void CPU::frameUpdate()
 {
@@ -14,6 +24,36 @@ void CPU::frameUpdate()
         interupts();
     }
     // RenderScreen();
+}
+
+int CPU::cycle()
+{
+    if (halted)
+        return 1; //not sure what return value should be here, check interupts
+
+    byte_t instructionByte{ m_Memory.readByte(m_PC) };
+
+    bool prefixed{ instructionByte == c_PREFIXED_INSTRUCTION_BYTE };
+    if (prefixed)
+    { 
+        ++m_PC;
+        instructionByte = m_Memory.readByte(m_PC); 
+    }
+    ++m_PC;
+    int nCycles{ execute(instructionByte, prefixed) };
+
+    return nCycles;
+}
+
+int CPU::execute(byte_t instructionByte, bool prefixed)
+{
+    //logging here
+    // "0x{:x} ", instructionByte
+    // "CB 0x{:x} ", instructionByte if prefixed
+    if (!prefixed)
+        { return ((*this).*(instructionTable[instructionByte]))(); }
+    else
+        { return ((*this).*(prefixedInstructionTable[instructionByte]))(); }
 }
 
 void CPU::updateTimers(int cycles)

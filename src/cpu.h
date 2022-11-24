@@ -18,6 +18,10 @@ private:
     bool m_InteruptsEnabled{};
     bool halted{};
 
+    using opcodeFnPtr = int(CPU::*)();
+    opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
+    opcodeFnPtr prefixedInstructionTable[c_INSTRUCTION_TABLE_SIZE]{};
+
 public:
     CPU();
     void frameUpdate();
@@ -25,29 +29,24 @@ public:
 private:
     int cycle();
     int execute(byte_t instructionByte, bool prefixed);
+    void setupTables();
     word_t readNextWord();
     byte_t readNextByte();
 
     void updateDividerRegister(int cycles);
     void updateTimers(int cycles);
     bool isClockEnabled() const;
-    byte_t getClockFreq() const;
     void setClockFreq();
+    byte_t getClockFreq() const;
     
     void interupts();
     void requestInterupt(int interupt);
     void performInterupt(int interupt);
-    void testFunc();
-    
-    using opcodeFnPtr = int(CPU::*)();
-    opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
-    opcodeFnPtr prefixedInstructionTable[c_INSTRUCTION_TABLE_SIZE]{};
-    
+    void halt();
+
     void push(word_t value);
     word_t pop();
     void swapNibbles(byte_t& reg);
-    void halt();
-    
     void testBit_OP(const byte_t& byte, int bit);
     bool testBit(const byte_t& byte, int bit) const;
     void setBit(byte_t& byte, int bit);
@@ -105,7 +104,6 @@ private:
     void byteDEC(byte_t& target); //decrement
     //Word Arithmetic
     void wordAdd(word_t& reg, const word_t& addValue);
-    
 
     //Opcodes
     //byte Loads
@@ -423,7 +421,19 @@ private:
     int OP_0xF3();
     //EI enable interupts
     int OP_0xFB();
+    //Prefix Instruction
+    int OP_OxCB(); 
 
+    //CB OPCODES
+    //SWAP n
+    int OP_CB_0x37();
+    int OP_CB_0x30();
+    int OP_CB_0x31();
+    int OP_CB_0x32();
+    int OP_CB_0x33();
+    int OP_CB_0x34();
+    int OP_CB_0x35();
+    int OP_CB_0x36();
     //Roates & Shifts
     //RLCA
     int OP_0x07();
@@ -496,21 +506,6 @@ private:
     int OP_CB_0x3C();
     int OP_CB_0x3D();
     int OP_CB_0x3E();
-
-    //SWAP n
-    int OP_CB_0x37();
-    int OP_CB_0x30();
-    int OP_CB_0x31();
-    int OP_CB_0x32();
-    int OP_CB_0x33();
-    int OP_CB_0x34();
-    int OP_CB_0x35();
-    int OP_CB_0x36();
-    
-    //RLCA
-
-
-    int OP_OxCB(); //Prefix Instruction
 };
 
 
