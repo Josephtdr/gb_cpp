@@ -4,34 +4,30 @@
 #include "cpu.h"
 
 
-int main()
+int main(int argc, char *argv[])
 {
-    Registers reg{};
+    if (argc != 2)
+	{
+		std::cerr << "Usage: " << argv[0] << " <ROM>\n";
+		std::exit(EXIT_FAILURE);
+	}
+
+    char const* romFilename = argv[1];
+
     CPU cpu{};
 
-    std::cout<< "yo! ";
-    reg.b = 0xA1;
-    reg.c = 0xB1;
+    cpu.loadGame(romFilename);
 
-    reg.set_af(0xf16c);
+    bool quit{};
 
-    std::cout << std::hex << reg.get_af() << "\n";
-
-    reg.set_af(0xf16c);
-
-    //+reg.c causes integer promotion, allowing proper printing
-    std::cout << "a:" << static_cast<int>(reg.a) << ", f:" << +reg.f << "\n";
-
-    // byte_t byte{ 0b11101111 };
-
-    // reg.f = byte;
-
-    // std::cout << "byte: " << +byte << " reg.f:" << +reg.f << "\n";
-
-    std::cout << std::boolalpha << reg.f.zero << reg.f.subtract << reg.f.half_carry << reg.f.carry << "\n";
+    while(!quit)
+    {
+        cpu.frameUpdate();
 
 
-    std::cout << "\n" << "a b4: " << +reg.a << "\n";
-    cpu.swap(reg.a);
-    std::cout << "\n" << "a a4: " << +reg.a << "\n";
+
+        
+    }
+
+
 }
