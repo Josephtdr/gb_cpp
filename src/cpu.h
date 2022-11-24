@@ -19,8 +19,12 @@ private:
     bool halted{};
 
     using opcodeFnPtr = int(CPU::*)();
+    using preCB0x40_Function = void(CPU::*)(byte_t&);
+    using postCB0x40_Function = void(CPU::*)(byte_t&, int);
+
     opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
-    opcodeFnPtr prefixedInstructionTable[c_INSTRUCTION_TABLE_SIZE]{};
+    preCB0x40_Function preCB0x40_FunctionTable[(0x40)]{};
+    postCB0x40_Function postCB0x40_FunctionTable[(0xFF-0x40)]{};
 
 public:
     CPU();
@@ -47,16 +51,25 @@ private:
 
     void push(word_t value);
     word_t pop();
-    void swapNibbles(byte_t& reg);
-    void testBit_OP(const byte_t& byte, int bit);
-    bool testBit(const byte_t& byte, int bit) const;
-    void setBit(byte_t& byte, int bit);
-    void resetBit(byte_t& byte, int bit);
-    void leftRotate(byte_t& byte, bool withCarry = false);
-    void rightRotate(byte_t& byte, bool withCarry = false);
-    void leftShift(byte_t& byte);
-    void rightShift(byte_t& byte, bool arithmeticShift = false);
     void checkDAA(byte_t& byte);
+    
+    //CB commands
+    byte_t& CBopcodeToRegister(byte_t opcode);
+    int CBopcode_Translator(byte_t opcode);
+    
+    bool testBit(const byte_t& byte, int bit) const;
+    void testBit_OP(byte_t& byte, int bit);
+    void resetBit(byte_t& byte, int bit);
+    void setBit(byte_t& byte, int bit);
+    void swapNibbles(byte_t& reg);
+    void leftRotate(byte_t& byte);
+    void leftRotateWithCarry(byte_t& byte);
+    void rightRotate(byte_t& byte);
+    void rightRotateWithCarry(byte_t& byte);
+    void leftShift(byte_t& byte);
+    void rightShift(byte_t& byte);
+    void rightShiftArithmetic(byte_t& byte);
+    
 
     //Jumps
     enum class JumpTest 
@@ -423,19 +436,6 @@ private:
     int OP_0xF3();
     //EI enable interupts
     int OP_0xFB();
-    //Prefix Instruction
-    int OP_OxCB(); 
-
-    //CB OPCODES
-    //SWAP n
-    int OP_CB_0x37();
-    int OP_CB_0x30();
-    int OP_CB_0x31();
-    int OP_CB_0x32();
-    int OP_CB_0x33();
-    int OP_CB_0x34();
-    int OP_CB_0x35();
-    int OP_CB_0x36();
     //Roates & Shifts
     //RLCA
     int OP_0x07();
@@ -445,145 +445,6 @@ private:
     int OP_0x0F();
     //RRA
     int OP_0x1F();
-    //RLC n
-    int OP_CB_0x07();
-    int OP_CB_0x00();
-    int OP_CB_0x01();
-    int OP_CB_0x02();
-    int OP_CB_0x03();
-    int OP_CB_0x04();
-    int OP_CB_0x05();
-    int OP_CB_0x06();
-    //RL n
-    int OP_CB_0x17();
-    int OP_CB_0x10();
-    int OP_CB_0x11();
-    int OP_CB_0x12();
-    int OP_CB_0x13();
-    int OP_CB_0x14();
-    int OP_CB_0x15();
-    int OP_CB_0x16();
-    //RRC n
-    int OP_CB_0x0F();
-    int OP_CB_0x08();
-    int OP_CB_0x09();
-    int OP_CB_0x0A();
-    int OP_CB_0x0B();
-    int OP_CB_0x0C();
-    int OP_CB_0x0D();
-    int OP_CB_0x0E();
-    //RR n
-    int OP_CB_0x1F();
-    int OP_CB_0x18();
-    int OP_CB_0x19();
-    int OP_CB_0x1A();
-    int OP_CB_0x1B();
-    int OP_CB_0x1C();
-    int OP_CB_0x1D();
-    int OP_CB_0x1E();
-    //SLA n
-    int OP_CB_0x27();
-    int OP_CB_0x20();
-    int OP_CB_0x21();
-    int OP_CB_0x22();
-    int OP_CB_0x23();
-    int OP_CB_0x24();
-    int OP_CB_0x25();
-    int OP_CB_0x26();
-    //SRA n arithmetic
-    int OP_CB_0x2F();
-    int OP_CB_0x28();
-    int OP_CB_0x29();
-    int OP_CB_0x2A();
-    int OP_CB_0x2B();
-    int OP_CB_0x2C();
-    int OP_CB_0x2D();
-    int OP_CB_0x2E();
-    //SRL n
-    int OP_CB_0x3F();
-    int OP_CB_0x38();
-    int OP_CB_0x39();
-    int OP_CB_0x3A();
-    int OP_CB_0x3B();
-    int OP_CB_0x3C();
-    int OP_CB_0x3D();
-    int OP_CB_0x3E();
-
-    //Bit opcodes
-    //BIT b,r //test bit
-    //Bit 0
-    int OP_CB_0x47();
-    int OP_CB_0x40();
-    int OP_CB_0x41();
-    int OP_CB_0x42();
-    int OP_CB_0x43();
-    int OP_CB_0x44();
-    int OP_CB_0x45();
-    int OP_CB_0x46();
-    //Bit 1
-    int OP_CB_0x4F();
-    int OP_CB_0x48();
-    int OP_CB_0x49();
-    int OP_CB_0x4A();
-    int OP_CB_0x4B();
-    int OP_CB_0x4C();
-    int OP_CB_0x4D();
-    int OP_CB_0x4E();
-    //Bit 2
-    int OP_CB_0x57();
-    int OP_CB_0x50();
-    int OP_CB_0x51();
-    int OP_CB_0x52();
-    int OP_CB_0x53();
-    int OP_CB_0x54();
-    int OP_CB_0x55();
-    int OP_CB_0x56();
-    //Bit 3
-    int OP_CB_0x5F();
-    int OP_CB_0x58();
-    int OP_CB_0x59();
-    int OP_CB_0x5A();
-    int OP_CB_0x5B();
-    int OP_CB_0x5C();
-    int OP_CB_0x5D();
-    int OP_CB_0x5E();
-    //Bit 4
-    int OP_CB_0x67();
-    int OP_CB_0x60();
-    int OP_CB_0x61();
-    int OP_CB_0x62();
-    int OP_CB_0x63();
-    int OP_CB_0x64();
-    int OP_CB_0x65();
-    int OP_CB_0x66();
-    //Bit 5
-    int OP_CB_0x6F();
-    int OP_CB_0x68();
-    int OP_CB_0x69();
-    int OP_CB_0x6A();
-    int OP_CB_0x6B();
-    int OP_CB_0x6C();
-    int OP_CB_0x6D();
-    int OP_CB_0x6E();
-    //Bit 6
-    int OP_CB_0x77();
-    int OP_CB_0x70();
-    int OP_CB_0x71();
-    int OP_CB_0x72();
-    int OP_CB_0x73();
-    int OP_CB_0x74();
-    int OP_CB_0x75();
-    int OP_CB_0x76();
-    //Bit 7
-    int OP_CB_0x7F();
-    int OP_CB_0x78();
-    int OP_CB_0x79();
-    int OP_CB_0x7A();
-    int OP_CB_0x7B();
-    int OP_CB_0x7C();
-    int OP_CB_0x7D();
-    int OP_CB_0x7E();
-
 };
 
 

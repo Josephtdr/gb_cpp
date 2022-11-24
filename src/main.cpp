@@ -11,9 +11,13 @@ int main(int argc, char *argv[])
 		std::exit(EXIT_FAILURE);
 	}
 
+    std::cout << "Starting up!" << "\n";
+
     char const* romFilename = argv[1];
 
     CPU cpu{};
+
+    std::cout << "CPU initialised!" << "\n";
 
     cpu.loadGame(romFilename);
 

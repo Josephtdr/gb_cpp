@@ -62,14 +62,12 @@ int CPU::execute(byte_t instructionByte, bool prefixed)
     {
         std::cout << "Running opcode CB 0x" << std::hex << +instructionByte << " \n"; 
     }
-
     try 
     {
         if (!prefixed)
             { return ((*this).*(instructionTable[instructionByte]))(); }
         else
-            { return ((*this).*(prefixedInstructionTable[instructionByte]))(); }
-
+            { return CBopcode_Translator(instructionByte); }
     }
     catch (std::runtime_error e)
     {

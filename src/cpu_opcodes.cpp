@@ -7,7 +7,6 @@ void CPU::setupTables()
     for(byte_t i = 0; i < c_INSTRUCTION_TABLE_SIZE; ++i)
     {
         instructionTable[i] = &CPU::OP_NOT_IMPLEMTED;
-        prefixedInstructionTable[i] = &CPU::OP_NOT_IMPLEMTED;
     }
 
     //LD nn,n
@@ -330,147 +329,50 @@ void CPU::setupTables()
     instructionTable[0x1F] = &CPU::OP_0x1F;
 
     //Prefix Instruction
-    // instructionTable[0xCB] = &CPU::OP_0xCB;
-    prefixedInstructionTable[0x37] = &CPU::OP_CB_0x37;
-    prefixedInstructionTable[0x30] = &CPU::OP_CB_0x30;
-    prefixedInstructionTable[0x31] = &CPU::OP_CB_0x31;
-    prefixedInstructionTable[0x32] = &CPU::OP_CB_0x32;
-    prefixedInstructionTable[0x33] = &CPU::OP_CB_0x33;
-    prefixedInstructionTable[0x34] = &CPU::OP_CB_0x34;
-    prefixedInstructionTable[0x35] = &CPU::OP_CB_0x35;
-    prefixedInstructionTable[0x36] = &CPU::OP_CB_0x36;
-    //Roates & Shifts
-    //RLC n
-    prefixedInstructionTable[0x07] = &CPU::OP_CB_0x07;
-    prefixedInstructionTable[0x00] = &CPU::OP_CB_0x00;
-    prefixedInstructionTable[0x01] = &CPU::OP_CB_0x01;
-    prefixedInstructionTable[0x02] = &CPU::OP_CB_0x02;
-    prefixedInstructionTable[0x03] = &CPU::OP_CB_0x03;
-    prefixedInstructionTable[0x04] = &CPU::OP_CB_0x04;
-    prefixedInstructionTable[0x05] = &CPU::OP_CB_0x05;
-    prefixedInstructionTable[0x06] = &CPU::OP_CB_0x06;
-    //RL n
-    prefixedInstructionTable[0x17] = &CPU::OP_CB_0x17;
-    prefixedInstructionTable[0x10] = &CPU::OP_CB_0x10;
-    prefixedInstructionTable[0x11] = &CPU::OP_CB_0x11;
-    prefixedInstructionTable[0x12] = &CPU::OP_CB_0x12;
-    prefixedInstructionTable[0x13] = &CPU::OP_CB_0x13;
-    prefixedInstructionTable[0x14] = &CPU::OP_CB_0x14;
-    prefixedInstructionTable[0x15] = &CPU::OP_CB_0x15;
-    prefixedInstructionTable[0x16] = &CPU::OP_CB_0x16;
-    //RRC n
-    prefixedInstructionTable[0x0F] = &CPU::OP_CB_0x0F;
-    prefixedInstructionTable[0x08] = &CPU::OP_CB_0x08;
-    prefixedInstructionTable[0x09] = &CPU::OP_CB_0x09;
-    prefixedInstructionTable[0x0A] = &CPU::OP_CB_0x0A;
-    prefixedInstructionTable[0x0B] = &CPU::OP_CB_0x0B;
-    prefixedInstructionTable[0x0C] = &CPU::OP_CB_0x0C;
-    prefixedInstructionTable[0x0D] = &CPU::OP_CB_0x0D;
-    prefixedInstructionTable[0x0E] = &CPU::OP_CB_0x0E;
-    //RR n
-    prefixedInstructionTable[0x1F] = &CPU::OP_CB_0x1F;
-    prefixedInstructionTable[0x18] = &CPU::OP_CB_0x18;
-    prefixedInstructionTable[0x19] = &CPU::OP_CB_0x19;
-    prefixedInstructionTable[0x1A] = &CPU::OP_CB_0x1A;
-    prefixedInstructionTable[0x1B] = &CPU::OP_CB_0x1B;
-    prefixedInstructionTable[0x1C] = &CPU::OP_CB_0x1C;
-    prefixedInstructionTable[0x1D] = &CPU::OP_CB_0x1D;
-    prefixedInstructionTable[0x1E] = &CPU::OP_CB_0x1E;
-    //SLA n
-    prefixedInstructionTable[0x27] = &CPU::OP_CB_0x27;
-    prefixedInstructionTable[0x20] = &CPU::OP_CB_0x20;
-    prefixedInstructionTable[0x21] = &CPU::OP_CB_0x21;
-    prefixedInstructionTable[0x22] = &CPU::OP_CB_0x22;
-    prefixedInstructionTable[0x23] = &CPU::OP_CB_0x23;
-    prefixedInstructionTable[0x24] = &CPU::OP_CB_0x24;
-    prefixedInstructionTable[0x25] = &CPU::OP_CB_0x25;
-    prefixedInstructionTable[0x26] = &CPU::OP_CB_0x26;
-    //SRA n arithmetic
-    prefixedInstructionTable[0x2F] = &CPU::OP_CB_0x2F;
-    prefixedInstructionTable[0x28] = &CPU::OP_CB_0x28;
-    prefixedInstructionTable[0x29] = &CPU::OP_CB_0x29;
-    prefixedInstructionTable[0x2A] = &CPU::OP_CB_0x2A;
-    prefixedInstructionTable[0x2B] = &CPU::OP_CB_0x2B;
-    prefixedInstructionTable[0x2C] = &CPU::OP_CB_0x2C;
-    prefixedInstructionTable[0x2D] = &CPU::OP_CB_0x2D;
-    prefixedInstructionTable[0x2E] = &CPU::OP_CB_0x2E;
-    //SRL n
-    prefixedInstructionTable[0x3F] = &CPU::OP_CB_0x3F;
-    prefixedInstructionTable[0x38] = &CPU::OP_CB_0x38;
-    prefixedInstructionTable[0x39] = &CPU::OP_CB_0x39;
-    prefixedInstructionTable[0x3A] = &CPU::OP_CB_0x3A;
-    prefixedInstructionTable[0x3B] = &CPU::OP_CB_0x3B;
-    prefixedInstructionTable[0x3C] = &CPU::OP_CB_0x3C;
-    prefixedInstructionTable[0x3D] = &CPU::OP_CB_0x3D;
-    prefixedInstructionTable[0x3E] = &CPU::OP_CB_0x3E;
-
-    //Bit opcodes
-    //BIT b,r //test bit
-    //Bit 0
-    prefixedInstructionTable[0x47] = &CPU::OP_CB_0x47;
-    prefixedInstructionTable[0x40] = &CPU::OP_CB_0x40;
-    prefixedInstructionTable[0x41] = &CPU::OP_CB_0x41;
-    prefixedInstructionTable[0x42] = &CPU::OP_CB_0x42;
-    prefixedInstructionTable[0x43] = &CPU::OP_CB_0x43;
-    prefixedInstructionTable[0x44] = &CPU::OP_CB_0x44;
-    prefixedInstructionTable[0x45] = &CPU::OP_CB_0x45;
-    prefixedInstructionTable[0x46] = &CPU::OP_CB_0x46;
-    prefixedInstructionTable[0x4F] = &CPU::OP_CB_0x4F;
-    prefixedInstructionTable[0x48] = &CPU::OP_CB_0x48;
-    prefixedInstructionTable[0x49] = &CPU::OP_CB_0x49;
-    prefixedInstructionTable[0x4A] = &CPU::OP_CB_0x4A;
-    prefixedInstructionTable[0x4B] = &CPU::OP_CB_0x4B;
-    prefixedInstructionTable[0x4C] = &CPU::OP_CB_0x4C;
-    prefixedInstructionTable[0x4D] = &CPU::OP_CB_0x4D;
-    prefixedInstructionTable[0x4E] = &CPU::OP_CB_0x4E;
-    prefixedInstructionTable[0x57] = &CPU::OP_CB_0x57;
-    prefixedInstructionTable[0x50] = &CPU::OP_CB_0x50;
-    prefixedInstructionTable[0x51] = &CPU::OP_CB_0x51;
-    prefixedInstructionTable[0x52] = &CPU::OP_CB_0x52;
-    prefixedInstructionTable[0x53] = &CPU::OP_CB_0x53;
-    prefixedInstructionTable[0x54] = &CPU::OP_CB_0x54;
-    prefixedInstructionTable[0x55] = &CPU::OP_CB_0x55;
-    prefixedInstructionTable[0x56] = &CPU::OP_CB_0x56;
-    prefixedInstructionTable[0x5F] = &CPU::OP_CB_0x5F;
-    prefixedInstructionTable[0x58] = &CPU::OP_CB_0x58;
-    prefixedInstructionTable[0x59] = &CPU::OP_CB_0x59;
-    prefixedInstructionTable[0x5A] = &CPU::OP_CB_0x5A;
-    prefixedInstructionTable[0x5B] = &CPU::OP_CB_0x5B;
-    prefixedInstructionTable[0x5C] = &CPU::OP_CB_0x5C;
-    prefixedInstructionTable[0x5D] = &CPU::OP_CB_0x5D;
-    prefixedInstructionTable[0x5E] = &CPU::OP_CB_0x5E;
-    prefixedInstructionTable[0x67] = &CPU::OP_CB_0x67;
-    prefixedInstructionTable[0x60] = &CPU::OP_CB_0x60;
-    prefixedInstructionTable[0x61] = &CPU::OP_CB_0x61;
-    prefixedInstructionTable[0x62] = &CPU::OP_CB_0x62;
-    prefixedInstructionTable[0x63] = &CPU::OP_CB_0x63;
-    prefixedInstructionTable[0x64] = &CPU::OP_CB_0x64;
-    prefixedInstructionTable[0x65] = &CPU::OP_CB_0x65;
-    prefixedInstructionTable[0x66] = &CPU::OP_CB_0x66;
-    prefixedInstructionTable[0x6F] = &CPU::OP_CB_0x6F;
-    prefixedInstructionTable[0x68] = &CPU::OP_CB_0x68;
-    prefixedInstructionTable[0x69] = &CPU::OP_CB_0x69;
-    prefixedInstructionTable[0x6A] = &CPU::OP_CB_0x6A;
-    prefixedInstructionTable[0x6B] = &CPU::OP_CB_0x6B;
-    prefixedInstructionTable[0x6C] = &CPU::OP_CB_0x6C;
-    prefixedInstructionTable[0x6D] = &CPU::OP_CB_0x6D;
-    prefixedInstructionTable[0x6E] = &CPU::OP_CB_0x6E;
-    prefixedInstructionTable[0x77] = &CPU::OP_CB_0x77;
-    prefixedInstructionTable[0x70] = &CPU::OP_CB_0x70;
-    prefixedInstructionTable[0x71] = &CPU::OP_CB_0x71;
-    prefixedInstructionTable[0x72] = &CPU::OP_CB_0x72;
-    prefixedInstructionTable[0x73] = &CPU::OP_CB_0x73;
-    prefixedInstructionTable[0x74] = &CPU::OP_CB_0x74;
-    prefixedInstructionTable[0x75] = &CPU::OP_CB_0x75;
-    prefixedInstructionTable[0x76] = &CPU::OP_CB_0x76;
-    prefixedInstructionTable[0x7F] = &CPU::OP_CB_0x7F;
-    prefixedInstructionTable[0x78] = &CPU::OP_CB_0x78;
-    prefixedInstructionTable[0x79] = &CPU::OP_CB_0x79;
-    prefixedInstructionTable[0x7A] = &CPU::OP_CB_0x7A;
-    prefixedInstructionTable[0x7B] = &CPU::OP_CB_0x7B;
-    prefixedInstructionTable[0x7C] = &CPU::OP_CB_0x7C;
-    prefixedInstructionTable[0x7D] = &CPU::OP_CB_0x7D;
-    prefixedInstructionTable[0x7E] = &CPU::OP_CB_0x7E;
+    for (byte_t i = 0; i < 0x8; ++i)
+    {
+        preCB0x40_FunctionTable[i] = &CPU::leftRotate;
+    }
+    for (byte_t i = 0x8; i < 0x10; ++i)
+    {
+        preCB0x40_FunctionTable[i] = &CPU::rightRotate;
+    }
+    for (byte_t i = 0x10; i < 0x18; ++i)
+    {
+        preCB0x40_FunctionTable[i] = &CPU::leftRotateWithCarry;
+    }
+    for (byte_t i = 0x18; i < 0x20; ++i)
+    {
+        preCB0x40_FunctionTable[i] = &CPU::rightRotateWithCarry;
+    }
+    for (byte_t i = 0x20; i < 0x28; ++i)
+    {
+        preCB0x40_FunctionTable[i] = &CPU::leftShift;
+    }
+    for (byte_t i = 0x28; i < 0x30; ++i)
+    {
+        preCB0x40_FunctionTable[i] = &CPU::rightShiftArithmetic;
+    }
+    for (byte_t i = 0x30; i < 0x38; ++i)
+    {
+        preCB0x40_FunctionTable[i] = &CPU::swapNibbles;
+    }
+    for (byte_t i = 0x38; i < 0x40; ++i)
+    {
+        preCB0x40_FunctionTable[i] = &CPU::rightShift;
+    }
+    for (byte_t i = 0x40; i < 0x80; ++i)
+    {
+        postCB0x40_FunctionTable[i-0x40] = &CPU::testBit_OP;
+    }
+    for (byte_t i = 0x80; i < 0xC0; ++i)
+    {
+        postCB0x40_FunctionTable[i-0x40] = &CPU::resetBit;
+    }
+    for (byte_t i = 0xC0; i >= 0xC0; ++i)
+    {
+        postCB0x40_FunctionTable[i-0x40] = &CPU::setBit;
+    }
 }
 
 int CPU::OP_NOT_IMPLEMTED()
@@ -478,6 +380,71 @@ int CPU::OP_NOT_IMPLEMTED()
     throw std::runtime_error("OPCODE NOT IMPLEMENTED!");
 }
 
+//Prefixed instructions
+byte_t& CPU::CBopcodeToRegister(byte_t opcode)
+{
+    switch(opcode & 0xFu)
+    {
+        case 0: case 8:
+        return m_Registers.b;
+        case 1: case 9:
+        return m_Registers.c; break;
+        case 2: case 10:
+        return m_Registers.d; break;
+        case 3: case 11:
+        return m_Registers.e; break;
+        case 4: case 12:
+        return m_Registers.h; break;
+        case 5: case 13:
+        return m_Registers.l; break;
+        case 7: case 15:
+        return m_Registers.a; break;
+        default: 
+            throw std::runtime_error("INVALID OPCODE used in CPU::CBopcodeToRegister");
+    }
+}
+
+int CPU::CBopcode_Translator(byte_t opcode)
+{
+    unsigned int regInt{ opcode & 0xFu }; 
+    bool usingHLI{ regInt != 6 and regInt != 14 };
+
+    if (opcode < 0x40)
+    {
+        if (!usingHLI)
+        {
+            byte_t& reg = CBopcodeToRegister(opcode);
+            ((*this).*(preCB0x40_FunctionTable[opcode-0x40]))(reg);
+            return 8;
+        }
+        else
+        {
+            byte_t HL{ m_Memory.readByte(m_Registers.get_hl()) };
+            ((*this).*(preCB0x40_FunctionTable[opcode-0x40]))(HL);
+            m_Memory.writeByte(m_Registers.get_hl(), HL);
+            return opcode < 0x80 ? 12 : 16;
+        }
+    }
+    else
+    {
+        int bit{ (opcode % 0x40) / 8 };
+        if (!usingHLI)
+        {
+            byte_t& reg = CBopcodeToRegister(opcode);
+            ((*this).*(postCB0x40_FunctionTable[opcode-0x40]))(reg, bit);
+            return 8;
+        }
+        else
+        {
+            byte_t HL{ m_Memory.readByte(m_Registers.get_hl()) };
+            ((*this).*(postCB0x40_FunctionTable[opcode-0x40]))(HL, bit);
+            m_Memory.writeByte(m_Registers.get_hl(), HL);
+            return opcode < 0x80 ? 12 : 16;
+        }
+    }
+}
+
+//Non prefixed Instructions
 //byte Loads
 //LD nn,n
 int CPU::OP_0x06()
@@ -1768,50 +1735,7 @@ int CPU::OP_0xFB()
     m_InteruptsEnabled = true;
     return 4;
 }
-//SWAP n
-int CPU::OP_CB_0x37()
-{
-    swapNibbles(m_Registers.a);
-    return 8;
-}
-int CPU::OP_CB_0x30()
-{
-    swapNibbles(m_Registers.b);
-    return 8;
-}
-int CPU::OP_CB_0x31()
-{
-    swapNibbles(m_Registers.c);
-    return 8;
-}
-int CPU::OP_CB_0x32()
-{
-    swapNibbles(m_Registers.d);
-    return 8;
-}
-int CPU::OP_CB_0x33()
-{
-    swapNibbles(m_Registers.e);
-    return 8;
-}
-int CPU::OP_CB_0x34()
-{
-    swapNibbles(m_Registers.h);
-    return 8;
-}
-int CPU::OP_CB_0x35()
-{
-    swapNibbles(m_Registers.l);
-    return 8;
-}
-int CPU::OP_CB_0x36()
-{
-    byte_t val{ m_Memory.readByte( m_Registers.get_hl()) };
-    swapNibbles(val);
-    m_Memory.writeByte(m_Registers.get_hl(), val);
-    return 16;
-}
-//Roates & Shifts
+//Rotates and shifts
 //RLCA
 int CPU::OP_0x07()
 {
@@ -1821,7 +1745,7 @@ int CPU::OP_0x07()
 //RLA
 int CPU::OP_0x17()
 {
-    leftRotate(m_Registers.a, true);
+    leftRotateWithCarry(m_Registers.a);
     return 4;
 }
 //RRCA
@@ -1833,637 +1757,68 @@ int CPU::OP_0x0F()
 //RRA
 int CPU::OP_0x1F()
 {
-    rightRotate(m_Registers.a, true);
+    rightRotateWithCarry(m_Registers.a);
     return 4;
 }
-//RLC n
-int CPU::OP_CB_0x07()
-{
-    leftRotate(m_Registers.a);
-    return 8;
-}
-int CPU::OP_CB_0x00()
-{
-    leftRotate(m_Registers.b);
-    return 8;
-}
-int CPU::OP_CB_0x01()
-{
-    leftRotate(m_Registers.c);
-    return 8;
-}
-int CPU::OP_CB_0x02()
-{
-    leftRotate(m_Registers.d);
-    return 8;
-}
-int CPU::OP_CB_0x03()
-{
-    leftRotate(m_Registers.e);
-    return 8;
-}
-int CPU::OP_CB_0x04()
-{
-    leftRotate(m_Registers.h);
-    return 8;
-}
-int CPU::OP_CB_0x05()
-{
-    leftRotate(m_Registers.l);
-    return 8;
-}
-int CPU::OP_CB_0x06()
-{
-    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
-    leftRotate(HL);
-    m_Memory.writeByte(m_Registers.get_hl(), HL);
-    return 16;
-}
-//RL n
-int CPU::OP_CB_0x17()
-{
-    leftRotate(m_Registers.a, true);
-    return 8;
-}
-int CPU::OP_CB_0x10()
-{
-    leftRotate(m_Registers.b, true);
-    return 8;
-}
-int CPU::OP_CB_0x11()
-{
-    leftRotate(m_Registers.c, true);
-    return 8;
-}
-int CPU::OP_CB_0x12()
-{
-    leftRotate(m_Registers.d, true);
-    return 8;
-}
-int CPU::OP_CB_0x13()
-{
-    leftRotate(m_Registers.e, true);
-    return 8;
-}
-int CPU::OP_CB_0x14()
-{
-    leftRotate(m_Registers.h, true);
-    return 8;
-}
-int CPU::OP_CB_0x15()
-{
-    leftRotate(m_Registers.l, true);
-    return 8;
-}
-int CPU::OP_CB_0x16()
-{
-    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
-    leftRotate(HL, true);
-    m_Memory.writeByte(m_Registers.get_hl(), HL);
-    return 16;
-}
-//RRC n
-int CPU::OP_CB_0x0F()
-{
-    rightRotate(m_Registers.a);
-    return 8;
-}
-int CPU::OP_CB_0x08()
-{
-    rightRotate(m_Registers.b);
-    return 8;
-}
-int CPU::OP_CB_0x09()
-{
-    rightRotate(m_Registers.c);
-    return 8;
-}
-int CPU::OP_CB_0x0A()
-{
-    rightRotate(m_Registers.d);
-    return 8;
-}
-int CPU::OP_CB_0x0B()
-{
-    rightRotate(m_Registers.e);
-    return 8;
-}
-int CPU::OP_CB_0x0C()
-{
-    rightRotate(m_Registers.h);
-    return 8;
-}
-int CPU::OP_CB_0x0D()
-{
-    rightRotate(m_Registers.l);
-    return 8;
-}
-int CPU::OP_CB_0x0E()
-{
-    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
-    rightRotate(HL);
-    m_Memory.writeByte(m_Registers.get_hl(), HL);
-    return 16;
-}
-//RR n
-int CPU::OP_CB_0x1F()
-{
-    rightRotate(m_Registers.a, true);
-    return 8;
-}
-int CPU::OP_CB_0x18()
-{
-    rightRotate(m_Registers.b, true);
-    return 8;
-}
-int CPU::OP_CB_0x19()
-{
-    rightRotate(m_Registers.c, true);
-    return 8;
-}
-int CPU::OP_CB_0x1A()
-{
-    rightRotate(m_Registers.d, true);
-    return 8;
-}
-int CPU::OP_CB_0x1B()
-{
-    rightRotate(m_Registers.e, true);
-    return 8;
-}
-int CPU::OP_CB_0x1C()
-{
-    rightRotate(m_Registers.h, true);
-    return 8;
-}
-int CPU::OP_CB_0x1D()
-{
-    rightRotate(m_Registers.l, true);
-    return 8;
-}
-int CPU::OP_CB_0x1E()
-{
-    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
-    rightRotate(HL, true);
-    m_Memory.writeByte(m_Registers.get_hl(), HL);
-    return 16;
-}
-//SLA n
-int CPU::OP_CB_0x27()
-{
-    leftShift(m_Registers.a);
-    return  8;
-}
-int CPU::OP_CB_0x20()
-{
-    leftShift(m_Registers.b);
-    return  8;
-}
-int CPU::OP_CB_0x21()
-{
-    leftShift(m_Registers.c);
-    return  8;
-}
-int CPU::OP_CB_0x22()
-{
-    leftShift(m_Registers.d);
-    return  8;
-}
-int CPU::OP_CB_0x23()
-{
-    leftShift(m_Registers.e);
-    return  8;
-}
-int CPU::OP_CB_0x24()
-{
-    leftShift(m_Registers.h);
-    return  8;
-}
-int CPU::OP_CB_0x25()
-{
-    leftShift(m_Registers.l);
-    return  8;
-}
-int CPU::OP_CB_0x26()
-{
-    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
-    leftShift(HL);
-    m_Memory.writeByte(m_Registers.get_hl(), HL);
-    return 16;
-}
-//SRA n arithmetic
-int CPU::OP_CB_0x2F()
-{
-    rightShift(m_Registers.a, true);
-    return 8;
-}
-int CPU::OP_CB_0x28()
-{
-    rightShift(m_Registers.b, true);
-    return 8;
-}
-int CPU::OP_CB_0x29()
-{
-    rightShift(m_Registers.c, true);
-    return 8;
-}
-int CPU::OP_CB_0x2A()
-{
-    rightShift(m_Registers.d, true);
-    return 8;
-}
-int CPU::OP_CB_0x2B()
-{
-    rightShift(m_Registers.e, true);
-    return 8;
-}
-int CPU::OP_CB_0x2C()
-{
-    rightShift(m_Registers.h, true);
-    return 8;
-}
-int CPU::OP_CB_0x2D()
-{
-    rightShift(m_Registers.l, true);
-    return 8;
-}
-int CPU::OP_CB_0x2E()
-{
-    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
-    rightShift(HL, true);
-    m_Memory.writeByte(m_Registers.get_hl(), HL);
-    return 16;
-}
-//SRL n
-int CPU::OP_CB_0x3F()
-{
-    rightShift(m_Registers.a);
-    return 8;
-}
-int CPU::OP_CB_0x38()
-{
-    rightShift(m_Registers.b);
-    return 8;
-}
-int CPU::OP_CB_0x39()
-{
-    rightShift(m_Registers.c);
-    return 8;
-}
-int CPU::OP_CB_0x3A()
-{
-    rightShift(m_Registers.d);
-    return 8;
-}
-int CPU::OP_CB_0x3B()
-{
-    rightShift(m_Registers.e);
-    return 8;
-}
-int CPU::OP_CB_0x3C()
-{
-    rightShift(m_Registers.h);
-    return 8;
-}
-int CPU::OP_CB_0x3D()
-{
-    rightShift(m_Registers.l);
-    return 8;
-}
-int CPU::OP_CB_0x3E()
-{
-    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
-    rightShift(HL);
-    m_Memory.writeByte(m_Registers.get_hl(), HL);
-    return 16;
-}
-//Bit opcodes
-//BIT b,r //test bit
-//Bit 0
-int CPU::OP_CB_0x47()
-{
-    testBit_OP(m_Registers.a,0);
-    return 8;
-}
-int CPU::OP_CB_0x40()
-{
-    testBit_OP(m_Registers.b,0);
-    return 8;
-}
-int CPU::OP_CB_0x41()
-{
-    testBit_OP(m_Registers.c,0);
-    return 8;
-}
-int CPU::OP_CB_0x42()
-{
-    testBit_OP(m_Registers.d,0);
-    return 8;
-}
-int CPU::OP_CB_0x43()
-{
-    testBit_OP(m_Registers.e,0);
-    return 8;
-}
-int CPU::OP_CB_0x44()
-{
-    testBit_OP(m_Registers.h,0);
-    return 8;
-}
-int CPU::OP_CB_0x45()
-{
-    testBit_OP(m_Registers.l,0);
-    return 8;
-}
-int CPU::OP_CB_0x46()
-{
-    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),0);
-    return 16;
-}
-//Bit 1
-int CPU::OP_CB_0x4F()
-{
-    testBit_OP(m_Registers.a,1);
-    return 8;
-}
-int CPU::OP_CB_0x48()
-{
-    testBit_OP(m_Registers.b,1);
-    return 8;
-}
-int CPU::OP_CB_0x49()
-{
-    testBit_OP(m_Registers.c,1);
-    return 8;
-}
-int CPU::OP_CB_0x4A()
-{
-    testBit_OP(m_Registers.d,1);
-    return 8;
-}
-int CPU::OP_CB_0x4B()
-{
-    testBit_OP(m_Registers.e,1);
-    return 8;
-}
-int CPU::OP_CB_0x4C()
-{
-    testBit_OP(m_Registers.h,1);
-    return 8;
-}
-int CPU::OP_CB_0x4D()
-{
-    testBit_OP(m_Registers.l,1);
-    return 8;
-}
-int CPU::OP_CB_0x4E()
-{
-    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),1);
-    return 16;
-}
-//Bit 2
-int CPU::OP_CB_0x57()
-{
-    testBit_OP(m_Registers.a,2);
-    return 8;
-}
-int CPU::OP_CB_0x50()
-{
-    testBit_OP(m_Registers.b,2);
-    return 8;
-}
-int CPU::OP_CB_0x51()
-{
-    testBit_OP(m_Registers.c,2);
-    return 8;
-}
-int CPU::OP_CB_0x52()
-{
-    testBit_OP(m_Registers.d,2);
-    return 8;
-}
-int CPU::OP_CB_0x53()
-{
-    testBit_OP(m_Registers.e,2);
-    return 8;
-}
-int CPU::OP_CB_0x54()
-{
-    testBit_OP(m_Registers.h,2);
-    return 8;
-}
-int CPU::OP_CB_0x55()
-{
-    testBit_OP(m_Registers.l,2);
-    return 8;
-}
-int CPU::OP_CB_0x56()
-{
-    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),2);
-    return 16;
-}
-//Bit 3
-int CPU::OP_CB_0x5F()
-{
-    testBit_OP(m_Registers.a,3);
-    return 8;
-}
-int CPU::OP_CB_0x58()
-{
-    testBit_OP(m_Registers.b,3);
-    return 8;
-}
-int CPU::OP_CB_0x59()
-{
-    testBit_OP(m_Registers.c,3);
-    return 8;
-}
-int CPU::OP_CB_0x5A()
-{
-    testBit_OP(m_Registers.d,3);
-    return 8;
-}
-int CPU::OP_CB_0x5B()
-{
-    testBit_OP(m_Registers.e,3);
-    return 8;
-}
-int CPU::OP_CB_0x5C()
-{
-    testBit_OP(m_Registers.h,3);
-    return 8;
-}
-int CPU::OP_CB_0x5D()
-{
-    testBit_OP(m_Registers.l,3);
-    return 8;
-}
-int CPU::OP_CB_0x5E()
-{
-    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),3);
-    return 16;
-}
-//Bit 4
-int CPU::OP_CB_0x67()
-{
-    testBit_OP(m_Registers.a,4);
-    return 8;
-}
-int CPU::OP_CB_0x60()
-{
-    testBit_OP(m_Registers.b,4);
-    return 8;
-}
-int CPU::OP_CB_0x61()
-{
-    testBit_OP(m_Registers.c,4);
-    return 8;
-}
-int CPU::OP_CB_0x62()
-{
-    testBit_OP(m_Registers.d,4);
-    return 8;
-}
-int CPU::OP_CB_0x63()
-{
-    testBit_OP(m_Registers.e,4);
-    return 8;
-}
-int CPU::OP_CB_0x64()
-{
-    testBit_OP(m_Registers.h,4);
-    return 8;
-}
-int CPU::OP_CB_0x65()
-{
-    testBit_OP(m_Registers.l,4);
-    return 8;
-}
-int CPU::OP_CB_0x66()
-{
-    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),4);
-    return 16;
-}
-//Bit 5
-int CPU::OP_CB_0x6F()
-{
-    testBit_OP(m_Registers.a,5);
-    return 8;
-}
-int CPU::OP_CB_0x68()
-{
-    testBit_OP(m_Registers.b,5);
-    return 8;
-}
-int CPU::OP_CB_0x69()
-{
-    testBit_OP(m_Registers.c,5);
-    return 8;
-}
-int CPU::OP_CB_0x6A()
-{
-    testBit_OP(m_Registers.d,5);
-    return 8;
-}
-int CPU::OP_CB_0x6B()
-{
-    testBit_OP(m_Registers.e,5);
-    return 8;
-}
-int CPU::OP_CB_0x6C()
-{
-    testBit_OP(m_Registers.h,5);
-    return 8;
-}
-int CPU::OP_CB_0x6D()
-{
-    testBit_OP(m_Registers.l,5);
-    return 8;
-}
-int CPU::OP_CB_0x6E()
-{
-    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),5);
-    return 16;
-}
-//Bit 6
-int CPU::OP_CB_0x77()
-{
-    testBit_OP(m_Registers.a,6);
-    return 8;
-}
-int CPU::OP_CB_0x70()
-{
-    testBit_OP(m_Registers.b,6);
-    return 8;
-}
-int CPU::OP_CB_0x71()
-{
-    testBit_OP(m_Registers.c,6);
-    return 8;
-}
-int CPU::OP_CB_0x72()
-{
-    testBit_OP(m_Registers.d,6);
-    return 8;
-}
-int CPU::OP_CB_0x73()
-{
-    testBit_OP(m_Registers.e,6);
-    return 8;
-}
-int CPU::OP_CB_0x74()
-{
-    testBit_OP(m_Registers.h,6);
-    return 8;
-}
-int CPU::OP_CB_0x75()
-{
-    testBit_OP(m_Registers.l,6);
-    return 8;
-}
-int CPU::OP_CB_0x76()
-{
-    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),6);
-    return 16;
-}
-//Bit 7
-int CPU::OP_CB_0x7F()
-{
-    testBit_OP(m_Registers.a,7);
-    return 8;
-}
-int CPU::OP_CB_0x78()
-{
-    testBit_OP(m_Registers.b,7);
-    return 8;
-}
-int CPU::OP_CB_0x79()
-{
-    testBit_OP(m_Registers.c,7);
-    return 8;
-}
-int CPU::OP_CB_0x7A()
-{
-    testBit_OP(m_Registers.d,7);
-    return 8;
-}
-int CPU::OP_CB_0x7B()
-{
-    testBit_OP(m_Registers.e,7);
-    return 8;
-}
-int CPU::OP_CB_0x7C()
-{
-    testBit_OP(m_Registers.h,7);
-    return 8;
-}
-int CPU::OP_CB_0x7D()
-{
-    testBit_OP(m_Registers.l,7);
-    return 8;
-}
-int CPU::OP_CB_0x7E()
-{
-    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),7);
-    return 16;
-}
+
+// //Bit opcodes
+// int CPU::testBit_Translator(byte_t opcode)
+// {
+//     byte_t start{ 0x40 };
+//     int bit{ (opcode - start) / 8 };
+//     unsigned int regInt{ opcode & 0xFu }; 
+
+//     if (regInt != 6 and regInt != 14) // otherwise (HL)
+//     {
+//         byte_t& reg = CBopcodeToRegister(opcode);
+//         testBit_OP(reg, bit);
+//         return 8;
+//     }
+//     else
+//     {
+//         byte_t HL{ m_Memory.readByte(m_Registers.get_hl()) };
+//         testBit_OP(HL, bit);
+//         m_Memory.writeByte(m_Registers.get_hl(), HL);
+//         return 16;
+//     }
+// }
+// int CPU::resetBit_Translator(byte_t opcode)
+// {
+//     byte_t start{ 0x80 };
+//     int bit{ (opcode - start) / 8 };
+//     unsigned int regInt{ opcode & 0xFu }; 
+
+//     if (regInt != 6 and regInt != 14) // otherwise (HL)
+//     {
+//         byte_t& reg = CBopcodeToRegister(opcode);
+//         resetBit(reg, bit);
+//         return 8;
+//     }
+//     else
+//     {
+//         byte_t HL{ m_Memory.readByte(m_Registers.get_hl()) };
+//         resetBit(HL, bit);
+//         m_Memory.writeByte(m_Registers.get_hl(), HL);
+//         return 16;
+//     }
+// }
+// int CPU::setBit_Translator(byte_t opcode)
+// {
+//     byte_t start{ 0xC0 };
+//     int bit{ (opcode - start) / 8 };
+//     unsigned int regInt{ opcode & 0xFu }; 
+
+//     if (regInt != 6 and regInt != 14) // otherwise (HL)
+//     {
+//         byte_t& reg = CBopcodeToRegister(opcode);
+//         setBit(reg, bit);
+//         return 8;
+//     }
+//     else
+//     {
+//         byte_t HL{ m_Memory.readByte(m_Registers.get_hl()) };
+//         setBit(HL, bit);
+//         m_Memory.writeByte(m_Registers.get_hl(), HL);
+//         return 16;
+//     }
+// }
