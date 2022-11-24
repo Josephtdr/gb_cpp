@@ -1,7 +1,15 @@
 #include "cpu.h"
 
+#include <stdexcept>
+
 void CPU::setupTables()
 {
+    for(byte_t i = 0; i < c_INSTRUCTION_TABLE_SIZE; ++i)
+    {
+        instructionTable[i] = &CPU::OP_NOT_IMPLEMTED;
+        prefixedInstructionTable[i] = &CPU::OP_NOT_IMPLEMTED;
+    }
+
     //LD nn,n
     instructionTable[0x06] = &CPU::OP_0x06;
     instructionTable[0x0E] = &CPU::OP_0x0E;
@@ -311,10 +319,25 @@ void CPU::setupTables()
     instructionTable[0xF3] = &CPU::OP_0xF3;
     //EI enable interupts
     instructionTable[0xFB] = &CPU::OP_0xFB;
+    //Roates & Shifts
+    //RLCA
+    instructionTable[0x07] = &CPU::OP_0x07;
+    //RLA
+    instructionTable[0x17] = &CPU::OP_0x17;
+    //RRCA
+    instructionTable[0x0F] = &CPU::OP_0x0F;
+    //RRA
+    instructionTable[0x1F] = &CPU::OP_0x1F;
+
     //Prefix Instruction
     // instructionTable[0xCB] = &CPU::OP_0xCB;
     
     // prefixedInstructionTable[] = 
+}
+
+int CPU::OP_NOT_IMPLEMTED()
+{
+    throw std::runtime_error("OPCODE NOT IMPLEMENTED!");
 }
 
 //byte Loads
@@ -1974,5 +1997,335 @@ int CPU::OP_CB_0x3E()
     byte_t HL = m_Memory.readByte(m_Registers.get_hl());
     rightShift(HL);
     m_Memory.writeByte(m_Registers.get_hl(), HL);
+    return 16;
+}
+//Bit opcodes
+//BIT b,r //test bit
+//Bit 0
+int CPU::OP_CB_0x47()
+{
+    testBit_OP(m_Registers.a,0);
+    return 8;
+}
+int CPU::OP_CB_0x40()
+{
+    testBit_OP(m_Registers.b,0);
+    return 8;
+}
+int CPU::OP_CB_0x41()
+{
+    testBit_OP(m_Registers.c,0);
+    return 8;
+}
+int CPU::OP_CB_0x42()
+{
+    testBit_OP(m_Registers.d,0);
+    return 8;
+}
+int CPU::OP_CB_0x43()
+{
+    testBit_OP(m_Registers.e,0);
+    return 8;
+}
+int CPU::OP_CB_0x44()
+{
+    testBit_OP(m_Registers.h,0);
+    return 8;
+}
+int CPU::OP_CB_0x45()
+{
+    testBit_OP(m_Registers.l,0);
+    return 8;
+}
+int CPU::OP_CB_0x46()
+{
+    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),0);
+    return 16;
+}
+//Bit 1
+int CPU::OP_CB_0x4F()
+{
+    testBit_OP(m_Registers.a,1);
+    return 8;
+}
+int CPU::OP_CB_0x48()
+{
+    testBit_OP(m_Registers.b,1);
+    return 8;
+}
+int CPU::OP_CB_0x49()
+{
+    testBit_OP(m_Registers.c,1);
+    return 8;
+}
+int CPU::OP_CB_0x4A()
+{
+    testBit_OP(m_Registers.d,1);
+    return 8;
+}
+int CPU::OP_CB_0x4B()
+{
+    testBit_OP(m_Registers.e,1);
+    return 8;
+}
+int CPU::OP_CB_0x4C()
+{
+    testBit_OP(m_Registers.h,1);
+    return 8;
+}
+int CPU::OP_CB_0x4D()
+{
+    testBit_OP(m_Registers.l,1);
+    return 8;
+}
+int CPU::OP_CB_0x4E()
+{
+    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),1);
+    return 16;
+}
+//Bit 2
+int CPU::OP_CB_0x57()
+{
+    testBit_OP(m_Registers.a,2);
+    return 8;
+}
+int CPU::OP_CB_0x50()
+{
+    testBit_OP(m_Registers.b,2);
+    return 8;
+}
+int CPU::OP_CB_0x51()
+{
+    testBit_OP(m_Registers.c,2);
+    return 8;
+}
+int CPU::OP_CB_0x52()
+{
+    testBit_OP(m_Registers.d,2);
+    return 8;
+}
+int CPU::OP_CB_0x53()
+{
+    testBit_OP(m_Registers.e,2);
+    return 8;
+}
+int CPU::OP_CB_0x54()
+{
+    testBit_OP(m_Registers.h,2);
+    return 8;
+}
+int CPU::OP_CB_0x55()
+{
+    testBit_OP(m_Registers.l,2);
+    return 8;
+}
+int CPU::OP_CB_0x56()
+{
+    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),2);
+    return 16;
+}
+//Bit 3
+int CPU::OP_CB_0x5F()
+{
+    testBit_OP(m_Registers.a,3);
+    return 8;
+}
+int CPU::OP_CB_0x58()
+{
+    testBit_OP(m_Registers.b,3);
+    return 8;
+}
+int CPU::OP_CB_0x59()
+{
+    testBit_OP(m_Registers.c,3);
+    return 8;
+}
+int CPU::OP_CB_0x5A()
+{
+    testBit_OP(m_Registers.d,3);
+    return 8;
+}
+int CPU::OP_CB_0x5B()
+{
+    testBit_OP(m_Registers.e,3);
+    return 8;
+}
+int CPU::OP_CB_0x5C()
+{
+    testBit_OP(m_Registers.h,3);
+    return 8;
+}
+int CPU::OP_CB_0x5D()
+{
+    testBit_OP(m_Registers.l,3);
+    return 8;
+}
+int CPU::OP_CB_0x5E()
+{
+    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),3);
+    return 16;
+}
+//Bit 4
+int CPU::OP_CB_0x67()
+{
+    testBit_OP(m_Registers.a,4);
+    return 8;
+}
+int CPU::OP_CB_0x60()
+{
+    testBit_OP(m_Registers.b,4);
+    return 8;
+}
+int CPU::OP_CB_0x61()
+{
+    testBit_OP(m_Registers.c,4);
+    return 8;
+}
+int CPU::OP_CB_0x62()
+{
+    testBit_OP(m_Registers.d,4);
+    return 8;
+}
+int CPU::OP_CB_0x63()
+{
+    testBit_OP(m_Registers.e,4);
+    return 8;
+}
+int CPU::OP_CB_0x64()
+{
+    testBit_OP(m_Registers.h,4);
+    return 8;
+}
+int CPU::OP_CB_0x65()
+{
+    testBit_OP(m_Registers.l,4);
+    return 8;
+}
+int CPU::OP_CB_0x66()
+{
+    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),4);
+    return 16;
+}
+//Bit 5
+int CPU::OP_CB_0x6F()
+{
+    testBit_OP(m_Registers.a,5);
+    return 8;
+}
+int CPU::OP_CB_0x68()
+{
+    testBit_OP(m_Registers.b,5);
+    return 8;
+}
+int CPU::OP_CB_0x69()
+{
+    testBit_OP(m_Registers.c,5);
+    return 8;
+}
+int CPU::OP_CB_0x6A()
+{
+    testBit_OP(m_Registers.d,5);
+    return 8;
+}
+int CPU::OP_CB_0x6B()
+{
+    testBit_OP(m_Registers.e,5);
+    return 8;
+}
+int CPU::OP_CB_0x6C()
+{
+    testBit_OP(m_Registers.h,5);
+    return 8;
+}
+int CPU::OP_CB_0x6D()
+{
+    testBit_OP(m_Registers.l,5);
+    return 8;
+}
+int CPU::OP_CB_0x6E()
+{
+    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),5);
+    return 16;
+}
+//Bit 6
+int CPU::OP_CB_0x77()
+{
+    testBit_OP(m_Registers.a,6);
+    return 8;
+}
+int CPU::OP_CB_0x70()
+{
+    testBit_OP(m_Registers.b,6);
+    return 8;
+}
+int CPU::OP_CB_0x71()
+{
+    testBit_OP(m_Registers.c,6);
+    return 8;
+}
+int CPU::OP_CB_0x72()
+{
+    testBit_OP(m_Registers.d,6);
+    return 8;
+}
+int CPU::OP_CB_0x73()
+{
+    testBit_OP(m_Registers.e,6);
+    return 8;
+}
+int CPU::OP_CB_0x74()
+{
+    testBit_OP(m_Registers.h,6);
+    return 8;
+}
+int CPU::OP_CB_0x75()
+{
+    testBit_OP(m_Registers.l,6);
+    return 8;
+}
+int CPU::OP_CB_0x76()
+{
+    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),6);
+    return 16;
+}
+//Bit 7
+int CPU::OP_CB_0x7F()
+{
+    testBit_OP(m_Registers.a,7);
+    return 8;
+}
+int CPU::OP_CB_0x78()
+{
+    testBit_OP(m_Registers.b,7);
+    return 8;
+}
+int CPU::OP_CB_0x79()
+{
+    testBit_OP(m_Registers.c,7);
+    return 8;
+}
+int CPU::OP_CB_0x7A()
+{
+    testBit_OP(m_Registers.d,7);
+    return 8;
+}
+int CPU::OP_CB_0x7B()
+{
+    testBit_OP(m_Registers.e,7);
+    return 8;
+}
+int CPU::OP_CB_0x7C()
+{
+    testBit_OP(m_Registers.h,7);
+    return 8;
+}
+int CPU::OP_CB_0x7D()
+{
+    testBit_OP(m_Registers.l,7);
+    return 8;
+}
+int CPU::OP_CB_0x7E()
+{
+    testBit_OP(m_Memory.readByte(m_Registers.get_hl()),7);
     return 16;
 }

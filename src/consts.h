@@ -2,7 +2,7 @@
 #define H_CONSTS
 
 #include <cstdint>
-#include <array>
+#include <string>
 
 using byte_t = uint8_t;
 using word_t = uint16_t;
@@ -33,7 +33,7 @@ const unsigned int c_LCD_INTERUPT = 0x48;
 const unsigned int c_TIMER_INTERUPT = 0x50;
 const unsigned int c_JOYPAD_INTERUPT = 0x60;
 
-const char* c_BOOT_ROM_LOCATION = "./../roms/DMG_ROM.bin";
+const std::string c_BOOT_ROM_LOCATION = "/home/randa/Documents/emulation/gb_cpp/roms/DMG_ROM.bin";
 const int c_BOOT_ROM_SIZE = 256;
 
 #endif

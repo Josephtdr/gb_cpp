@@ -25,7 +25,8 @@ private:
 public:
     CPU();
     void frameUpdate();
-    
+    void loadGame(const char* fileName);
+
 private:
     int cycle();
     int execute(byte_t instructionByte, bool prefixed);
@@ -106,6 +107,7 @@ private:
     void wordAdd(word_t& reg, const word_t& addValue);
 
     //Opcodes
+    int OP_NOT_IMPLEMTED();
     //byte Loads
     //LD nn,n
     int OP_0x06();
@@ -506,6 +508,82 @@ private:
     int OP_CB_0x3C();
     int OP_CB_0x3D();
     int OP_CB_0x3E();
+
+    //Bit opcodes
+    //BIT b,r //test bit
+    //Bit 0
+    int OP_CB_0x47();
+    int OP_CB_0x40();
+    int OP_CB_0x41();
+    int OP_CB_0x42();
+    int OP_CB_0x43();
+    int OP_CB_0x44();
+    int OP_CB_0x45();
+    int OP_CB_0x46();
+    //Bit 1
+    int OP_CB_0x4F();
+    int OP_CB_0x48();
+    int OP_CB_0x49();
+    int OP_CB_0x4A();
+    int OP_CB_0x4B();
+    int OP_CB_0x4C();
+    int OP_CB_0x4D();
+    int OP_CB_0x4E();
+    //Bit 2
+    int OP_CB_0x57();
+    int OP_CB_0x50();
+    int OP_CB_0x51();
+    int OP_CB_0x52();
+    int OP_CB_0x53();
+    int OP_CB_0x54();
+    int OP_CB_0x55();
+    int OP_CB_0x56();
+    //Bit 3
+    int OP_CB_0x5F();
+    int OP_CB_0x58();
+    int OP_CB_0x59();
+    int OP_CB_0x5A();
+    int OP_CB_0x5B();
+    int OP_CB_0x5C();
+    int OP_CB_0x5D();
+    int OP_CB_0x5E();
+    //Bit 4
+    int OP_CB_0x67();
+    int OP_CB_0x60();
+    int OP_CB_0x61();
+    int OP_CB_0x62();
+    int OP_CB_0x63();
+    int OP_CB_0x64();
+    int OP_CB_0x65();
+    int OP_CB_0x66();
+    //Bit 5
+    int OP_CB_0x6F();
+    int OP_CB_0x68();
+    int OP_CB_0x69();
+    int OP_CB_0x6A();
+    int OP_CB_0x6B();
+    int OP_CB_0x6C();
+    int OP_CB_0x6D();
+    int OP_CB_0x6E();
+    //Bit 6
+    int OP_CB_0x77();
+    int OP_CB_0x70();
+    int OP_CB_0x71();
+    int OP_CB_0x72();
+    int OP_CB_0x73();
+    int OP_CB_0x74();
+    int OP_CB_0x75();
+    int OP_CB_0x76();
+    //Bit 7
+    int OP_CB_0x7F();
+    int OP_CB_0x78();
+    int OP_CB_0x79();
+    int OP_CB_0x7A();
+    int OP_CB_0x7B();
+    int OP_CB_0x7C();
+    int OP_CB_0x7D();
+    int OP_CB_0x7E();
+
 };
 
 

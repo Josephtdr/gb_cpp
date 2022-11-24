@@ -1,7 +1,7 @@
 #include "memoryBus.h"
 
 #include <stdexcept> // for std::runtime_error
-#include<cstring> //memset, 
+#include <cstring> //memset, 
 #include <fstream> //streams
 #include <iostream>
 
@@ -148,6 +148,7 @@ void MemoryBus::loadGame(const char* filename)
     fclose(in); 
 
     getRomBankingMode();
+    loadBootRom();
 }
 
 void MemoryBus::loadBootRom()
@@ -157,7 +158,7 @@ void MemoryBus::loadBootRom()
     char* buffer = new char[c_BOOT_ROM_SIZE];
 
     FILE *in;
-    in = fopen( c_BOOT_ROM_LOCATION, "rb" );
+    in = fopen( c_BOOT_ROM_LOCATION.c_str(), "rb" );
     fread(buffer, 1, c_BOOT_ROM_SIZE, in);
     fclose(in); 
 
@@ -172,6 +173,7 @@ void MemoryBus::loadBootRom()
 
 void MemoryBus::unloadBootRom()
 {
+    std::cout << "Unloading boot rom!" << "\n";
     m_bootRomLoaded = false;
 }
 

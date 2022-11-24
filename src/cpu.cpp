@@ -1,7 +1,10 @@
 #include "cpu.h"
 
+#include <iostream> 
+#include <stdexcept>
+
 CPU::CPU()
- : m_PC{ c_INITIAL_PC_VALUE }, m_SP{ c_TOP_OF_STACK }
+ : m_PC{0}, m_SP{ c_TOP_OF_STACK }
 {
     m_Registers.set_af(0x01B0);
     m_Registers.set_bc(0x0013);
@@ -50,10 +53,34 @@ int CPU::execute(byte_t instructionByte, bool prefixed)
     //logging here
     // "0x{:x} ", instructionByte
     // "CB 0x{:x} ", instructionByte if prefixed
+    //Temp cout logging
     if (!prefixed)
-        { return ((*this).*(instructionTable[instructionByte]))(); }
+    {
+        std::cout << "Running opcode 0x" << std::hex << +instructionByte << " \n"; 
+    }
     else
-        { return ((*this).*(prefixedInstructionTable[instructionByte]))(); }
+    {
+        std::cout << "Running opcode CB 0x" << std::hex << +instructionByte << " \n"; 
+    }
+
+    try 
+    {
+        if (!prefixed)
+            { return ((*this).*(instructionTable[instructionByte]))(); }
+        else
+            { return ((*this).*(prefixedInstructionTable[instructionByte]))(); }
+
+    }
+    catch (std::runtime_error e)
+    {
+        std::cout << e.what() << "\n";
+        std::exit(EXIT_FAILURE);
+    }
+}
+
+void CPU::loadGame(const char* fileName)
+{
+    m_Memory.loadGame(fileName);
 }
 
 void CPU::updateTimers(int cycles)

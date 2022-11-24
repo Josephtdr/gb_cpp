@@ -35,8 +35,8 @@ void CPU::halt()
  */
 void CPU::swapNibbles(byte_t& reg)
 {
-    byte_t lsn{ reg & 0xFu };
-    byte_t msn{ reg >> 4 };
+    byte_t lsn{ static_cast<byte_t>(reg & 0xFu) };
+    byte_t msn{ static_cast<byte_t>(reg >> 4) };
 
     reg = ((lsn << 4) | msn); 
 
@@ -107,7 +107,7 @@ void CPU::resetBit(byte_t& byte, int bit)
 void CPU::leftRotate(byte_t& byte, bool withCarry)
 {
     byte_t carry{ m_Registers.f.carry };
-    byte_t oldBit7{ (byte & 0b10000000) >> 7 };
+    byte_t oldBit7{ static_cast<byte_t>(byte >> 7) };
 
     if (withCarry)
     {
@@ -137,7 +137,7 @@ void CPU::leftRotate(byte_t& byte, bool withCarry)
 void CPU::rightRotate(byte_t& byte, bool withCarry)
 {
     byte_t carry{ m_Registers.f.carry };
-    byte_t oldBit0{ (byte & 0b1) };
+    byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
 
     if (withCarry)
     {
@@ -157,7 +157,7 @@ void CPU::rightRotate(byte_t& byte, bool withCarry)
 
 void CPU::leftShift(byte_t& byte)
 {
-    byte_t oldBit7{ (byte & 0b10000000) >> 7 };
+    byte_t oldBit7{ static_cast<byte_t>(byte >> 7) };
 
     m_Registers.f.carry = oldBit7;
     byte <<= 1;
@@ -168,8 +168,8 @@ void CPU::leftShift(byte_t& byte)
 }
 void CPU::rightShift(byte_t& byte, bool arithmeticShift)
 {
-    byte_t oldBit0{ (byte & 0b1) };
-    byte_t oldBit7{ (byte & 0b10000000) };
+    byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
+    byte_t oldBit7{ static_cast<byte_t>(byte & 0b10000000) };
 
     m_Registers.f.carry = oldBit0;
     byte >>= 1;
@@ -186,8 +186,8 @@ void CPU::rightShift(byte_t& byte, bool arithmeticShift)
 
 void CPU::checkDAA(byte_t& byte)
 {
-    byte_t lowerNibble{ byte & 0xFu };
-    byte_t upperNibble{ (byte & 0xF0u) >> 4 };
+    byte_t lowerNibble{ static_cast<byte_t>(byte & 0xFu) };
+    byte_t upperNibble{ static_cast<byte_t>(byte >> 4) };
     
     if (lowerNibble > 9u)
     {
@@ -616,4 +616,3 @@ void CPU::wordAdd(word_t& reg, const word_t& addValue)
     m_Registers.f.carry = ctest > 0xFFFF;
     m_Registers.f.half_carry = htest > 0xFFF;
 }
-
