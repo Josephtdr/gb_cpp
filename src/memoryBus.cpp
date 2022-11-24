@@ -66,12 +66,14 @@ byte_t MemoryBus::readByte(word_t address) const
         return m_RAMBankMemory[newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)];
     }
     // restricted memory area
-    else if (0xFEA0u <= address || address <= 0xFEFFu)
+    else if (0xFEA0u <= address && address <= 0xFEFFu)
     {
+        // std::cout << "Restricted access for address: " << +address << "!\n";
         return 0u;
     }
     else
     {
+        // std::cout << "Reading address:" << +address << " normally!\n";
         return m_Memory[address];
     }
 }
@@ -88,19 +90,19 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     {
         if (m_EnableRAM)
         {
-            word_t newAddress = address - 0xA000 ;
+            word_t newAddress{ address - 0xA000 };
             m_RAMBankMemory[newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)] = value ;
         }
     }
     //maybe TODO: echo into echo ram?
     //echo from echo ram
-    else if (0xE000u <= address || address <= 0xFE00u)
+    else if ((0xE000u <= address) && (address <= 0xFE00u))
     {
         m_Memory[address] = value;
         writeByte(address-0x2000, value);
     }
     //restricted memory area
-    else if (0xFEA0u <= address || address <= 0xFEFFu)
+    else if ((0xFEA0u <= address) && (address <= 0xFEFFu))
     {
         return;
     }
@@ -122,16 +124,17 @@ void MemoryBus::writeByte(word_t address, byte_t value)
             }
         }
     }
-    else if (c_DIV_REGISTER_ADDRESS == address)
+    else if (address == c_DIV_REGISTER_ADDRESS)
     {
         m_Memory[c_DIV_REGISTER_ADDRESS] = 0 ;
     }
-    else if (address = 0xFF50 && value == 0x1) //unmap  bootrom
+    else if ((address == 0xFF50) && value) //unmap  bootrom
     {
         unloadBootRom();
     }
     else
     {
+        std::cout << std::hex << "writing value:" << +value << ", to address:" << +address << " normally!\n";
         m_Memory[address] = value;
     }
 }
@@ -175,11 +178,12 @@ void MemoryBus::unloadBootRom()
 {
     std::cout << "Unloading boot rom!" << "\n";
     m_bootRomLoaded = false;
+    std::exit(EXIT_FAILURE);
 }
 
 void MemoryBus::getRomBankingMode()
 {
-    switch (m_CartridgeMemory[0x147])
+    switch (m_CartridgeMemory[0x147])   
     {
         case 1:
             m_MBC1 = true; break;

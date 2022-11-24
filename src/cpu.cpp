@@ -56,11 +56,11 @@ int CPU::execute(byte_t instructionByte, bool prefixed)
     //Temp cout logging
     if (!prefixed)
     {
-        std::cout << "Running opcode 0x" << std::hex << +instructionByte << " \n"; 
+        std::cout << "PC: " << std::hex << +(m_PC-1) << ", Running opcode 0x" << +instructionByte << " \n"; 
     }
     else
     {
-        std::cout << "Running opcode CB 0x" << std::hex << +instructionByte << " \n"; 
+        std::cout << "PC: " << std::hex << +(m_PC-1) << ", Running opcode CB 0x" << +instructionByte << " \n"; 
     }
     try 
     {
@@ -92,6 +92,7 @@ void CPU::updateTimers(int cycles)
         // enough cpu clock cycles have happened to update the timer
         if (m_TimerCounter <= 0)
         {
+            std::cout << "Timer reset!\n";
             // reset m_TimerTracer to the correct value
             setClockFreq();
 
@@ -180,6 +181,7 @@ void CPU::requestInterupt(int interupt) //0,1,2,4
  */
 void CPU::performInterupt(int interupt)
 {
+    std::cout << "Starting interupt " << interupt << "!\n";
     m_InteruptsEnabled = false;
 
     byte_t requests = m_Memory.readByte(c_INTERUPTS_REQ_ADDRESS);

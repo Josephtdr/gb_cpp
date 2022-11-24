@@ -1,5 +1,6 @@
 #include "cpu.h"
 
+#include <iostream>
 #include <stdexcept> // for std::runtime_error
 
 /**
@@ -29,219 +30,24 @@ void CPU::halt()
 }
 
 /**
- * @brief swap the upper and lower nibbles of the given value
- * 
- * @param reg 
- */
-void CPU::swapNibbles(byte_t& reg)
-{
-    byte_t lsn{ static_cast<byte_t>(reg & 0xFu) };
-    byte_t msn{ static_cast<byte_t>(reg >> 4) };
-
-    reg = ((lsn << 4) | msn); 
-
-    m_Registers.f.zero = !reg;
-    m_Registers.f.subtract = false;
-    m_Registers.f.half_carry = false;
-    m_Registers.f.carry = false;
-}
-
-/**
- * @brief performs the function testBit, but with the intention of setting
- * the f register, if testBit is false, the zero register is set. 
- * 
- * @param byte the byte
- * @param bit the nth bit from the right, starting at 0
- */
-void CPU::testBit_OP(byte_t& byte, int bit)
-{
-    bool test{ testBit(byte, bit) };
-
-    m_Registers.f.zero = !test;
-    m_Registers.f.subtract = false;
-    m_Registers.f.half_carry = true;
-}
-
-/**
- * @brief returns true if the bit is set in the byte
- * 
- * @param byte the byte
- * @param bit the nth bit from the right, starting at 0
- */
-bool CPU::testBit(const byte_t& byte, int bit) const
-{
-    return byte & (1 << bit);
-}
-
-/**
- * @brief sets a bit in a byte
- * 
- * @param byte the byte to be changed
- * @param bit the nth bit from the right, starting at 0
- */
-void CPU::setBit(byte_t& byte, int bit)
-{
-    byte |= (1 << bit); 
-}
-
-/**
- * @brief resets a bit in a byte
- * 
- * @param byte the byte to be changed
- * @param bit the nth bit from the right, starting at 0
- */
-void CPU::resetBit(byte_t& byte, int bit)
-{
-    byte &= ~(1 << bit);
-}
-
-/**
- * @brief Rotates the given byte left by 1.
- * 
- * @param byte 
- * @param withCarry If true, then rotated through the carry, 
- * (i.e. bit 7 becomes the carry and the carry becomes bit 0),
- * otherwise rotated normally but the carry is also set
- * to old bit 7. 
- */
-void CPU::leftRotate(byte_t& byte)
-{
-    byte_t carry{ m_Registers.f.carry };
-    byte_t oldBit7{ static_cast<byte_t>(byte >> 7) };
-
-    m_Registers.f.carry = oldBit7;
-    byte = (byte << 1) | oldBit7;    
-
-    m_Registers.f.zero = !byte;
-    m_Registers.f.subtract = false;
-    m_Registers.f.half_carry = false;
-}
-
-void CPU::leftRotateWithCarry(byte_t& byte)
-{
-    byte_t carry{ m_Registers.f.carry };
-    byte_t oldBit7{ static_cast<byte_t>(byte >> 7) };
-
-    m_Registers.f.carry = oldBit7;
-    byte = (byte << 1) | carry;    
-
-    m_Registers.f.zero = !byte;
-    m_Registers.f.subtract = false;
-    m_Registers.f.half_carry = false;
-}
-
-/**
- * @brief Rotates the given byte right by 1.
- * 
- * @param byte 
- * @param withCarry If true, then rotated through the carry, 
- * (i.e. bit 0 becomes the carry and the carry becomes bit 7),
- * otherwise rotated normally but the carry is also set
- * to old bit 0. 
- */
-void CPU::rightRotate(byte_t& byte)
-{
-    byte_t carry{ m_Registers.f.carry };
-    byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
-
-    m_Registers.f.carry = oldBit0;
-    byte = (oldBit0 << 7) | (byte >> 1);
-    
-    m_Registers.f.zero = !byte;
-    m_Registers.f.subtract = false;
-    m_Registers.f.half_carry = false;
-}
-
-void CPU::rightRotateWithCarry(byte_t& byte)
-{
-    byte_t carry{ m_Registers.f.carry };
-    byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
-
-    m_Registers.f.carry = oldBit0;
-    byte = (carry << 7) | (byte >> 1);
-
-    m_Registers.f.zero = !byte;
-    m_Registers.f.subtract = false;
-    m_Registers.f.half_carry = false;
-}
-
-void CPU::leftShift(byte_t& byte)
-{
-    byte_t oldBit7{ static_cast<byte_t>(byte >> 7) };
-
-    m_Registers.f.carry = oldBit7;
-    byte <<= 1;
-
-    m_Registers.f.zero = !byte;
-    m_Registers.f.subtract = false;
-    m_Registers.f.half_carry = false;
-}
-void CPU::rightShift(byte_t& byte)
-{
-    byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
-    byte_t oldBit7{ static_cast<byte_t>(byte & 0b10000000) };
-
-    m_Registers.f.carry = oldBit0;
-    byte >>= 1;
-
-    m_Registers.f.zero = !byte;
-    m_Registers.f.subtract = false;
-    m_Registers.f.half_carry = false;
-}
-
-void CPU::rightShiftArithmetic(byte_t& byte)
-{
-    byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
-    byte_t oldBit7{ static_cast<byte_t>(byte & 0b10000000) };
-
-    m_Registers.f.carry = oldBit0;
-    byte >>= 1;
-    byte |= (oldBit7);    
-
-    m_Registers.f.zero = !byte;
-    m_Registers.f.subtract = false;
-    m_Registers.f.half_carry = false;
-}
-
-void CPU::checkDAA(byte_t& byte)
-{
-    byte_t lowerNibble{ static_cast<byte_t>(byte & 0xFu) };
-    byte_t upperNibble{ static_cast<byte_t>(byte >> 4) };
-    
-    if (lowerNibble > 9u)
-    {
-        lowerNibble += 6u;
-        lowerNibble &= 0xFu;
-        upperNibble += 1u;
-    }
-    if (upperNibble > 9u)
-    {
-        upperNibble += 6u;
-        upperNibble &= 0xFu;
-        m_Registers.f.carry = true;
-    }
-    else
-    {
-        m_Registers.f.carry = false;
-    }
-    byte = (upperNibble << 4) | lowerNibble;
-
-    m_Registers.f.zero = !byte;
-    m_Registers.f.half_carry = false;
-}
-
-
-/**
  * @brief Adds the given value to the stack, a byte at a time, msb first, 
  * also decrements the sp twice.
  * @param value the value to be added to the stack
  */
 void CPU::push(word_t value)
 {
+    word_t lsb{ static_cast<word_t>(value & 0xFFu) };
+    word_t msb{ static_cast<word_t>(value >> 8) };
+    std::cout << "SP: " << +m_SP << ", will push " << +value << " to stack!\n";
+
     --m_SP;
-    m_Memory.writeByte(m_SP, ((value & 0xFF00u) >> 8));
+    std::cout << "SP: " << +m_SP << ", Pushing msb:" << +msb << " to stack!\n"; 
+
+    m_Memory.writeByte(m_SP, msb);
     --m_SP;
-    m_Memory.writeByte(m_SP, (value & 0xFFu));
+
+    std::cout << "SP: " << +m_SP << ", Pushing lsb:" << +lsb << " to stack!\n";
+    m_Memory.writeByte(m_SP, lsb);
 }
 
 /**
@@ -252,9 +58,14 @@ void CPU::push(word_t value)
 word_t CPU::pop()
 {
     byte_t lsb{ m_Memory.readByte(m_SP) };
+    std::cout << "SP: " << +m_SP << ", popping " << +lsb << " from stack!\n";
     ++m_SP;
     byte_t msb{ m_Memory.readByte(m_SP) };
+    std::cout << "SP: " << +m_SP << ", popping " << +msb << " from stack!\n";
     ++m_SP;
+
+    std::cout << "SP: " << +m_SP << ", Popped " << +((msb << 8) | lsb) << " from stack!\n"; 
+
     return (msb << 8) | lsb;
 }
 
@@ -634,4 +445,206 @@ void CPU::wordAdd(word_t& reg, const word_t& addValue)
     m_Registers.f.subtract = false;
     m_Registers.f.carry = ctest > 0xFFFF;
     m_Registers.f.half_carry = htest > 0xFFF;
+}
+
+/**
+ * @brief swap the upper and lower nibbles of the given value
+ * 
+ * @param reg 
+ */
+void CPU::swapNibbles(byte_t& reg)
+{
+    byte_t lsn{ static_cast<byte_t>(reg & 0xFu) };
+    byte_t msn{ static_cast<byte_t>(reg >> 4) };
+
+    reg = ((lsn << 4) | msn); 
+
+    m_Registers.f.zero = !reg;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
+    m_Registers.f.carry = false;
+}
+
+/**
+ * @brief performs the function testBit, but with the intention of setting
+ * the f register, if testBit is false, the zero register is set. 
+ * 
+ * @param byte the byte
+ * @param bit the nth bit from the right, starting at 0
+ */
+void CPU::testBit_OP(byte_t& byte, int bit)
+{
+    bool test{ testBit(byte, bit) };
+
+    m_Registers.f.zero = !test;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = true;
+}
+
+/**
+ * @brief returns true if the bit is set in the byte
+ * 
+ * @param byte the byte
+ * @param bit the nth bit from the right, starting at 0
+ */
+bool CPU::testBit(const byte_t& byte, int bit) const
+{
+    return byte & (1 << bit);
+}
+
+/**
+ * @brief sets a bit in a byte
+ * 
+ * @param byte the byte to be changed
+ * @param bit the nth bit from the right, starting at 0
+ */
+void CPU::setBit(byte_t& byte, int bit)
+{
+    byte |= (1 << bit); 
+}
+
+/**
+ * @brief resets a bit in a byte
+ * 
+ * @param byte the byte to be changed
+ * @param bit the nth bit from the right, starting at 0
+ */
+void CPU::resetBit(byte_t& byte, int bit)
+{
+    byte &= ~(1 << bit);
+}
+
+/**
+ * @brief Rotates the given byte left by 1.
+ * 
+ * @param byte 
+ * @param withCarry If true, then rotated through the carry, 
+ * (i.e. bit 7 becomes the carry and the carry becomes bit 0),
+ * otherwise rotated normally but the carry is also set
+ * to old bit 7. 
+ */
+void CPU::leftRotate(byte_t& byte)
+{
+    byte_t carry{ m_Registers.f.carry };
+    byte_t oldBit7{ static_cast<byte_t>(byte >> 7) };
+
+    m_Registers.f.carry = oldBit7;
+    byte = (byte << 1) | oldBit7;    
+
+    m_Registers.f.zero = !byte;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
+}
+
+void CPU::leftRotateWithCarry(byte_t& byte)
+{
+    byte_t carry{ m_Registers.f.carry };
+    byte_t oldBit7{ static_cast<byte_t>(byte >> 7) };
+
+    m_Registers.f.carry = oldBit7;
+    byte = (byte << 1) | carry;    
+
+    m_Registers.f.zero = !byte;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
+}
+
+/**
+ * @brief Rotates the given byte right by 1.
+ * 
+ * @param byte 
+ * @param withCarry If true, then rotated through the carry, 
+ * (i.e. bit 0 becomes the carry and the carry becomes bit 7),
+ * otherwise rotated normally but the carry is also set
+ * to old bit 0. 
+ */
+void CPU::rightRotate(byte_t& byte)
+{
+    byte_t carry{ m_Registers.f.carry };
+    byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
+
+    m_Registers.f.carry = oldBit0;
+    byte = (oldBit0 << 7) | (byte >> 1);
+    
+    m_Registers.f.zero = !byte;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
+}
+
+void CPU::rightRotateWithCarry(byte_t& byte)
+{
+    byte_t carry{ m_Registers.f.carry };
+    byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
+
+    m_Registers.f.carry = oldBit0;
+    byte = (carry << 7) | (byte >> 1);
+
+    m_Registers.f.zero = !byte;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
+}
+
+void CPU::leftShift(byte_t& byte)
+{
+    byte_t oldBit7{ static_cast<byte_t>(byte >> 7) };
+
+    m_Registers.f.carry = oldBit7;
+    byte <<= 1;
+
+    m_Registers.f.zero = !byte;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
+}
+void CPU::rightShift(byte_t& byte)
+{
+    byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
+    byte_t oldBit7{ static_cast<byte_t>(byte & 0b10000000) };
+
+    m_Registers.f.carry = oldBit0;
+    byte >>= 1;
+
+    m_Registers.f.zero = !byte;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
+}
+
+void CPU::rightShiftArithmetic(byte_t& byte)
+{
+    byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
+    byte_t oldBit7{ static_cast<byte_t>(byte & 0b10000000) };
+
+    m_Registers.f.carry = oldBit0;
+    byte >>= 1;
+    byte |= (oldBit7);    
+
+    m_Registers.f.zero = !byte;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
+}
+
+void CPU::checkDAA(byte_t& byte)
+{
+    byte_t lowerNibble{ static_cast<byte_t>(byte & 0xFu) };
+    byte_t upperNibble{ static_cast<byte_t>(byte >> 4) };
+    
+    if (lowerNibble > 9u)
+    {
+        lowerNibble += 6u;
+        lowerNibble &= 0xFu;
+        upperNibble += 1u;
+    }
+    if (upperNibble > 9u)
+    {
+        upperNibble += 6u;
+        upperNibble &= 0xFu;
+        m_Registers.f.carry = true;
+    }
+    else
+    {
+        m_Registers.f.carry = false;
+    }
+    byte = (upperNibble << 4) | lowerNibble;
+
+    m_Registers.f.zero = !byte;
+    m_Registers.f.half_carry = false;
 }
