@@ -154,6 +154,10 @@ void CPU::leftRotate(byte_t& byte, bool withCarry)
         m_Registers.f.carry = oldBit7;
         byte = (byte << 1) | oldBit7;
     }
+
+    m_Registers.f.zero = !byte;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
 }
 
 /**
@@ -180,15 +184,39 @@ void CPU::rightRotate(byte_t& byte, bool withCarry)
         m_Registers.f.carry = oldBit0;
         byte = (oldBit0 << 7) | (byte >> 1);
     }
+
+    m_Registers.f.zero = !byte;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
 }
 
-void CPU::leftShift(byte_t& byte, bool withCarry)
+void CPU::leftShift(byte_t& byte)
 {
+    byte_t oldBit7{ (byte & 0b10000000) >> 7 };
 
+    m_Registers.f.carry = oldBit7;
+    byte <<= 1;
+
+    m_Registers.f.zero = !byte;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
 }
-void CPU::rightShift(byte_t& byte, bool withCarry)
+void CPU::rightShift(byte_t& byte, bool arithmeticShift)
 {
+    byte_t oldBit0{ (byte & 0b1) };
+    byte_t oldBit7{ (byte & 0b10000000) };
 
+    m_Registers.f.carry = oldBit0;
+    byte >>= 1;
+
+    if (arithmeticShift)
+    {
+        byte |= (oldBit7);
+    }
+
+    m_Registers.f.zero = !byte;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
 }
 
 void CPU::checkDAA(byte_t& byte)

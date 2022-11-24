@@ -1530,3 +1530,132 @@ int CPU::OP_CB_0x1E()
     m_Memory.writeByte(m_Registers.get_hl(), HL);
     return 16;
 }
+//SLA n
+int CPU::OP_CB_0x27()
+{
+    leftShift(m_Registers.a);
+    return  8;
+}
+int CPU::OP_CB_0x20()
+{
+    leftShift(m_Registers.b);
+    return  8;
+}
+int CPU::OP_CB_0x21()
+{
+    leftShift(m_Registers.c);
+    return  8;
+}
+int CPU::OP_CB_0x22()
+{
+    leftShift(m_Registers.d);
+    return  8;
+}
+int CPU::OP_CB_0x23()
+{
+    leftShift(m_Registers.e);
+    return  8;
+}
+int CPU::OP_CB_0x24()
+{
+    leftShift(m_Registers.h);
+    return  8;
+}
+int CPU::OP_CB_0x25()
+{
+    leftShift(m_Registers.l);
+    return  8;
+}
+int CPU::OP_CB_0x26()
+{
+    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
+    leftShift(HL);
+    m_Memory.writeByte(m_Registers.get_hl(), HL);
+    return 16;
+}
+//SRA n arithmetic
+int CPU::OP_CB_0x2F()
+{
+    rightShift(m_Registers.a, true);
+    return 8;
+}
+int CPU::OP_CB_0x28()
+{
+    rightShift(m_Registers.b, true);
+    return 8;
+}
+int CPU::OP_CB_0x29()
+{
+    rightShift(m_Registers.c, true);
+    return 8;
+}
+int CPU::OP_CB_0x2A()
+{
+    rightShift(m_Registers.d, true);
+    return 8;
+}
+int CPU::OP_CB_0x2B()
+{
+    rightShift(m_Registers.e, true);
+    return 8;
+}
+int CPU::OP_CB_0x2C()
+{
+    rightShift(m_Registers.h, true);
+    return 8;
+}
+int CPU::OP_CB_0x2D()
+{
+    rightShift(m_Registers.l, true);
+    return 8;
+}
+int CPU::OP_CB_0x2E()
+{
+    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
+    rightShift(HL, true);
+    m_Memory.writeByte(m_Registers.get_hl(), HL);
+    return 16;
+}
+//SRL n
+int CPU::OP_CB_0x3F()
+{
+    rightShift(m_Registers.a);
+    return 8;
+}
+int CPU::OP_CB_0x38()
+{
+    rightShift(m_Registers.b);
+    return 8;
+}
+int CPU::OP_CB_0x39()
+{
+    rightShift(m_Registers.c);
+    return 8;
+}
+int CPU::OP_CB_0x3A()
+{
+    rightShift(m_Registers.d);
+    return 8;
+}
+int CPU::OP_CB_0x3B()
+{
+    rightShift(m_Registers.e);
+    return 8;
+}
+int CPU::OP_CB_0x3C()
+{
+    rightShift(m_Registers.h);
+    return 8;
+}
+int CPU::OP_CB_0x3D()
+{
+    rightShift(m_Registers.l);
+    return 8;
+}
+int CPU::OP_CB_0x3E()
+{
+    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
+    rightShift(HL);
+    m_Memory.writeByte(m_Registers.get_hl(), HL);
+    return 16;
+}

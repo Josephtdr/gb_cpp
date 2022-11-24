@@ -54,8 +54,8 @@ private:
     void resetBit(byte_t& byte, int bit);
     void leftRotate(byte_t& byte, bool withCarry = false);
     void rightRotate(byte_t& byte, bool withCarry = false);
-    void leftShift(byte_t& byte, bool withCarry = false);
-    void rightShift(byte_t& byte, bool withCarry = false);
+    void leftShift(byte_t& byte);
+    void rightShift(byte_t& byte, bool arithmeticShift = false);
     void checkDAA(byte_t& byte);
 
     //Jumps
@@ -469,7 +469,33 @@ private:
     int OP_CB_0x1C();
     int OP_CB_0x1D();
     int OP_CB_0x1E();
-    //
+    //SLA n
+    int OP_CB_0x27();
+    int OP_CB_0x20();
+    int OP_CB_0x21();
+    int OP_CB_0x22();
+    int OP_CB_0x23();
+    int OP_CB_0x24();
+    int OP_CB_0x25();
+    int OP_CB_0x26();
+    //SRA n arithmetic
+    int OP_CB_0x2F();
+    int OP_CB_0x28();
+    int OP_CB_0x29();
+    int OP_CB_0x2A();
+    int OP_CB_0x2B();
+    int OP_CB_0x2C();
+    int OP_CB_0x2D();
+    int OP_CB_0x2E();
+    //SRL n
+    int OP_CB_0x3F();
+    int OP_CB_0x38();
+    int OP_CB_0x39();
+    int OP_CB_0x3A();
+    int OP_CB_0x3B();
+    int OP_CB_0x3C();
+    int OP_CB_0x3D();
+    int OP_CB_0x3E();
 
     //SWAP n
     int OP_CB_0x37();
