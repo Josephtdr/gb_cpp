@@ -331,8 +331,146 @@ void CPU::setupTables()
 
     //Prefix Instruction
     // instructionTable[0xCB] = &CPU::OP_0xCB;
-    
-    // prefixedInstructionTable[] = 
+    prefixedInstructionTable[0x37] = &CPU::OP_CB_0x37;
+    prefixedInstructionTable[0x30] = &CPU::OP_CB_0x30;
+    prefixedInstructionTable[0x31] = &CPU::OP_CB_0x31;
+    prefixedInstructionTable[0x32] = &CPU::OP_CB_0x32;
+    prefixedInstructionTable[0x33] = &CPU::OP_CB_0x33;
+    prefixedInstructionTable[0x34] = &CPU::OP_CB_0x34;
+    prefixedInstructionTable[0x35] = &CPU::OP_CB_0x35;
+    prefixedInstructionTable[0x36] = &CPU::OP_CB_0x36;
+    //Roates & Shifts
+    //RLC n
+    prefixedInstructionTable[0x07] = &CPU::OP_CB_0x07;
+    prefixedInstructionTable[0x00] = &CPU::OP_CB_0x00;
+    prefixedInstructionTable[0x01] = &CPU::OP_CB_0x01;
+    prefixedInstructionTable[0x02] = &CPU::OP_CB_0x02;
+    prefixedInstructionTable[0x03] = &CPU::OP_CB_0x03;
+    prefixedInstructionTable[0x04] = &CPU::OP_CB_0x04;
+    prefixedInstructionTable[0x05] = &CPU::OP_CB_0x05;
+    prefixedInstructionTable[0x06] = &CPU::OP_CB_0x06;
+    //RL n
+    prefixedInstructionTable[0x17] = &CPU::OP_CB_0x17;
+    prefixedInstructionTable[0x10] = &CPU::OP_CB_0x10;
+    prefixedInstructionTable[0x11] = &CPU::OP_CB_0x11;
+    prefixedInstructionTable[0x12] = &CPU::OP_CB_0x12;
+    prefixedInstructionTable[0x13] = &CPU::OP_CB_0x13;
+    prefixedInstructionTable[0x14] = &CPU::OP_CB_0x14;
+    prefixedInstructionTable[0x15] = &CPU::OP_CB_0x15;
+    prefixedInstructionTable[0x16] = &CPU::OP_CB_0x16;
+    //RRC n
+    prefixedInstructionTable[0x0F] = &CPU::OP_CB_0x0F;
+    prefixedInstructionTable[0x08] = &CPU::OP_CB_0x08;
+    prefixedInstructionTable[0x09] = &CPU::OP_CB_0x09;
+    prefixedInstructionTable[0x0A] = &CPU::OP_CB_0x0A;
+    prefixedInstructionTable[0x0B] = &CPU::OP_CB_0x0B;
+    prefixedInstructionTable[0x0C] = &CPU::OP_CB_0x0C;
+    prefixedInstructionTable[0x0D] = &CPU::OP_CB_0x0D;
+    prefixedInstructionTable[0x0E] = &CPU::OP_CB_0x0E;
+    //RR n
+    prefixedInstructionTable[0x1F] = &CPU::OP_CB_0x1F;
+    prefixedInstructionTable[0x18] = &CPU::OP_CB_0x18;
+    prefixedInstructionTable[0x19] = &CPU::OP_CB_0x19;
+    prefixedInstructionTable[0x1A] = &CPU::OP_CB_0x1A;
+    prefixedInstructionTable[0x1B] = &CPU::OP_CB_0x1B;
+    prefixedInstructionTable[0x1C] = &CPU::OP_CB_0x1C;
+    prefixedInstructionTable[0x1D] = &CPU::OP_CB_0x1D;
+    prefixedInstructionTable[0x1E] = &CPU::OP_CB_0x1E;
+    //SLA n
+    prefixedInstructionTable[0x27] = &CPU::OP_CB_0x27;
+    prefixedInstructionTable[0x20] = &CPU::OP_CB_0x20;
+    prefixedInstructionTable[0x21] = &CPU::OP_CB_0x21;
+    prefixedInstructionTable[0x22] = &CPU::OP_CB_0x22;
+    prefixedInstructionTable[0x23] = &CPU::OP_CB_0x23;
+    prefixedInstructionTable[0x24] = &CPU::OP_CB_0x24;
+    prefixedInstructionTable[0x25] = &CPU::OP_CB_0x25;
+    prefixedInstructionTable[0x26] = &CPU::OP_CB_0x26;
+    //SRA n arithmetic
+    prefixedInstructionTable[0x2F] = &CPU::OP_CB_0x2F;
+    prefixedInstructionTable[0x28] = &CPU::OP_CB_0x28;
+    prefixedInstructionTable[0x29] = &CPU::OP_CB_0x29;
+    prefixedInstructionTable[0x2A] = &CPU::OP_CB_0x2A;
+    prefixedInstructionTable[0x2B] = &CPU::OP_CB_0x2B;
+    prefixedInstructionTable[0x2C] = &CPU::OP_CB_0x2C;
+    prefixedInstructionTable[0x2D] = &CPU::OP_CB_0x2D;
+    prefixedInstructionTable[0x2E] = &CPU::OP_CB_0x2E;
+    //SRL n
+    prefixedInstructionTable[0x3F] = &CPU::OP_CB_0x3F;
+    prefixedInstructionTable[0x38] = &CPU::OP_CB_0x38;
+    prefixedInstructionTable[0x39] = &CPU::OP_CB_0x39;
+    prefixedInstructionTable[0x3A] = &CPU::OP_CB_0x3A;
+    prefixedInstructionTable[0x3B] = &CPU::OP_CB_0x3B;
+    prefixedInstructionTable[0x3C] = &CPU::OP_CB_0x3C;
+    prefixedInstructionTable[0x3D] = &CPU::OP_CB_0x3D;
+    prefixedInstructionTable[0x3E] = &CPU::OP_CB_0x3E;
+
+    //Bit opcodes
+    //BIT b,r //test bit
+    //Bit 0
+    prefixedInstructionTable[0x47] = &CPU::OP_CB_0x47;
+    prefixedInstructionTable[0x40] = &CPU::OP_CB_0x40;
+    prefixedInstructionTable[0x41] = &CPU::OP_CB_0x41;
+    prefixedInstructionTable[0x42] = &CPU::OP_CB_0x42;
+    prefixedInstructionTable[0x43] = &CPU::OP_CB_0x43;
+    prefixedInstructionTable[0x44] = &CPU::OP_CB_0x44;
+    prefixedInstructionTable[0x45] = &CPU::OP_CB_0x45;
+    prefixedInstructionTable[0x46] = &CPU::OP_CB_0x46;
+    prefixedInstructionTable[0x4F] = &CPU::OP_CB_0x4F;
+    prefixedInstructionTable[0x48] = &CPU::OP_CB_0x48;
+    prefixedInstructionTable[0x49] = &CPU::OP_CB_0x49;
+    prefixedInstructionTable[0x4A] = &CPU::OP_CB_0x4A;
+    prefixedInstructionTable[0x4B] = &CPU::OP_CB_0x4B;
+    prefixedInstructionTable[0x4C] = &CPU::OP_CB_0x4C;
+    prefixedInstructionTable[0x4D] = &CPU::OP_CB_0x4D;
+    prefixedInstructionTable[0x4E] = &CPU::OP_CB_0x4E;
+    prefixedInstructionTable[0x57] = &CPU::OP_CB_0x57;
+    prefixedInstructionTable[0x50] = &CPU::OP_CB_0x50;
+    prefixedInstructionTable[0x51] = &CPU::OP_CB_0x51;
+    prefixedInstructionTable[0x52] = &CPU::OP_CB_0x52;
+    prefixedInstructionTable[0x53] = &CPU::OP_CB_0x53;
+    prefixedInstructionTable[0x54] = &CPU::OP_CB_0x54;
+    prefixedInstructionTable[0x55] = &CPU::OP_CB_0x55;
+    prefixedInstructionTable[0x56] = &CPU::OP_CB_0x56;
+    prefixedInstructionTable[0x5F] = &CPU::OP_CB_0x5F;
+    prefixedInstructionTable[0x58] = &CPU::OP_CB_0x58;
+    prefixedInstructionTable[0x59] = &CPU::OP_CB_0x59;
+    prefixedInstructionTable[0x5A] = &CPU::OP_CB_0x5A;
+    prefixedInstructionTable[0x5B] = &CPU::OP_CB_0x5B;
+    prefixedInstructionTable[0x5C] = &CPU::OP_CB_0x5C;
+    prefixedInstructionTable[0x5D] = &CPU::OP_CB_0x5D;
+    prefixedInstructionTable[0x5E] = &CPU::OP_CB_0x5E;
+    prefixedInstructionTable[0x67] = &CPU::OP_CB_0x67;
+    prefixedInstructionTable[0x60] = &CPU::OP_CB_0x60;
+    prefixedInstructionTable[0x61] = &CPU::OP_CB_0x61;
+    prefixedInstructionTable[0x62] = &CPU::OP_CB_0x62;
+    prefixedInstructionTable[0x63] = &CPU::OP_CB_0x63;
+    prefixedInstructionTable[0x64] = &CPU::OP_CB_0x64;
+    prefixedInstructionTable[0x65] = &CPU::OP_CB_0x65;
+    prefixedInstructionTable[0x66] = &CPU::OP_CB_0x66;
+    prefixedInstructionTable[0x6F] = &CPU::OP_CB_0x6F;
+    prefixedInstructionTable[0x68] = &CPU::OP_CB_0x68;
+    prefixedInstructionTable[0x69] = &CPU::OP_CB_0x69;
+    prefixedInstructionTable[0x6A] = &CPU::OP_CB_0x6A;
+    prefixedInstructionTable[0x6B] = &CPU::OP_CB_0x6B;
+    prefixedInstructionTable[0x6C] = &CPU::OP_CB_0x6C;
+    prefixedInstructionTable[0x6D] = &CPU::OP_CB_0x6D;
+    prefixedInstructionTable[0x6E] = &CPU::OP_CB_0x6E;
+    prefixedInstructionTable[0x77] = &CPU::OP_CB_0x77;
+    prefixedInstructionTable[0x70] = &CPU::OP_CB_0x70;
+    prefixedInstructionTable[0x71] = &CPU::OP_CB_0x71;
+    prefixedInstructionTable[0x72] = &CPU::OP_CB_0x72;
+    prefixedInstructionTable[0x73] = &CPU::OP_CB_0x73;
+    prefixedInstructionTable[0x74] = &CPU::OP_CB_0x74;
+    prefixedInstructionTable[0x75] = &CPU::OP_CB_0x75;
+    prefixedInstructionTable[0x76] = &CPU::OP_CB_0x76;
+    prefixedInstructionTable[0x7F] = &CPU::OP_CB_0x7F;
+    prefixedInstructionTable[0x78] = &CPU::OP_CB_0x78;
+    prefixedInstructionTable[0x79] = &CPU::OP_CB_0x79;
+    prefixedInstructionTable[0x7A] = &CPU::OP_CB_0x7A;
+    prefixedInstructionTable[0x7B] = &CPU::OP_CB_0x7B;
+    prefixedInstructionTable[0x7C] = &CPU::OP_CB_0x7C;
+    prefixedInstructionTable[0x7D] = &CPU::OP_CB_0x7D;
+    prefixedInstructionTable[0x7E] = &CPU::OP_CB_0x7E;
 }
 
 int CPU::OP_NOT_IMPLEMTED()
