@@ -17,10 +17,12 @@ private:
     bool m_MBC2{}; //rom banking mode 2
     bool m_ROMBanking{};
     bool m_EnableRAM{};
+    bool m_bootRomLoaded{};
 
     int& m_timerCounterRef;
 
     void loadBootRom();
+    void unloadBootRom();
     void getRomBankingMode();
     void updateBanking(word_t address, byte_t value);
     void ramBankEnable(word_t address, byte_t value);

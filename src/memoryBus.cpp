@@ -43,13 +43,18 @@ MemoryBus::MemoryBus(int& timerRef)
 
 byte_t MemoryBus::readByte(word_t address) const
 {
-    // //initial rom bank
-    // if ((address>=0) && (address <= 0x4000)) 
-    // {
-
-    // }
+    //boot rom currently loaded
+    if (m_bootRomLoaded && (address>=0) && (address <= 0x100))
+    {
+        return m_Memory[address];
+    }
+    //boot rom wiped
+    else if ((address>=0) && (address <= 0x4000)) 
+    {
+        return m_CartridgeMemory[address];
+    }
     //rom banking area so access cartridge memory instead
-    if ((address>=0x4000) && (address <= 0x7FFF))
+    else if ((address>=0x4000) && (address <= 0x7FFF))
     {
         word_t newAddress = address - c_ROM_BANK_SIZE;
         return m_CartridgeMemory[newAddress + (m_CurrentROMBank*c_ROM_BANK_SIZE)];
@@ -121,6 +126,10 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     {
         m_Memory[c_DIV_REGISTER_ADDRESS] = 0 ;
     }
+    else if (address = 0xFF50 && value == 0x1) //unmap  bootrom
+    {
+        unloadBootRom();
+    }
     else
     {
         m_Memory[address] = value;
@@ -157,7 +166,13 @@ void MemoryBus::loadBootRom()
         m_Memory[i] = buffer[i];
     }
 
+    m_bootRomLoaded = true;
     delete[] buffer;
+}
+
+void MemoryBus::unloadBootRom()
+{
+    m_bootRomLoaded = false;
 }
 
 void MemoryBus::getRomBankingMode()
