@@ -1333,3 +1333,200 @@ int CPU::OP_CB_0x36()
     m_Memory.writeByte(m_Registers.get_hl(), val);
     return 16;
 }
+//Roates & Shifts
+//RLCA
+int CPU::OP_0x07()
+{
+    leftRotate(m_Registers.a);
+    return 4;
+}
+//RLA
+int CPU::OP_0x17()
+{
+    leftRotate(m_Registers.a, true);
+    return 4;
+}
+//RRCA
+int CPU::OP_0x0F()
+{
+    rightRotate(m_Registers.a);
+    return 4;
+}
+//RRA
+int CPU::OP_0x1F()
+{
+    rightRotate(m_Registers.a, true);
+    return 4;
+}
+//RLC n
+int CPU::OP_CB_0x07()
+{
+    leftRotate(m_Registers.a);
+    return 8;
+}
+int CPU::OP_CB_0x00()
+{
+    leftRotate(m_Registers.b);
+    return 8;
+}
+int CPU::OP_CB_0x01()
+{
+    leftRotate(m_Registers.c);
+    return 8;
+}
+int CPU::OP_CB_0x02()
+{
+    leftRotate(m_Registers.d);
+    return 8;
+}
+int CPU::OP_CB_0x03()
+{
+    leftRotate(m_Registers.e);
+    return 8;
+}
+int CPU::OP_CB_0x04()
+{
+    leftRotate(m_Registers.h);
+    return 8;
+}
+int CPU::OP_CB_0x05()
+{
+    leftRotate(m_Registers.l);
+    return 8;
+}
+int CPU::OP_CB_0x06()
+{
+    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
+    leftRotate(HL);
+    m_Memory.writeByte(m_Registers.get_hl(), HL);
+    return 16;
+}
+//RL n
+int CPU::OP_CB_0x17()
+{
+    leftRotate(m_Registers.a, true);
+    return 8;
+}
+int CPU::OP_CB_0x10()
+{
+    leftRotate(m_Registers.b, true);
+    return 8;
+}
+int CPU::OP_CB_0x11()
+{
+    leftRotate(m_Registers.c, true);
+    return 8;
+}
+int CPU::OP_CB_0x12()
+{
+    leftRotate(m_Registers.d, true);
+    return 8;
+}
+int CPU::OP_CB_0x13()
+{
+    leftRotate(m_Registers.e, true);
+    return 8;
+}
+int CPU::OP_CB_0x14()
+{
+    leftRotate(m_Registers.h, true);
+    return 8;
+}
+int CPU::OP_CB_0x15()
+{
+    leftRotate(m_Registers.l, true);
+    return 8;
+}
+int CPU::OP_CB_0x16()
+{
+    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
+    leftRotate(HL, true);
+    m_Memory.writeByte(m_Registers.get_hl(), HL);
+    return 16;
+}
+//RRC n
+int CPU::OP_CB_0x0F()
+{
+    rightRotate(m_Registers.a);
+    return 8;
+}
+int CPU::OP_CB_0x08()
+{
+    rightRotate(m_Registers.b);
+    return 8;
+}
+int CPU::OP_CB_0x09()
+{
+    rightRotate(m_Registers.c);
+    return 8;
+}
+int CPU::OP_CB_0x0A()
+{
+    rightRotate(m_Registers.d);
+    return 8;
+}
+int CPU::OP_CB_0x0B()
+{
+    rightRotate(m_Registers.e);
+    return 8;
+}
+int CPU::OP_CB_0x0C()
+{
+    rightRotate(m_Registers.h);
+    return 8;
+}
+int CPU::OP_CB_0x0D()
+{
+    rightRotate(m_Registers.l);
+    return 8;
+}
+int CPU::OP_CB_0x0E()
+{
+    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
+    rightRotate(HL);
+    m_Memory.writeByte(m_Registers.get_hl(), HL);
+    return 16;
+}
+//RR n
+int CPU::OP_CB_0x1F()
+{
+    rightRotate(m_Registers.a, true);
+    return 8;
+}
+int CPU::OP_CB_0x18()
+{
+    rightRotate(m_Registers.b, true);
+    return 8;
+}
+int CPU::OP_CB_0x19()
+{
+    rightRotate(m_Registers.c, true);
+    return 8;
+}
+int CPU::OP_CB_0x1A()
+{
+    rightRotate(m_Registers.d, true);
+    return 8;
+}
+int CPU::OP_CB_0x1B()
+{
+    rightRotate(m_Registers.e, true);
+    return 8;
+}
+int CPU::OP_CB_0x1C()
+{
+    rightRotate(m_Registers.h, true);
+    return 8;
+}
+int CPU::OP_CB_0x1D()
+{
+    rightRotate(m_Registers.l, true);
+    return 8;
+}
+int CPU::OP_CB_0x1E()
+{
+    byte_t HL = m_Memory.readByte(m_Registers.get_hl());
+    rightRotate(HL, true);
+    m_Memory.writeByte(m_Registers.get_hl(), HL);
+    return 16;
+}

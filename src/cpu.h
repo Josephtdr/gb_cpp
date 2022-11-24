@@ -423,6 +423,54 @@ private:
     int OP_0xF3();
     //EI enable interupts
     int OP_0xFB();
+
+    //Roates & Shifts
+    //RLCA
+    int OP_0x07();
+    //RLA
+    int OP_0x17();
+    //RRCA
+    int OP_0x0F();
+    //RRA
+    int OP_0x1F();
+    //RLC n
+    int OP_CB_0x07();
+    int OP_CB_0x00();
+    int OP_CB_0x01();
+    int OP_CB_0x02();
+    int OP_CB_0x03();
+    int OP_CB_0x04();
+    int OP_CB_0x05();
+    int OP_CB_0x06();
+    //RL n
+    int OP_CB_0x17();
+    int OP_CB_0x10();
+    int OP_CB_0x11();
+    int OP_CB_0x12();
+    int OP_CB_0x13();
+    int OP_CB_0x14();
+    int OP_CB_0x15();
+    int OP_CB_0x16();
+    //RRC n
+    int OP_CB_0x0F();
+    int OP_CB_0x08();
+    int OP_CB_0x09();
+    int OP_CB_0x0A();
+    int OP_CB_0x0B();
+    int OP_CB_0x0C();
+    int OP_CB_0x0D();
+    int OP_CB_0x0E();
+    //RR n
+    int OP_CB_0x1F();
+    int OP_CB_0x18();
+    int OP_CB_0x19();
+    int OP_CB_0x1A();
+    int OP_CB_0x1B();
+    int OP_CB_0x1C();
+    int OP_CB_0x1D();
+    int OP_CB_0x1E();
+    //
+
     //SWAP n
     int OP_CB_0x37();
     int OP_CB_0x30();
