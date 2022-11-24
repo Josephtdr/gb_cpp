@@ -3,6 +3,7 @@
 #include <stdexcept> // for std::runtime_error
 #include<cstring> //memset, 
 #include <fstream> //streams
+#include <iostream>
 
 MemoryBus::MemoryBus(int& timerRef)
     : m_timerCounterRef{ timerRef }
@@ -53,13 +54,13 @@ byte_t MemoryBus::readByte(word_t address) const
         word_t newAddress = address - c_ROM_BANK_SIZE;
         return m_CartridgeMemory[newAddress + (m_CurrentROMBank*c_ROM_BANK_SIZE)];
     }
-    // are we reading from ram memory bank?
+    // ram memory bank area
     else if ((address >= 0xA000) && (address <= 0xBFFF))
     {
         word_t newAddress = address - 0xA000;
         return m_RAMBankMemory[newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)];
     }
-    //restricted memory area
+    // restricted memory area
     else if (0xFEA0u <= address || address <= 0xFEFFu)
     {
         return 0u;
@@ -129,6 +130,7 @@ void MemoryBus::writeByte(word_t address, byte_t value)
 
 void MemoryBus::loadGame(const char* filename)
 {
+    std::cout << "loading game!" << "\n";
     memset(m_CartridgeMemory,0,sizeof(m_CartridgeMemory)) ;
 
     FILE *in;
@@ -137,6 +139,25 @@ void MemoryBus::loadGame(const char* filename)
     fclose(in); 
 
     getRomBankingMode();
+}
+
+void MemoryBus::loadBootRom()
+{
+    std::cout << "loading boot rom into memory!" << "\n";
+
+    char* buffer = new char[c_BOOT_ROM_SIZE];
+
+    FILE *in;
+    in = fopen( c_BOOT_ROM_LOCATION, "rb" );
+    fread(buffer, 1, c_BOOT_ROM_SIZE, in);
+    fclose(in); 
+
+    for (int i = 0; i < c_BOOT_ROM_SIZE; ++i)
+    {
+        m_Memory[i] = buffer[i];
+    }
+
+    delete[] buffer;
 }
 
 void MemoryBus::getRomBankingMode()

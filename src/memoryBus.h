@@ -20,6 +20,7 @@ private:
 
     int& m_timerCounterRef;
 
+    void loadBootRom();
     void getRomBankingMode();
     void updateBanking(word_t address, byte_t value);
     void ramBankEnable(word_t address, byte_t value);
