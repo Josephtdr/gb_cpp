@@ -5,7 +5,7 @@
 #include <fstream> //streams
 
 MemoryBus::MemoryBus(int& timerRef)
-    : m_timerCounter{ timerRef }
+    : m_timerCounterRef{ timerRef }
 {}
 
 byte_t MemoryBus::readByte(word_t address) const
@@ -67,26 +67,26 @@ void MemoryBus::writeByte(word_t address, byte_t value)
         return;
     }
     //harcoded and hacky because of oop setup
-    else if (address == c_TMC)
+    else if (address == c_TMC_ADDRESS)
     {
-        byte_t currentfreq = m_Memory[c_TMC] & 0b11u;
-        m_Memory[c_TMC] = value;
-        byte_t newfreq = m_Memory[c_TMC] & 0b11u;
+        byte_t currentfreq = m_Memory[c_TMC_ADDRESS] & 0b11u;
+        m_Memory[c_TMC_ADDRESS] = value;
+        byte_t newfreq = m_Memory[c_TMC_ADDRESS] & 0b11u;
 
         if (currentfreq != newfreq)
         {
             switch (newfreq)
             {
-                case 0: m_timerCounter = 1024; break; // freq 4096
-                case 1: m_timerCounter = 16; break;// freq 262144
-                case 2: m_timerCounter = 64; break;// freq 65536
-                case 3: m_timerCounter = 256; break;// freq 16382
+                case 0: m_timerCounterRef = 1024; break; // freq 4096
+                case 1: m_timerCounterRef = 16; break;// freq 262144
+                case 2: m_timerCounterRef = 64; break;// freq 65536
+                case 3: m_timerCounterRef = 256; break;// freq 16382
             }
         }
     }
-    else if (c_DIV_REGISTER == address)
+    else if (c_DIV_REGISTER_ADDRESS == address)
     {
-        m_Memory[c_DIV_REGISTER] = 0 ;
+        m_Memory[c_DIV_REGISTER_ADDRESS] = 0 ;
     }
     else
     {
@@ -173,10 +173,10 @@ void MemoryBus::ramBankEnable(word_t address, byte_t value)
         if (address & (1<<4)) return;
     }
 
-    word_t testData = value & 0xF;
-    if (testData == 0xA)
+    word_t testData = value & 0xFu;
+    if (testData == 0xAu)
         m_EnableRAM = true;
-    else if (testData == 0x0)
+    else if (testData == 0u)
         m_EnableRAM = false;
 }
 
@@ -212,13 +212,13 @@ void MemoryBus::RAMBankChange(byte_t value)
 }
 void MemoryBus::changeROMRAMMode(byte_t value)
 {
-    word_t newData = value & 0x1u ;
-    m_ROMBanking = newData == 0;
+    word_t newData = value & 1u ;
+    m_ROMBanking = !newData;
     if (m_ROMBanking)
         m_CurrentRAMBank = 0 ;
 }
 
 void MemoryBus::incrementDivRegister()
 {
-    ++m_Memory[c_DIV_REGISTER];
+    ++m_Memory[c_DIV_REGISTER_ADDRESS];
 }

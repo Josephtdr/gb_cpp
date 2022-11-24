@@ -1221,39 +1221,42 @@ int CPU::OP_0xD8()
     return_(JumpTest::Carry);
     return 8;
 }
-/**********************vvvvvv****************************/
 //RETI
 int CPU::OP_0xD9()
 {
     return_(JumpTest::Always);
-    //TODO: enable interupts here
+    m_InteruptsEnabled = true;
     return 8;
 }
-
 //Miscellaneous
 //DAA
 int CPU::OP_0x27()
 {
-    //idk
+    checkDAA(m_Registers.a);
     return 4;
 }
-/********************^^^^^^^^^***************************/
 //CPL
 int CPU::OP_0x2F()
 {
     m_Registers.a = ~m_Registers.a;
+    m_Registers.f.subtract = true;
+    m_Registers.f.half_carry = true;
     return 4;
 }
 //CCF
 int CPU::OP_0x3F()
 {
     m_Registers.f.carry = !m_Registers.f.carry;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
     return 4;
 }
 //SCF
 int CPU::OP_0x37()
 {
     m_Registers.f.carry = true;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
     return 4;
 }
 //NOP
@@ -1274,60 +1277,59 @@ int CPU::OP_0x10()
 
     return 4;
 }
+/***********************^^^^^^^************************/
 //DI disable interupts
 int CPU::OP_0xF3()
 {
-
+    m_InteruptsEnabled = false;
     return 4;
 }
 //EI enable interupts
 int CPU::OP_0xFB()
 {
-
+    m_InteruptsEnabled = true;
     return 4;
 }
-/***********************^^^^^^^************************/
-
 //SWAP n
 int CPU::OP_CB_0x37()
 {
-    swap(m_Registers.a);
+    swapNibbles(m_Registers.a);
     return 8;
 }
 int CPU::OP_CB_0x30()
 {
-    swap(m_Registers.b);
+    swapNibbles(m_Registers.b);
     return 8;
 }
 int CPU::OP_CB_0x31()
 {
-    swap(m_Registers.c);
+    swapNibbles(m_Registers.c);
     return 8;
 }
 int CPU::OP_CB_0x32()
 {
-    swap(m_Registers.d);
+    swapNibbles(m_Registers.d);
     return 8;
 }
 int CPU::OP_CB_0x33()
 {
-    swap(m_Registers.e);
+    swapNibbles(m_Registers.e);
     return 8;
 }
 int CPU::OP_CB_0x34()
 {
-    swap(m_Registers.h);
+    swapNibbles(m_Registers.h);
     return 8;
 }
 int CPU::OP_CB_0x35()
 {
-    swap(m_Registers.l);
+    swapNibbles(m_Registers.l);
     return 8;
 }
 int CPU::OP_CB_0x36()
 {
     byte_t val{ m_Memory.readByte( m_Registers.get_hl()) };
-    swap(val);
+    swapNibbles(val);
     m_Memory.writeByte(m_Registers.get_hl(), val);
     return 16;
 }

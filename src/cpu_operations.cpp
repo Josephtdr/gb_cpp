@@ -64,13 +64,156 @@ void CPU::halt()
  * 
  * @param reg 
  */
-void CPU::swap(byte_t& reg)
+void CPU::swapNibbles(byte_t& reg)
 {
     byte_t lsn{ reg & 0xFu };
     byte_t msn{ reg >> 4 };
 
     reg = ((lsn << 4) | msn); 
+
+    m_Registers.f.zero = !reg;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = false;
+    m_Registers.f.carry = false;
 }
+
+/**
+ * @brief performs the function testBit, but with the intention of setting
+ * the f register, if testBit is false, the zero register is set. 
+ * 
+ * @param byte the byte
+ * @param bit the nth bit from the right, starting at 0
+ */
+void CPU::testBit_OP(const byte_t& byte, int bit)
+{
+    bool test{ testBit(byte, bit) };
+
+    m_Registers.f.zero = !test;
+    m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = true;
+}
+
+/**
+ * @brief returns true if the bit is set in the byte
+ * 
+ * @param byte the byte
+ * @param bit the nth bit from the right, starting at 0
+ */
+bool CPU::testBit(const byte_t& byte, int bit) const
+{
+    return byte & (1 << bit);
+}
+
+/**
+ * @brief sets a bit in a byte
+ * 
+ * @param byte the byte to be changed
+ * @param bit the nth bit from the right, starting at 0
+ */
+void CPU::setBit(byte_t& byte, int bit)
+{
+    byte |= (1 << bit); 
+}
+
+/**
+ * @brief resets a bit in a byte
+ * 
+ * @param byte the byte to be changed
+ * @param bit the nth bit from the right, starting at 0
+ */
+void CPU::resetBit(byte_t& byte, int bit)
+{
+    byte &= ~(1 << bit);
+}
+
+/**
+ * @brief Rotates the given byte left by 1.
+ * 
+ * @param byte 
+ * @param withCarry If true, then rotated through the carry, 
+ * (i.e. bit 7 becomes the carry and the carry becomes bit 0),
+ * otherwise rotated normally but the carry is also set
+ * to old bit 7. 
+ */
+void CPU::leftRotate(byte_t& byte, bool withCarry)
+{
+    byte_t carry{ m_Registers.f.carry };
+    byte_t oldBit7{ (byte & 0b10000000) >> 7 };
+
+    if (withCarry)
+    {
+        m_Registers.f.carry = oldBit7;
+        byte = (byte << 1) | carry;
+    } 
+    else
+    {
+        m_Registers.f.carry = oldBit7;
+        byte = (byte << 1) | oldBit7;
+    }
+}
+
+/**
+ * @brief Rotates the given byte right by 1.
+ * 
+ * @param byte 
+ * @param withCarry If true, then rotated through the carry, 
+ * (i.e. bit 0 becomes the carry and the carry becomes bit 7),
+ * otherwise rotated normally but the carry is also set
+ * to old bit 0. 
+ */
+void CPU::rightRotate(byte_t& byte, bool withCarry)
+{
+    byte_t carry{ m_Registers.f.carry };
+    byte_t oldBit0{ (byte & 0b1) };
+
+    if (withCarry)
+    {
+        m_Registers.f.carry = oldBit0;
+        byte = (carry << 7) | (byte >> 1);
+    } 
+    else
+    {
+        m_Registers.f.carry = oldBit0;
+        byte = (oldBit0 << 7) | (byte >> 1);
+    }
+}
+
+void CPU::leftShift(byte_t& byte, bool withCarry)
+{
+
+}
+void CPU::rightShift(byte_t& byte, bool withCarry)
+{
+
+}
+
+void CPU::checkDAA(byte_t& byte)
+{
+    byte_t lowerNibble{ byte & 0xFu };
+    byte_t upperNibble{ (byte & 0xF0u) >> 4 };
+    
+    if (lowerNibble > 9u)
+    {
+        lowerNibble += 6u;
+        lowerNibble &= 0xFu;
+        upperNibble += 1u;
+    }
+    if (upperNibble > 9u)
+    {
+        upperNibble += 6u;
+        upperNibble &= 0xFu;
+        m_Registers.f.carry = true;
+    }
+    else
+    {
+        m_Registers.f.carry = false;
+    }
+    byte = (upperNibble << 4) | lowerNibble;
+
+    m_Registers.f.zero = !byte;
+    m_Registers.f.half_carry = false;
+}
+
 
 /**
  * @brief Adds the given value to the stack, a byte at a time, msb first, 
@@ -84,6 +227,7 @@ void CPU::push(word_t value)
     --m_SP;
     m_Memory.writeByte(m_SP, (value & 0xFFu));
 }
+
 /**
  * @brief Pops a value of the top of the stack 
  * and increments the sp twice
@@ -112,13 +256,13 @@ void CPU::call(JumpTest type, const word_t& address)
         m_PC = address;
     }
 }
+
 /**
  * @brief Checks if the return is valid, if so 
- * pops the value from the top of the stack and returns it
- * otherwise returns the current pc such that the return is ignored.
+ * pops the value from the top of the stack and sets the pc to it
+ * otherwise does nothing.
  * 
- * @param valid boolean indicating if the return is valid
- * @return the address to return to
+ * @param valid jumptest type to check if the return is valid
  */
 void CPU::return_(JumpTest type)
 {
@@ -127,7 +271,8 @@ void CPU::return_(JumpTest type)
 }
 
 /**
- * @brief Resets the program counter to 0x0000 + the given address value
+ * @brief add the current pc to the stack then
+ * resets the program counter to 0x0000 + the given address value
  * 
  * @param address a byte
  */

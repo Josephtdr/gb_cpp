@@ -18,7 +18,7 @@ private:
     bool m_ROMBanking{};
     bool m_EnableRAM{};
 
-    int& m_timerCounter;
+    int& m_timerCounterRef;
 
     void getRomBankingMode();
     void updateBanking(word_t address, byte_t value);

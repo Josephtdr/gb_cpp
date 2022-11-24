@@ -15,33 +15,48 @@ private:
     word_t m_PC{};
     word_t m_SP{};
     
+    bool m_InteruptsEnabled{};
     bool halted{};
 
 public:
     CPU();
     void frameUpdate();
-    void updateDividerRegister(int cycles);
+    
 private:
     int cycle();
     int execute(byte_t instructionByte, bool prefixed);
     word_t readNextWord();
     byte_t readNextByte();
 
+    void updateDividerRegister(int cycles);
     void updateTimers(int cycles);
-    
     bool isClockEnabled() const;
     byte_t getClockFreq() const;
     void setClockFreq();
-
+    
+    void interupts();
+    void requestInterupt(int interupt);
+    void performInterupt(int interupt);
+    void testFunc();
+    
     using opcodeFnPtr = int(CPU::*)();
     opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
     opcodeFnPtr prefixedInstructionTable[c_INSTRUCTION_TABLE_SIZE]{};
     
     void push(word_t value);
     word_t pop();
-    void swap(byte_t& reg);
+    void swapNibbles(byte_t& reg);
     void halt();
     
+    void testBit_OP(const byte_t& byte, int bit);
+    bool testBit(const byte_t& byte, int bit) const;
+    void setBit(byte_t& byte, int bit);
+    void resetBit(byte_t& byte, int bit);
+    void leftRotate(byte_t& byte, bool withCarry = false);
+    void rightRotate(byte_t& byte, bool withCarry = false);
+    void leftShift(byte_t& byte, bool withCarry = false);
+    void rightShift(byte_t& byte, bool withCarry = false);
+    void checkDAA(byte_t& byte);
 
     //Jumps
     enum class JumpTest 
