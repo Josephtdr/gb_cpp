@@ -189,7 +189,6 @@ void CPU::byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource)
         default:
             throw std::runtime_error("Invalid load source!");
     }
-    //D16I, BCI, DEI, HLI,
     switch (ldTarget)
     {
         case ByteLoadTarget::A:

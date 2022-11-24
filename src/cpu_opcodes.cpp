@@ -422,7 +422,7 @@ int CPU::CBopcode_Translator(byte_t opcode)
             byte_t HL{ m_Memory.readByte(m_Registers.get_hl()) };
             ((*this).*(preCB0x40_FunctionTable[opcode-0x40]))(HL);
             m_Memory.writeByte(m_Registers.get_hl(), HL);
-            return opcode < 0x80 ? 12 : 16;
+            return 16;
         }
     }
     else

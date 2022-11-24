@@ -20,6 +20,7 @@ void CPU::frameUpdate()
 
     while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE) 
     {
+        //if (!halted) something like this
         int cycles{ cycle() };
         cyclesThisUpdate += cycles;
         updateTimers(cycles);
@@ -31,9 +32,6 @@ void CPU::frameUpdate()
 
 int CPU::cycle()
 {
-    if (halted)
-        return 1; //not sure what return value should be here, check interupts
-
     byte_t instructionByte{ m_Memory.readByte(m_PC) };
 
     bool prefixed{ instructionByte == c_PREFIXED_INSTRUCTION_BYTE };
@@ -158,6 +156,7 @@ void CPU::interupts()
                 {
                     if (testBit(enabled,i)) //and interupt (i) is enabled 
                     {
+                        //remove halt?
                         performInterupt(i);
                     }
                 }
