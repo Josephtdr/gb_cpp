@@ -18,7 +18,7 @@ void CPU::frameUpdate()
 {
     int cyclesThisUpdate = 0;
 
-    while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE) 
+    while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
     {
         //if (!halted) something like this
         int cycles{ cycle() };

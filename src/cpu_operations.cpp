@@ -40,14 +40,8 @@ void CPU::push(word_t value)
     word_t msb{ static_cast<word_t>(value >> 8) };
     std::cout << "SP: " << +m_SP << ", will push " << +value << " to stack!\n";
 
-    --m_SP;
-    std::cout << "SP: " << +m_SP << ", Pushing msb:" << +msb << " to stack!\n"; 
-
-    m_Memory.writeByte(m_SP, msb);
-    --m_SP;
-
-    std::cout << "SP: " << +m_SP << ", Pushing lsb:" << +lsb << " to stack!\n";
-    m_Memory.writeByte(m_SP, lsb);
+    m_Memory.writeByte(--m_SP, msb);
+    m_Memory.writeByte(--m_SP, lsb);
 }
 
 /**
@@ -57,15 +51,10 @@ void CPU::push(word_t value)
  */
 word_t CPU::pop()
 {
-    byte_t lsb{ m_Memory.readByte(m_SP) };
-    std::cout << "SP: " << +m_SP << ", popping " << +lsb << " from stack!\n";
-    ++m_SP;
-    byte_t msb{ m_Memory.readByte(m_SP) };
-    std::cout << "SP: " << +m_SP << ", popping " << +msb << " from stack!\n";
-    ++m_SP;
+    byte_t lsb{ m_Memory.readByte(m_SP++) };
+    byte_t msb{ m_Memory.readByte(m_SP++) };
 
     std::cout << "SP: " << +m_SP << ", Popped " << +((msb << 8) | lsb) << " from stack!\n"; 
-
     return (msb << 8) | lsb;
 }
 

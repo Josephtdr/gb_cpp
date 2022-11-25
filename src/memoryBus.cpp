@@ -134,7 +134,7 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     }
     else
     {
-        std::cout << std::hex << "writing value:" << +value << ", to address:" << +address << " normally!\n";
+        // std::cout << std::hex << "writing value:" << +value << ", to address:" << +address << " normally!\n";
         m_Memory[address] = value;
     }
 }

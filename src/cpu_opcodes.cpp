@@ -1,6 +1,7 @@
 #include "cpu.h"
 
 #include <stdexcept>
+#include <iostream>
 
 void CPU::setupTables()
 {
@@ -1727,12 +1728,14 @@ int CPU::OP_0x10()
 int CPU::OP_0xF3()
 {
     m_InteruptsEnabled = false;
+    std::cout << "Interupts Disabled!" << "\n";
     return 4;
 }
 //EI enable interupts
 int CPU::OP_0xFB()
 {
     m_InteruptsEnabled = true;
+    std::cout << "Interupts Enabled!" << "\n";
     return 4;
 }
 //Rotates and shifts
