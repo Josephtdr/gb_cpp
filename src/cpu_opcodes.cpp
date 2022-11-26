@@ -1,4 +1,4 @@
-#include "cpu.h"
+#include "inc/cpu.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -415,13 +415,13 @@ int CPU::CBopcode_Translator(byte_t opcode)
         if (!usingHLI)
         {
             byte_t& reg = CBopcodeToRegister(opcode);
-            ((*this).*(preCB0x40_FunctionTable[opcode-0x40]))(reg);
+            ((*this).*(preCB0x40_FunctionTable[opcode]))(reg);
             return 8;
         }
         else
         {
             byte_t HL{ m_Memory.readByte(m_Registers.get_hl()) };
-            ((*this).*(preCB0x40_FunctionTable[opcode-0x40]))(HL);
+            ((*this).*(preCB0x40_FunctionTable[opcode]))(HL);
             m_Memory.writeByte(m_Registers.get_hl(), HL);
             return 16;
         }
@@ -429,6 +429,7 @@ int CPU::CBopcode_Translator(byte_t opcode)
     else
     {
         int bit{ (opcode % 0x40) / 8 };
+        // logg(LOG_DEBUG) << "CB Opcode: " << +opcode << ", performing on bit: " << bit;  
         if (!usingHLI)
         {
             byte_t& reg = CBopcodeToRegister(opcode);
@@ -1708,6 +1709,7 @@ int CPU::OP_0x37()
 //NOP
 int CPU::OP_0x00()
 {
+    // logg(LOG_DEBUG) << "NOP";
     return 4;
 }
 /*********************vvvvvv************************/
@@ -1715,12 +1717,14 @@ int CPU::OP_0x00()
 int CPU::OP_0x76()
 {
 
+    // logg(LOG_INFO) << "Executed Halt!";
     return 4;
 }
 //STOP
 int CPU::OP_0x10()
 {
 
+    // logg(LOG_INFO) << "Executed Stop!";
     return 4;
 }
 /***********************^^^^^^^************************/
@@ -1728,14 +1732,14 @@ int CPU::OP_0x10()
 int CPU::OP_0xF3()
 {
     m_InteruptsEnabled = false;
-    std::cout << "Interupts Disabled!" << "\n";
+    // logg(LOG_INFO) << "Interupts Disabled!";
     return 4;
 }
 //EI enable interupts
 int CPU::OP_0xFB()
 {
     m_InteruptsEnabled = true;
-    std::cout << "Interupts Enabled!" << "\n";
+    // logg(LOG_INFO) << "Interupts Enabled!";
     return 4;
 }
 //Rotates and shifts

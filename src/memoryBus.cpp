@@ -1,4 +1,4 @@
-#include "memoryBus.h"
+#include "inc/memoryBus.h"
 
 #include <stdexcept> // for std::runtime_error
 #include <cstring> //memset, 
@@ -46,34 +46,38 @@ byte_t MemoryBus::readByte(word_t address) const
     //boot rom currently loaded
     if (m_bootRomLoaded && (address>=0) && (address <= 0x100))
     {
+        // logg(LOG_DEBUG) << "Read boot rom, address:" << +address << ".";
         return m_Memory[address];
     }
     //boot rom wiped
     else if ((address>=0) && (address <= 0x4000)) 
     {
+        // logg(LOG_DEBUG) << "Read ram bank: 0.";
         return m_CartridgeMemory[address];
     }
     //rom banking area so access cartridge memory instead
     else if ((address>=0x4000) && (address <= 0x7FFF))
     {
-        word_t newAddress = address - c_ROM_BANK_SIZE;
+        // logg(LOG_DEBUG) << "Read rom bank: " << m_CurrentROMBank;
+        word_t newAddress{ address - c_ROM_BANK_SIZE };
         return m_CartridgeMemory[newAddress + (m_CurrentROMBank*c_ROM_BANK_SIZE)];
     }
     // ram memory bank area
     else if ((address >= 0xA000) && (address <= 0xBFFF))
     {
-        word_t newAddress = address - 0xA000;
+        // logg(LOG_DEBUG) << "Read ram bank: " << m_CurrentRAMBank;
+        word_t newAddress{ address - 0xA000 };
         return m_RAMBankMemory[newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)];
     }
     // restricted memory area
-    else if (0xFEA0u <= address && address <= 0xFEFFu)
+    else if ((0xFEA0u <= address) && (address <= 0xFEFFu))
     {
-        // std::cout << "Restricted access for address: " << +address << "!\n";
+        // logg(LOG_DEBUG) << "Read restricted, address: " << +address << "!";
         return 0u;
     }
     else
     {
-        // std::cout << "Reading address:" << +address << " normally!\n";
+        // logg(LOG_DEBUG) << "Read normal, address: " << +address << ", value: " << +m_Memory[address] << ".";
         return m_Memory[address];
     }
 }
@@ -91,6 +95,9 @@ void MemoryBus::writeByte(word_t address, byte_t value)
         if (m_EnableRAM)
         {
             word_t newAddress{ address - 0xA000 };
+            // logg(LOG_DEBUG) << "Write to Ram Bank:" << m_CurrentRAMBank 
+                        //    << ", address: " << +(newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)) 
+                        //    << ", value: " << +value << ".";
             m_RAMBankMemory[newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)] = value ;
         }
     }
@@ -109,6 +116,8 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     //harcoded and hacky because of oop setup
     else if (address == c_TMC_ADDRESS)
     {
+        // logg(LOG_INFO) << "Writing new TMC value:" << +value;
+
         byte_t currentfreq = m_Memory[c_TMC_ADDRESS] & 0b11u;
         m_Memory[c_TMC_ADDRESS] = value;
         byte_t newfreq = m_Memory[c_TMC_ADDRESS] & 0b11u;
@@ -134,7 +143,8 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     }
     else
     {
-        // std::cout << std::hex << "writing value:" << +value << ", to address:" << +address << " normally!\n";
+        // logg(LOG_DEBUG) << "Write normal, address: " << +address 
+                    //    << ", value: " << +value << ".";
         m_Memory[address] = value;
     }
 }
@@ -142,7 +152,7 @@ void MemoryBus::writeByte(word_t address, byte_t value)
 
 void MemoryBus::loadGame(const char* filename)
 {
-    std::cout << "loading game!" << "\n";
+    // logg(LOG_INFO) << "Loading game into game rom!";
     memset(m_CartridgeMemory,0,sizeof(m_CartridgeMemory)) ;
 
     FILE *in;
@@ -156,7 +166,7 @@ void MemoryBus::loadGame(const char* filename)
 
 void MemoryBus::loadBootRom()
 {
-    std::cout << "loading boot rom into memory!" << "\n";
+    // logg(LOG_INFO) << "Loading boot rom into memory!";
 
     char* buffer = new char[c_BOOT_ROM_SIZE];
 
@@ -176,7 +186,7 @@ void MemoryBus::loadBootRom()
 
 void MemoryBus::unloadBootRom()
 {
-    std::cout << "Unloading boot rom!" << "\n";
+    // logg(LOG_INFO) << "Unmapping boot rom!";
     m_bootRomLoaded = false;
     std::exit(EXIT_FAILURE);
 }

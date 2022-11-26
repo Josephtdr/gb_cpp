@@ -1,3 +1,3 @@
 #! /bin/sh
 
-./build/gbemu
+./build/src/gbemu

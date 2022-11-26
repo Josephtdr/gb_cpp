@@ -1,4 +1,4 @@
-#include "registers.h"
+#include "inc/registers.h"
 
 FlagsRegister::FlagsRegister(byte_t value)
     : zero{static_cast<bool>( (value >> c_ZERO_FLAG_BYTE_POS) & 0b1 )},

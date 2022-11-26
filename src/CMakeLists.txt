@@ -1,12 +1,14 @@
-cmake_minimum_required(VERSION 3.24.2)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-project(gbemu)
-
 # find_package(SDL2 REQUIRED)
 
 # include_directories(${PROJECT_NAME} 
 #     ${SDL2_INCLUDE_DIRS}
+# )
+include_directories(
+    ${MyProject_SOURCE_DIR}/src/inc
+    # ${MyProject_SOURCE_DIR}/external/BSlogger/src
+)
+# link_directories(
+#     ${MyProject_SOURCE_DIR}/external/BSlogger
 # )
 
 add_executable(${PROJECT_NAME} 
@@ -18,6 +20,8 @@ add_executable(${PROJECT_NAME}
     cpu_opcodes.cpp
     gpu.cpp
 )
+
+# target_link_libraries(${PROJECT_NAME} bslogger)
 
 # target_link_libraries(${PROJECT_NAME} 
 #     ${SDL2_LIBRARIES}

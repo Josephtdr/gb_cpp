@@ -2,7 +2,7 @@
 #include <chrono> // for std::chrono functions
 
 #include "unistd.h"
-#include "cpu.h"
+#include "inc/cpu.h"
 
 //https://www.learncpp.com/cpp-tutorial/timing-your-code/
 class Timer

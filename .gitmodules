@@ -1,3 +1,0 @@
-[submodule "external/BSlogger"]
-	path = external/BSlogger
-	url = https://github.com/bschiffthaler/BSlogger.git

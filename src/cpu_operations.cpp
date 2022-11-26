@@ -1,4 +1,4 @@
-#include "cpu.h"
+#include "inc/cpu.h"
 
 #include <iostream>
 #include <stdexcept> // for std::runtime_error
@@ -38,7 +38,7 @@ void CPU::push(word_t value)
 {
     word_t lsb{ static_cast<word_t>(value & 0xFFu) };
     word_t msb{ static_cast<word_t>(value >> 8) };
-    std::cout << "SP: " << +m_SP << ", will push " << +value << " to stack!\n";
+    // logg(LOG_DEBUG) << "SP: " << +m_SP << ", will push " << +value << " to stack!"; 
 
     m_Memory.writeByte(--m_SP, msb);
     m_Memory.writeByte(--m_SP, lsb);
@@ -54,8 +54,10 @@ word_t CPU::pop()
     byte_t lsb{ m_Memory.readByte(m_SP++) };
     byte_t msb{ m_Memory.readByte(m_SP++) };
 
-    std::cout << "SP: " << +m_SP << ", Popped " << +((msb << 8) | lsb) << " from stack!\n"; 
-    return (msb << 8) | lsb;
+    byte_t out{ (msb << 8) | lsb };
+
+    // logg(LOG_DEBUG) << "SP: " << +(m_SP-2) << ", Popped " << +out << " from stack!"; 
+    return out;
 }
 
 /**

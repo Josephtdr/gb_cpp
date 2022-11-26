@@ -1,4 +1,4 @@
-#include "cpu.h"
+#include "inc/cpu.h"
 
 #include <iostream> 
 #include <stdexcept>
@@ -27,6 +27,7 @@ void CPU::frameUpdate()
         // UpdateGraphics(cycles);
         interupts();
     }
+    // logg(LOG_DEBUG) << "Frame finished!";
     // RenderScreen();
 }
 
@@ -48,18 +49,8 @@ int CPU::cycle()
 
 int CPU::execute(byte_t instructionByte, bool prefixed)
 {
-    //logging here
-    // "0x{:x} ", instructionByte
-    // "CB 0x{:x} ", instructionByte if prefixed
-    //Temp cout logging
-    if (!prefixed)
-    {
-        std::cout << "PC: " << std::hex << +(m_PC-1) << ", Running opcode 0x" << +instructionByte << " \n"; 
-    }
-    else
-    {
-        std::cout << "PC: " << std::hex << +(m_PC-1) << ", Running opcode CB 0x" << +instructionByte << " \n"; 
-    }
+    // logg(LOG_DEBUG) << "PC:" << +(m_PC-1) << ", Running opcode" << ((prefixed) ? "CB_0x" : "0x") << +instructionByte;
+
     try 
     {
         if (!prefixed)
@@ -69,7 +60,7 @@ int CPU::execute(byte_t instructionByte, bool prefixed)
     }
     catch (std::runtime_error e)
     {
-        std::cout << e.what() << "\n";
+        // logg(LOG_ERROR) << e.what();
         std::exit(EXIT_FAILURE);
     }
 }
@@ -90,7 +81,7 @@ void CPU::updateTimers(int cycles)
         // enough cpu clock cycles have happened to update the timer
         if (m_TimerCounter <= 0)
         {
-            std::cout << "Timer reset!\n";
+            // logg(LOG_INFO) << "Timer reset!";
             // reset m_TimerTracer to the correct value
             setClockFreq();
 
@@ -180,7 +171,7 @@ void CPU::requestInterupt(int interupt) //0,1,2,4
  */
 void CPU::performInterupt(int interupt)
 {
-    std::cout << "Starting interupt " << interupt << "!\n";
+    // logg(LOG_INFO) << "Starting interupt " << interupt << "!";
     m_InteruptsEnabled = false;
 
     byte_t requests = m_Memory.readByte(c_INTERUPTS_REQ_ADDRESS);
