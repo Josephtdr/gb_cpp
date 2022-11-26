@@ -10,8 +10,11 @@
  */
 word_t CPU::readNextWord()
 {
-    byte_t lsb{ m_Memory.readByte(m_PC++) };
-    byte_t msb{ m_Memory.readByte(m_PC++) };
+    byte_t lsb{ m_Memory.readByte(m_PC) };
+    ++m_PC;
+    byte_t msb{ m_Memory.readByte(m_PC) };
+    ++m_PC;
+    
     return (msb << 8) | lsb;
 }
 /**
@@ -21,7 +24,9 @@ word_t CPU::readNextWord()
  */
 byte_t CPU::readNextByte()
 {
-    return m_Memory.readByte(m_PC++);
+    byte_t out{ m_Memory.readByte(m_PC) };
+    ++m_PC;
+    return out;
 }
 
 void CPU::halt()
@@ -38,10 +43,13 @@ void CPU::push(word_t value)
 {
     word_t lsb{ static_cast<word_t>(value & 0xFFu) };
     word_t msb{ static_cast<word_t>(value >> 8) };
-    // logg(LOG_DEBUG) << "SP: " << +m_SP << ", will push " << +value << " to stack!"; 
+    m_log(LOG_DEBUG) << "SP: " << +m_SP << ", will push " << +msb 
+                     << ", " << +lsb << " to stack!" << "\n"; 
 
-    m_Memory.writeByte(--m_SP, msb);
-    m_Memory.writeByte(--m_SP, lsb);
+    --m_SP;
+    m_Memory.writeByte(m_SP, msb);
+    --m_SP;
+    m_Memory.writeByte(m_SP, lsb);
 }
 
 /**
@@ -51,12 +59,14 @@ void CPU::push(word_t value)
  */
 word_t CPU::pop()
 {
-    byte_t lsb{ m_Memory.readByte(m_SP++) };
-    byte_t msb{ m_Memory.readByte(m_SP++) };
+    byte_t lsb{ m_Memory.readByte(m_SP) };
+    ++m_SP;
+    byte_t msb{ m_Memory.readByte(m_SP) };
+    ++m_SP;
 
-    byte_t out{ (msb << 8) | lsb };
+    word_t out{ (msb << 8) | lsb };
 
-    // logg(LOG_DEBUG) << "SP: " << +(m_SP-2) << ", Popped " << +out << " from stack!"; 
+    m_log(LOG_DEBUG) << "SP: " << +(m_SP-2) << ", Popped " << +out << " from stack!" << "\n"; 
     return out;
 }
 

@@ -429,7 +429,7 @@ int CPU::CBopcode_Translator(byte_t opcode)
     else
     {
         int bit{ (opcode % 0x40) / 8 };
-        // logg(LOG_DEBUG) << "CB Opcode: " << +opcode << ", performing on bit: " << bit;  
+        m_log(LOG_DEBUG) << "CB Opcode: " << +opcode << ", performing on bit: " << bit << "\n";  
         if (!usingHLI)
         {
             byte_t& reg = CBopcodeToRegister(opcode);
@@ -1547,28 +1547,33 @@ int CPU::OP_0xE9()
 // JR n
 int CPU::OP_0x18()
 {
-    jump(JumpTest::Always, m_PC+readNextByte());
+    byte_t offset{ readNextByte() };
+    jump(JumpTest::Always, m_PC+offset);
     return 8;
 }
 //JR cc,n
 int CPU::OP_0x20()
 {
-    jump(JumpTest::NotZero, m_PC+readNextByte());
+    byte_t offset{ readNextByte() };
+    jump(JumpTest::NotZero, m_PC+offset);
     return 8;
 }
 int CPU::OP_0x28()
 {
-    jump(JumpTest::Zero,  m_PC+readNextByte());
+    byte_t offset{ readNextByte() };
+    jump(JumpTest::Zero,  m_PC+offset);
     return 8;
 }
 int CPU::OP_0x30()
 {
-    jump(JumpTest::NotCarry,  m_PC+readNextByte());
+    byte_t offset{ readNextByte() };
+    jump(JumpTest::NotCarry,  m_PC+offset);
     return 8;
 }
 int CPU::OP_0x38()
 {
-    jump(JumpTest::Carry,  m_PC+readNextByte());
+    byte_t offset{ readNextByte() };
+    jump(JumpTest::Carry,  m_PC+offset);
     return 8;
 }
 //Calls
@@ -1709,7 +1714,7 @@ int CPU::OP_0x37()
 //NOP
 int CPU::OP_0x00()
 {
-    // logg(LOG_DEBUG) << "NOP";
+    m_log(LOG_DEBUG) << "NOP" << "\n";
     return 4;
 }
 /*********************vvvvvv************************/
@@ -1717,14 +1722,14 @@ int CPU::OP_0x00()
 int CPU::OP_0x76()
 {
 
-    // logg(LOG_INFO) << "Executed Halt!";
+    m_log(LOG_INFO) << "Executed Halt!" << "\n";
     return 4;
 }
 //STOP
 int CPU::OP_0x10()
 {
 
-    // logg(LOG_INFO) << "Executed Stop!";
+    m_log(LOG_INFO) << "Executed Stop!" << "\n";
     return 4;
 }
 /***********************^^^^^^^************************/
@@ -1732,14 +1737,14 @@ int CPU::OP_0x10()
 int CPU::OP_0xF3()
 {
     m_InteruptsEnabled = false;
-    // logg(LOG_INFO) << "Interupts Disabled!";
+    m_log(LOG_INFO) << "Interupts Disabled!" << "\n";
     return 4;
 }
 //EI enable interupts
 int CPU::OP_0xFB()
 {
     m_InteruptsEnabled = true;
-    // logg(LOG_INFO) << "Interupts Enabled!";
+    m_log(LOG_INFO) << "Interupts Enabled!" << "\n";
     return 4;
 }
 //Rotates and shifts

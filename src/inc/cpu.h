@@ -4,13 +4,15 @@
 #include "consts.h"
 #include "registers.h"
 #include "memoryBus.h"
+#include "BSlogger.h"
 
 class CPU
 {
 private:
     int m_TimerCounter{};
     int m_DividerCounter{};
-    MemoryBus m_Memory{m_TimerCounter};
+    logger m_log;
+    MemoryBus m_Memory{m_TimerCounter, m_log};
     Registers m_Registers{};
     word_t m_PC{};
     word_t m_SP{};

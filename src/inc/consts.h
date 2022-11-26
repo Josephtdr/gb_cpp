@@ -33,7 +33,7 @@ const unsigned int c_LCD_INTERUPT = 0x48;
 const unsigned int c_TIMER_INTERUPT = 0x50;
 const unsigned int c_JOYPAD_INTERUPT = 0x60;
 
-const std::string c_BOOT_ROM_LOCATION = "/home/randa/Documents/emulation/gb_cpp/roms/DMG_ROM.bin";
-const int c_BOOT_ROM_SIZE = 256;
+const std::string c_BOOT_ROM_LOCATION = "/home/randa/Documents/Projects/gb_cpp/roms/DMG_ROM.bin";
+const int c_BOOT_ROM_SIZE = 0x100;
 
 #endif

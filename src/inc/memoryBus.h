@@ -1,11 +1,15 @@
+
 #ifndef H_MEMORYBUS
 #define H_MEMORYBUS
 
 #include "consts.h"
+#include "BSlogger.h"
 
 class MemoryBus
 {
 private:
+    logger& m_log;
+
     byte_t m_Memory[c_MEMORY_SIZE]{};
     byte_t m_CartridgeMemory[c_CARTRIDGE_MEMORY_SIZE]{};
     byte_t m_RAMBankMemory[c_RAM_BANKS_MEMORY_SIZE]{};
@@ -32,7 +36,7 @@ private:
     void changeROMRAMMode(byte_t value);
 
 public:
-    MemoryBus(int& timerRef);
+    MemoryBus(int& timerRef, logger& logRef);
 
     byte_t readByte(word_t address) const;
     void writeByte(word_t address, byte_t value);
