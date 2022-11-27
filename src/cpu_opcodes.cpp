@@ -938,7 +938,8 @@ int CPU::OP_0xF9()
 //LDHL SP,n
 int CPU::OP_0xF8()
 {
-    makesigned.
+    m_log(LOG_ERROR) << "opcode 0xF8 needs to be signed!" << "\n";
+    std::exit(EXIT_FAILURE);
     wordLoad(WordLoadTarget::HL, WordLoadSource::SPpD8);
     return 12;
 }
@@ -1472,7 +1473,8 @@ int CPU::OP_0x39()
 //ADD SP,n
 int CPU::OP_0xE8()
 {
-    makesigned.
+    m_log(LOG_ERROR) << "Opcode 0xE8 needs to be signed" << "\n";
+    std::exit(EXIT_FAILURE);
     wordAdd(m_SP, readNextWord());
     return 16;
 }
@@ -1729,14 +1731,16 @@ int CPU::OP_0x00()
 //HALT
 int CPU::OP_0x76()
 {
-
+    m_log(LOG_ERROR) << "Halt not implemented" << "\n";
+    std::exit(EXIT_FAILURE);
     m_log(LOG_INFO) << "Executed Halt!" << "\n";
     return 4;
 }
 //STOP
 int CPU::OP_0x10()
 {
-
+    m_log(LOG_ERROR) << "Stop not implemented" << "\n";
+    std::exit(EXIT_FAILURE);
     m_log(LOG_INFO) << "Executed Stop!" << "\n";
     return 4;
 }

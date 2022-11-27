@@ -33,7 +33,7 @@ void CPU::frameUpdate()
         if (m_lineByLine)
             getchar();
     }
-    m_log(LOG_DEBUG) << "Frame finished!" << "\n";
+    m_log(LOG_ERROR) << "Frame finished!" << "\n";
     // RenderScreen();
 }
 
