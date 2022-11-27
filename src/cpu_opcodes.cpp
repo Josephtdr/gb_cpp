@@ -408,14 +408,17 @@ byte_t& CPU::CBopcodeToRegister(byte_t opcode)
 int CPU::CBopcode_Translator(byte_t opcode)
 {
     unsigned int regInt{ opcode & 0xFu }; 
-    bool usingHLI{ regInt != 6 and regInt != 14 };
+    bool usingHLI{ regInt == 6 || regInt == 14 };
 
     if (opcode < 0x40)
     {
         if (!usingHLI)
         {
             byte_t& reg = CBopcodeToRegister(opcode);
+            std::cout <<"\n";
+            m_log(LOG_INFO) << "reg before is: " << +reg << ", f: "<< +m_Registers.f << ".\n";
             ((*this).*(preCB0x40_FunctionTable[opcode]))(reg);
+            m_log(LOG_INFO) << "reg after is: " << +reg << ", f: "<< +m_Registers.f <<".\n";
             return 8;
         }
         else
@@ -433,7 +436,10 @@ int CPU::CBopcode_Translator(byte_t opcode)
         if (!usingHLI)
         {
             byte_t& reg = CBopcodeToRegister(opcode);
+            std::cout <<"\n";
+            m_log(LOG_INFO) << "reg before is: " << +reg << ", f: "<< +m_Registers.f <<".\n";
             ((*this).*(postCB0x40_FunctionTable[opcode-0x40]))(reg, bit);
+            m_log(LOG_INFO) << "reg after is: " << +reg << ", f: "<< +m_Registers.f <<".\n";
             return 8;
         }
         else
@@ -932,6 +938,7 @@ int CPU::OP_0xF9()
 //LDHL SP,n
 int CPU::OP_0xF8()
 {
+    makesigned.
     wordLoad(WordLoadTarget::HL, WordLoadSource::SPpD8);
     return 12;
 }
@@ -1465,6 +1472,7 @@ int CPU::OP_0x39()
 //ADD SP,n
 int CPU::OP_0xE8()
 {
+    makesigned.
     wordAdd(m_SP, readNextWord());
     return 16;
 }
@@ -1548,32 +1556,32 @@ int CPU::OP_0xE9()
 int CPU::OP_0x18()
 {
     byte_t offset{ readNextByte() };
-    jump(JumpTest::Always, m_PC+offset);
+    jumpRelative(JumpTest::Always, offset);
     return 8;
 }
 //JR cc,n
 int CPU::OP_0x20()
 {
     byte_t offset{ readNextByte() };
-    jump(JumpTest::NotZero, m_PC+offset);
+    jumpRelative(JumpTest::NotZero, offset);
     return 8;
 }
 int CPU::OP_0x28()
 {
     byte_t offset{ readNextByte() };
-    jump(JumpTest::Zero,  m_PC+offset);
+    jumpRelative(JumpTest::Zero, offset);
     return 8;
 }
 int CPU::OP_0x30()
 {
     byte_t offset{ readNextByte() };
-    jump(JumpTest::NotCarry,  m_PC+offset);
+    jumpRelative(JumpTest::NotCarry, offset);
     return 8;
 }
 int CPU::OP_0x38()
 {
     byte_t offset{ readNextByte() };
-    jump(JumpTest::Carry,  m_PC+offset);
+    jumpRelative(JumpTest::Carry, offset);
     return 8;
 }
 //Calls

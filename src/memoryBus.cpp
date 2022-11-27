@@ -44,16 +44,13 @@ MemoryBus::MemoryBus(int& timerRef, logger& logRef)
 
 byte_t MemoryBus::readByte(word_t address) const
 {
-    //boot rom currently loaded
-    if (m_bootRomLoaded && (address < 0x100))
+    if (address <= 0x4000) 
     {
-        // m_log(LOG_DEBUG) << "Read boot rom, address:" << +address << "." << "\n";
-        return m_Memory[address];
-    }
-    //boot rom wiped
-    else if (address <= 0x4000) 
-    {
-        // m_log(LOG_DEBUG) << "Read ram bank: 0." << "\n";
+        //boot rom currently loaded
+        if (m_bootRomLoaded && (address < 0x100))
+        {
+            return m_Memory[address];
+        }
         return m_CartridgeMemory[address];
     }
     //rom banking area so access cartridge memory instead

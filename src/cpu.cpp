@@ -30,6 +30,8 @@ void CPU::frameUpdate()
         updateTimers(cycles);
         // UpdateGraphics(cycles);
         interupts();
+        if (m_lineByLine)
+            getchar();
     }
     m_log(LOG_DEBUG) << "Frame finished!" << "\n";
     // RenderScreen();
@@ -37,15 +39,13 @@ void CPU::frameUpdate()
 
 int CPU::cycle()
 {
-    byte_t instructionByte{ m_Memory.readByte(m_PC) };
+    byte_t instructionByte{ readNextByte() };
 
     bool prefixed{ instructionByte == c_PREFIXED_INSTRUCTION_BYTE };
     if (prefixed)
     { 
-        ++m_PC;
-        instructionByte = m_Memory.readByte(m_PC); 
+        instructionByte = readNextByte(); 
     }
-    ++m_PC;
     int nCycles{ execute(instructionByte, prefixed) };
 
     return nCycles;
@@ -53,8 +53,16 @@ int CPU::cycle()
 
 int CPU::execute(byte_t instructionByte, bool prefixed)
 {
-    m_log(LOG_INFO) << "PC:" << +(m_PC-1) << ", Running opcode " << std::hex 
+    if(m_lineByLine)
+    {
+        m_log(LOG_INFO) << "PC:" << +(m_PC-1) << ", Running opcode " << std::hex 
+                     << ((prefixed) ? "CB_0x" : "0x") << +instructionByte  << " ";
+    }
+    else
+    {
+        m_log(LOG_INFO) << "PC:" << +(m_PC-1) << ", Running opcode " << std::hex 
                      << ((prefixed) ? "CB_0x" : "0x") << +instructionByte  << "\n";
+    }
 
     try 
     {

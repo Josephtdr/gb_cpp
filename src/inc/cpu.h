@@ -19,6 +19,7 @@ private:
     
     bool m_InteruptsEnabled{};
     bool halted{};
+    bool m_lineByLine{};
 
     using opcodeFnPtr = int(CPU::*)();
     using preCB0x40_Function = void(CPU::*)(byte_t&);
@@ -84,6 +85,7 @@ private:
     };
     bool testJumpTest(JumpTest type);
     void jump(JumpTest type, const word_t& address);
+    void jumpRelative(JumpTest type, const byte_t& unsignedData);
     void call(JumpTest type, const word_t& address);
     void return_(JumpTest type);
     void restart(byte_t address);

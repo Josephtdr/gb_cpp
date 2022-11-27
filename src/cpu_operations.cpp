@@ -146,6 +146,31 @@ void CPU::jump(JumpTest type, const word_t& address)
         { m_PC = address; }
 }
 
+void CPU::jumpRelative(JumpTest type, const byte_t& unsignedData)
+{
+    int sign{ (unsignedData >> 7) };
+
+    if (sign)
+    {
+        int offset{ (unsignedData & 0b01111111) - 0b10000000 };
+        int intAddress{ m_PC + offset };
+        // intAddress %= 0xFFFF;
+
+        word_t newAddress{ static_cast<word_t>(intAddress) };
+
+        m_log(LOG_INFO) << "old address: " << +m_PC << ", new address: " << +newAddress 
+            << ", offset: " << std::dec << offset << std::hex
+                        <<".\n";
+
+        jump(type, newAddress);
+
+    }
+    else
+    {
+        jump(type, m_PC + (unsignedData >> 1));
+    }
+}
+
 /**
  * @brief Loads a byte value from the source into the target.
  * HCI etc. means the address location of the value stored in HC,
