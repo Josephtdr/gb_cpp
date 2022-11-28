@@ -8,7 +8,7 @@ CPU::CPU()
    m_SP{ c_TOP_OF_STACK },
    m_log{ std::cout, __PRETTY_FUNCTION__ }
 {
-    m_log.set_log_level(LOG_DEBUG);
+    m_log.set_log_level(LOG_INFO);
 
     m_Registers.set_af(0x01B0);
     m_Registers.set_bc(0x0013);
@@ -53,6 +53,10 @@ int CPU::cycle()
 
 int CPU::execute(byte_t instructionByte, bool prefixed)
 {
+    // if (m_PC > 0xF)
+    //     m_lineByLine = true;
+
+
     if(m_lineByLine)
     {
         m_log(LOG_INFO) << "PC:" << +(m_PC-1) << ", Running opcode " << std::hex 
@@ -67,9 +71,9 @@ int CPU::execute(byte_t instructionByte, bool prefixed)
     try 
     {
         if (!prefixed)
-            { return ((*this).*(instructionTable[instructionByte]))(); }
+            { return ((*this).*(instructionTable[instructionByte]))(instructionByte); }
         else
-            { return CBopcode_Translator(instructionByte); }
+            { return cpu_CB_opcode_Translator(instructionByte); }
     }
     catch (std::runtime_error e)
     {

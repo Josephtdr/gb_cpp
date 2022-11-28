@@ -57,14 +57,14 @@ byte_t MemoryBus::readByte(word_t address) const
     else if ((address>=0x4000) && (address <= 0x7FFF))
     {
         // m_log(LOG_DEBUG) << "Read rom bank: " << m_CurrentROMBank << "\n";
-        word_t newAddress{ address - c_ROM_BANK_SIZE };
+        word_t newAddress{ static_cast<word_t>(address - c_ROM_BANK_SIZE) };
         return m_CartridgeMemory[newAddress + (m_CurrentROMBank*c_ROM_BANK_SIZE)];
     }
     // ram memory bank area
     else if ((address >= 0xA000) && (address <= 0xBFFF))
     {
         // m_log(LOG_DEBUG) << "Read ram bank: " << m_CurrentRAMBank << "\n";
-        word_t newAddress{ address - 0xA000 };
+        word_t newAddress{ static_cast<word_t>(address - 0xA000) };
         return m_RAMBankMemory[newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)];
     }
     // restricted memory area
@@ -92,7 +92,7 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     {
         if (m_EnableRAM)
         {
-            word_t newAddress{ address - 0xA000 };
+            word_t newAddress{ static_cast<word_t>(address - 0xA000) };
             // m_log(LOG_DEBUG) << "Write to Ram Bank:" << m_CurrentRAMBank 
             //                  << ", address: " << +(newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)) 
             //                  << ", value: " << +value << "." << "\n";
