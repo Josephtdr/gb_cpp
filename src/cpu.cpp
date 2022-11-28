@@ -9,6 +9,7 @@ CPU::CPU()
    m_log{ std::cout, __PRETTY_FUNCTION__ }
 {
     m_log.set_log_level(LOG_DEBUG);
+    // m_lineByLine = true;
 
     m_Registers.set_af(0x01B0);
     m_Registers.set_bc(0x0013);
@@ -63,18 +64,17 @@ int CPU::execute(byte_t instructionByte, bool prefixed)
         m_log(LOG_INFO) << "PC:" << +(m_PC-1) << ", Running opcode " << std::hex 
                      << ((prefixed) ? "CB_0x" : "0x") << +instructionByte  << "\n";
     }
-
     try 
     {
         if (!prefixed)
-            { return ((*this).*(instructionTable[instructionByte]))(); }
+            { return opcode_Translator(instructionByte); }
         else
             { return CBopcode_Translator(instructionByte); }
     }
     catch (std::runtime_error e)
     {
         m_log(LOG_ERROR) << e.what() << "\n";
-        // std::exit(EXIT_FAILURE);
+        std::exit(EXIT_FAILURE);
     }
 }
 

@@ -22,12 +22,15 @@ private:
     bool m_lineByLine{};
 
     using opcodeFnPtr = int(CPU::*)();
-    using preCB0x40_Function = void(CPU::*)(byte_t&);
-    using postCB0x40_Function = void(CPU::*)(byte_t&, int);
+    using opcodeFnPtr2 = int(CPU::*)(const byte_t&);
+    using preCB0x40_FunctionPtr = void(CPU::*)(byte_t&);
+    using postCB0x40_FunctionPtr = void(CPU::*)(byte_t&, int);
 
     opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
-    preCB0x40_Function preCB0x40_FunctionTable[(0x40)]{};
-    postCB0x40_Function postCB0x40_FunctionTable[(0xFF-0x40)]{};
+    opcodeFnPtr2 instructionTable2[c_INSTRUCTION_TABLE_SIZE]{};
+
+    preCB0x40_FunctionPtr preCB0x40_FunctionTable[(0x40)]{};
+    postCB0x40_FunctionPtr postCB0x40_FunctionTable[(0xFF-0x40)]{};
 
 public:
     CPU();
@@ -56,8 +59,22 @@ private:
     word_t pop();
     void checkDAA(byte_t& byte);
     
+
+    byte_t& getRegister(int index);
+    int opcode_Translator(byte_t opcode);
+
+    int cpu_byteArithmetic(const byte_t& opcode);
+    void byteAdd(const byte_t& data);
+    void byteAddWithCarry(const byte_t& data);
+    void byteSub(const byte_t& data);
+    void byteSubWithCarry(const byte_t& data);
+    void byteAND(const byte_t& data);
+    void byteOR(const byte_t& data);
+    void byteXOR(const byte_t& data);
+    void byteCP(const byte_t& data); //compare
+
+
     //CB commands
-    byte_t& CBopcodeToRegister(byte_t opcode);
     int CBopcode_Translator(byte_t opcode);
     
     bool testBit(const byte_t& byte, int bit) const;
@@ -101,23 +118,7 @@ private:
     };
     void byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource);
     
-    enum class WordLoadTarget
-    {
-        BC, DE, HL, SP, D16I,
-    };
-    enum class WordLoadSource
-    {
-        HL, SP, D16, SPpD8,
-    };
-    void wordLoad(WordLoadTarget ldTarget, WordLoadSource ldSource);
 
-    //Byte Arithmetic
-    void byteAdd(byte_t& reg, const byte_t& addValue, bool withCarry=false);
-    void byteSub(byte_t& reg, const byte_t& subValue, bool withCarry=false);
-    void byteAND(byte_t& reg, const byte_t& andValue);
-    void byteOR(byte_t& reg, const byte_t& orValue);
-    void byteXOR(byte_t& reg, const byte_t& xorValue);
-    void byteCP(const byte_t& reg, const byte_t& cmpValue); //compare
     void byteINC(byte_t& target); //increment
     void byteDEC(byte_t& target); //decrement
     //Word Arithmetic
@@ -125,6 +126,7 @@ private:
 
     //Opcodes
     int OP_NOT_IMPLEMTED();
+    int OP_NOT_IMPLEMTED2(const byte_t&);
     //byte Loads
     //LD nn,n
     int OP_0x06();
@@ -256,87 +258,6 @@ private:
     int OP_0xD1();
     int OP_0xE1();
     
-    //Byte arithmetic with reg A
-    //ADD A,n
-    int OP_0x87();
-    int OP_0x80();
-    int OP_0x81();
-    int OP_0x82();
-    int OP_0x83();
-    int OP_0x84();
-    int OP_0x85();
-    int OP_0x86();
-    int OP_0xC6();
-    //ADC A,n
-    int OP_0x8F();
-    int OP_0x88();
-    int OP_0x89();
-    int OP_0x8A();
-    int OP_0x8B();
-    int OP_0x8C();
-    int OP_0x8D();
-    int OP_0x8E();
-    int OP_0xCE();
-    //SUB A, n
-    int OP_0x97();
-    int OP_0x90();
-    int OP_0x91();
-    int OP_0x92();
-    int OP_0x93();
-    int OP_0x94();
-    int OP_0x95();
-    int OP_0x96();
-    int OP_0xD6();
-    //SBC A,n
-    int OP_0x9F();
-    int OP_0x98();
-    int OP_0x99();
-    int OP_0x9A();
-    int OP_0x9B();
-    int OP_0x9C();
-    int OP_0x9D();
-    int OP_0x9E();
-    // int OP_0x??(); rip D8
-    //AND A, n
-    int OP_0xA7();
-    int OP_0xA0();
-    int OP_0xA1();
-    int OP_0xA2();
-    int OP_0xA3();
-    int OP_0xA4();
-    int OP_0xA5();
-    int OP_0xA6();
-    int OP_0xE6();
-    //OR A, n
-    int OP_0xB7();
-    int OP_0xB0();
-    int OP_0xB1();
-    int OP_0xB2();
-    int OP_0xB3();
-    int OP_0xB4();
-    int OP_0xB5();
-    int OP_0xB6();
-    int OP_0xF6();
-    //XOR A, n
-    int OP_0xAF();
-    int OP_0xA8();
-    int OP_0xA9();
-    int OP_0xAA();
-    int OP_0xAB();
-    int OP_0xAC();
-    int OP_0xAD();
-    int OP_0xAE();
-    int OP_0xEE();
-    //CP A, n
-    int OP_0xBF();
-    int OP_0xB8();
-    int OP_0xB9();
-    int OP_0xBA();
-    int OP_0xBB();
-    int OP_0xBC();
-    int OP_0xBD();
-    int OP_0xBE();
-    int OP_0xFE();
     //INC n
     int OP_0x3C();
     int OP_0x04();

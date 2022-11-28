@@ -8,6 +8,7 @@ void CPU::setupTables()
     for(byte_t i = 0; i < c_INSTRUCTION_TABLE_SIZE; ++i)
     {
         instructionTable[i] = &CPU::OP_NOT_IMPLEMTED;
+        instructionTable2[i] = &CPU::OP_NOT_IMPLEMTED2;
     }
 
     //LD nn,n
@@ -138,87 +139,17 @@ void CPU::setupTables()
     instructionTable[0xC1] = &CPU::OP_0xC1;
     instructionTable[0xD1] = &CPU::OP_0xD1;
     instructionTable[0xE1] = &CPU::OP_0xE1;
+    
     //Byte arithmetic with reg A
-    //ADD A,n
-    instructionTable[0x87] = &CPU::OP_0x87;
-    instructionTable[0x80] = &CPU::OP_0x80;
-    instructionTable[0x81] = &CPU::OP_0x81;
-    instructionTable[0x82] = &CPU::OP_0x82;
-    instructionTable[0x83] = &CPU::OP_0x83;
-    instructionTable[0x84] = &CPU::OP_0x84;
-    instructionTable[0x85] = &CPU::OP_0x85;
-    instructionTable[0x86] = &CPU::OP_0x86;
-    instructionTable[0xC6] = &CPU::OP_0xC6;
-    //ADC A,n
-    instructionTable[0x8F] = &CPU::OP_0x8F;
-    instructionTable[0x88] = &CPU::OP_0x88;
-    instructionTable[0x89] = &CPU::OP_0x89;
-    instructionTable[0x8A] = &CPU::OP_0x8A;
-    instructionTable[0x8B] = &CPU::OP_0x8B;
-    instructionTable[0x8C] = &CPU::OP_0x8C;
-    instructionTable[0x8D] = &CPU::OP_0x8D;
-    instructionTable[0x8E] = &CPU::OP_0x8E;
-    instructionTable[0xCE] = &CPU::OP_0xCE;
-    //SUB A, n
-    instructionTable[0x97] = &CPU::OP_0x97;
-    instructionTable[0x90] = &CPU::OP_0x90;
-    instructionTable[0x91] = &CPU::OP_0x91;
-    instructionTable[0x92] = &CPU::OP_0x92;
-    instructionTable[0x93] = &CPU::OP_0x93;
-    instructionTable[0x94] = &CPU::OP_0x94;
-    instructionTable[0x95] = &CPU::OP_0x95;
-    instructionTable[0x96] = &CPU::OP_0x96;
-    instructionTable[0xD6] = &CPU::OP_0xD6;
-    //SBC A,n
-    instructionTable[0x9F] = &CPU::OP_0x9F;
-    instructionTable[0x98] = &CPU::OP_0x98;
-    instructionTable[0x99] = &CPU::OP_0x99;
-    instructionTable[0x9A] = &CPU::OP_0x9A;
-    instructionTable[0x9B] = &CPU::OP_0x9B;
-    instructionTable[0x9C] = &CPU::OP_0x9C;
-    instructionTable[0x9D] = &CPU::OP_0x9D;
-    instructionTable[0x9E] = &CPU::OP_0x9E;
-    // int OP_0x??(); rip D8
-    //AND A, n
-    instructionTable[0xA7] = &CPU::OP_0xA7;
-    instructionTable[0xA0] = &CPU::OP_0xA0;
-    instructionTable[0xA1] = &CPU::OP_0xA1;
-    instructionTable[0xA2] = &CPU::OP_0xA2;
-    instructionTable[0xA3] = &CPU::OP_0xA3;
-    instructionTable[0xA4] = &CPU::OP_0xA4;
-    instructionTable[0xA5] = &CPU::OP_0xA5;
-    instructionTable[0xA6] = &CPU::OP_0xA6;
-    instructionTable[0xE6] = &CPU::OP_0xE6;
-    //OR A, n
-    instructionTable[0xB7] = &CPU::OP_0xB7;
-    instructionTable[0xB0] = &CPU::OP_0xB0;
-    instructionTable[0xB1] = &CPU::OP_0xB1;
-    instructionTable[0xB2] = &CPU::OP_0xB2;
-    instructionTable[0xB3] = &CPU::OP_0xB3;
-    instructionTable[0xB4] = &CPU::OP_0xB4;
-    instructionTable[0xB5] = &CPU::OP_0xB5;
-    instructionTable[0xB6] = &CPU::OP_0xB6;
-    instructionTable[0xF6] = &CPU::OP_0xF6;
-    //XOR A, n
-    instructionTable[0xAF] = &CPU::OP_0xAF;
-    instructionTable[0xA8] = &CPU::OP_0xA8;
-    instructionTable[0xA9] = &CPU::OP_0xA9;
-    instructionTable[0xAA] = &CPU::OP_0xAA;
-    instructionTable[0xAB] = &CPU::OP_0xAB;
-    instructionTable[0xAC] = &CPU::OP_0xAC;
-    instructionTable[0xAD] = &CPU::OP_0xAD;
-    instructionTable[0xAE] = &CPU::OP_0xAE;
-    instructionTable[0xEE] = &CPU::OP_0xEE;
-    //CP A, n
-    instructionTable[0xBF] = &CPU::OP_0xBF;
-    instructionTable[0xB8] = &CPU::OP_0xB8;
-    instructionTable[0xB9] = &CPU::OP_0xB9;
-    instructionTable[0xBA] = &CPU::OP_0xBA;
-    instructionTable[0xBB] = &CPU::OP_0xBB;
-    instructionTable[0xBC] = &CPU::OP_0xBC;
-    instructionTable[0xBD] = &CPU::OP_0xBD;
-    instructionTable[0xBE] = &CPU::OP_0xBE;
-    instructionTable[0xFE] = &CPU::OP_0xFE;
+    for (byte_t i{ 0x80 }; i < 0xC0; ++i)
+    {
+        instructionTable2[i] = &CPU::cpu_byteArithmetic;
+    }
+    for (byte_t i{ 0xC6 }; i >= 0xC6; i+=0x8)
+    {
+        instructionTable2[i] = &CPU::cpu_byteArithmetic;
+    }
+
     //INC n
     instructionTable[0x3C] = &CPU::OP_0x3C;
     instructionTable[0x04] = &CPU::OP_0x04;
@@ -378,30 +309,24 @@ void CPU::setupTables()
 
 int CPU::OP_NOT_IMPLEMTED()
 {
-    throw std::runtime_error("OPCODE NOT IMPLEMENTED!");
+    throw std::runtime_error("OPCODE NOT IMPLEMENTED in table 1!");
 }
 
-//Prefixed instructions
-byte_t& CPU::CBopcodeToRegister(byte_t opcode)
+int CPU::OP_NOT_IMPLEMTED2(const byte_t&)
 {
-    switch(opcode & 0xFu)
+    throw std::runtime_error("OPCODE NOT IMPLEMENTED in table 2!");
+}
+
+
+int CPU::opcode_Translator(byte_t opcode)
+{
+    if ( (opcode>=0x80 && opcode<=0xBF) || (opcode>=0x80 && (opcode%8)==6))
     {
-        case 0: case 8:
-        return m_Registers.b;
-        case 1: case 9:
-        return m_Registers.c; break;
-        case 2: case 10:
-        return m_Registers.d; break;
-        case 3: case 11:
-        return m_Registers.e; break;
-        case 4: case 12:
-        return m_Registers.h; break;
-        case 5: case 13:
-        return m_Registers.l; break;
-        case 7: case 15:
-        return m_Registers.a; break;
-        default: 
-            throw std::runtime_error("INVALID OPCODE used in CPU::CBopcodeToRegister");
+        return ((*this).*(instructionTable2[opcode]))(opcode);
+    }
+    else
+    {
+        return ((*this).*(instructionTable[opcode]))();
     }
 }
 
@@ -414,7 +339,7 @@ int CPU::CBopcode_Translator(byte_t opcode)
     {
         if (!usingHLI)
         {
-            byte_t& reg = CBopcodeToRegister(opcode);
+            byte_t& reg = getRegister(opcode%8);
             std::cout <<"\n";
             m_log(LOG_INFO) << "reg before is: " << +reg << ", f: "<< +m_Registers.f << ".\n";
             ((*this).*(preCB0x40_FunctionTable[opcode]))(reg);
@@ -435,7 +360,7 @@ int CPU::CBopcode_Translator(byte_t opcode)
         m_log(LOG_DEBUG) << "CB Opcode: " << +opcode << ", performing on bit: " << bit << "\n";  
         if (!usingHLI)
         {
-            byte_t& reg = CBopcodeToRegister(opcode);
+            byte_t& reg = getRegister(opcode%8);
             std::cout <<"\n";
             m_log(LOG_INFO) << "reg before is: " << +reg << ", f: "<< +m_Registers.f <<".\n";
             ((*this).*(postCB0x40_FunctionTable[opcode-0x40]))(reg, bit);
@@ -910,28 +835,28 @@ int CPU::OP_0xF0()
 //LD n,nn
 int CPU::OP_0x01()
 {
-    wordLoad(WordLoadTarget::BC, WordLoadSource::D16);
+    m_Registers.set_bc(readNextWord());
     return 12;
 }
 int CPU::OP_0x11()
 {
-    wordLoad(WordLoadTarget::DE, WordLoadSource::D16);
+    m_Registers.set_de(readNextWord());
     return 12;
 }
 int CPU::OP_0x21()
 {
-    wordLoad(WordLoadTarget::HL, WordLoadSource::D16);
+    m_Registers.set_hl(readNextWord());
     return 12;
 }
 int CPU::OP_0x31()
 {
-    wordLoad(WordLoadTarget::SP, WordLoadSource::D16);
+    m_SP = readNextWord();
     return 12;
 }
 //LD SP,HL
 int CPU::OP_0xF9()
 {
-    wordLoad(WordLoadTarget::SP, WordLoadSource::HL);
+    m_SP = m_Registers.get_hl();
     return 8;
 }
 //LD HL,SP+n
@@ -940,13 +865,33 @@ int CPU::OP_0xF8()
 {
     m_log(LOG_ERROR) << "opcode 0xF8 needs to be signed!" << "\n";
     std::exit(EXIT_FAILURE);
-    wordLoad(WordLoadTarget::HL, WordLoadSource::SPpD8);
+
+    // byte_t d8{ readNextByte() };
+    // m_Registers.f.zero = false;
+    // m_Registers.f.subtract = false;
+
+    // unsigned int v{ static_cast<unsigned int>(m_SP)+static_cast<unsigned int>(d8) };
+    // bool carry{ v > 0xFFFF };
+    // m_Registers.f.carry = carry;
+
+    // bool half_carry{ ((m_SP & 0xF) + (d8 & 0xF)) > 0xF };
+    // m_Registers.f.half_carry = half_carry;
+
+    // value = m_SP+d8; 
+
     return 12;
 }
 //LD (nn),SP
 int CPU::OP_0x08()
 {
-    wordLoad(WordLoadTarget::D16I, WordLoadSource::SP);
+    word_t address{ readNextWord() };
+
+    byte_t lsb{ static_cast<byte_t>(m_SP & 0xF) };
+    byte_t msb{ static_cast<byte_t>(m_SP >> 4) };
+    
+    m_Memory.writeByte(address, lsb);
+    m_Memory.writeByte(address+1, msb);
+
     return 20;
 }
 //PUSH nn
@@ -973,7 +918,17 @@ int CPU::OP_0xE5()
 //POP nn
 int CPU::OP_0xF1()
 {
-    m_Registers.set_af(pop());
+    m_log(LOG_ERROR) << "Opcode 0xF1 needs to affect flags somehow" << "\n";
+    std::exit(EXIT_FAILURE);
+
+    word_t data{ pop() };
+    
+    m_Registers.f.zero = !data;
+    // m_Registers.f.subtract
+    // m_Registers.f.half_carry
+    // m_Registers.f.carry
+
+    m_Registers.set_af(data);
     return 12;
 }
 int CPU::OP_0xC1()
@@ -991,369 +946,9 @@ int CPU::OP_0xE1()
     m_Registers.set_hl(pop());
     return 12;
 }
-//ADD A,n
-int CPU::OP_0x87()
-{
-    byteAdd(m_Registers.a,m_Registers.a);
-    return 4;
-}
-int CPU::OP_0x80()
-{
-    byteAdd(m_Registers.a,m_Registers.b);
-    return 4;
-}
-int CPU::OP_0x81()
-{
-    byteAdd(m_Registers.a,m_Registers.c);
-    return 4;
-}
-int CPU::OP_0x82()
-{
-    byteAdd(m_Registers.a,m_Registers.d);
-    return 4;
-}
-int CPU::OP_0x83()
-{
-    byteAdd(m_Registers.a,m_Registers.e);
-    return 4;
-}
-int CPU::OP_0x84()
-{
-    byteAdd(m_Registers.a,m_Registers.h);
-    return 4;
-}
-int CPU::OP_0x85()
-{
-    byteAdd(m_Registers.a,m_Registers.l);
-    return 4;
-}
-int CPU::OP_0x86()
-{
-    byteAdd(m_Registers.a, m_Memory.readByte(m_Registers.get_hl()));
-    return 8;
-}
-int CPU::OP_0xC6()
-{
-    byteAdd(m_Registers.a, readNextByte());
-    return 8;
-}
-//ADC A,n
-int CPU::OP_0x8F()
-{
-    byteAdd(m_Registers.a,m_Registers.a, true);
-    return 4;
-}
-int CPU::OP_0x88()
-{
-    byteAdd(m_Registers.a,m_Registers.b, true);
-    return 4;
-}
-int CPU::OP_0x89()
-{
-    byteAdd(m_Registers.a,m_Registers.c, true);
-    return 4;
-}
-int CPU::OP_0x8A()
-{
-    byteAdd(m_Registers.a,m_Registers.d, true);
-    return 4;
-}
-int CPU::OP_0x8B()
-{
-    byteAdd(m_Registers.a,m_Registers.e, true);
-    return 4;
-}
-int CPU::OP_0x8C()
-{
-    byteAdd(m_Registers.a,m_Registers.h, true);
-    return 4;
-}
-int CPU::OP_0x8D()
-{
-    byteAdd(m_Registers.a,m_Registers.l, true);
-    return 4;
-}
-int CPU::OP_0x8E()
-{
-    byteAdd(m_Registers.a, m_Memory.readByte(m_Registers.get_hl()), true);
-    return 8;
-}
-int CPU::OP_0xCE()
-{
-    byteAdd(m_Registers.a, readNextByte(), true);
-    return 8;
-}
-//SUB A, n
-int CPU::OP_0x97()
-{
-    byteSub(m_Registers.a,m_Registers.a);
-    return 4;
-}
-int CPU::OP_0x90()
-{
-    byteSub(m_Registers.a,m_Registers.b);
-    return 4;
-}
-int CPU::OP_0x91()
-{
-    byteSub(m_Registers.a,m_Registers.c);
-    return 4;
-}
-int CPU::OP_0x92()
-{
-    byteSub(m_Registers.a,m_Registers.d);
-    return 4;
-}
-int CPU::OP_0x93()
-{
-    byteSub(m_Registers.a,m_Registers.e);
-    return 4;
-}
-int CPU::OP_0x94()
-{
-    byteSub(m_Registers.a,m_Registers.h);
-    return 4;
-}
-int CPU::OP_0x95()
-{
-    byteSub(m_Registers.a,m_Registers.l);
-    return 4;
-}
-int CPU::OP_0x96()
-{
-    byteSub(m_Registers.a, m_Memory.readByte(m_Registers.get_hl()));
-    return 8;
-}
-int CPU::OP_0xD6()
-{
-    byteSub(m_Registers.a, readNextByte());
-    return 8;
-}
-//SBC A,n
-int CPU::OP_0x9F()
-{
-    byteSub(m_Registers.a,m_Registers.a, true);
-    return 4;
-}
-int CPU::OP_0x98()
-{
-    byteSub(m_Registers.a,m_Registers.b, true);
-    return 4;
-}
-int CPU::OP_0x99()
-{
-    byteSub(m_Registers.a,m_Registers.c, true);
-    return 4;
-}
-int CPU::OP_0x9A()
-{
-    byteSub(m_Registers.a,m_Registers.d, true);
-    return 4;
-}
-int CPU::OP_0x9B()
-{
-    byteSub(m_Registers.a,m_Registers.e, true);
-    return 4;
-}
-int CPU::OP_0x9C()
-{
-    byteSub(m_Registers.a,m_Registers.h, true);
-    return 4;
-}
-int CPU::OP_0x9D()
-{
-    byteSub(m_Registers.a,m_Registers.l, true);
-    return 4;
-}
-int CPU::OP_0x9E()
-{
-    byteSub(m_Registers.a, m_Memory.readByte(m_Registers.get_hl()), true);
-    return 8;
-}
-//AND A, n
-int CPU::OP_0xA7()
-{
-    byteAND(m_Registers.a,m_Registers.a);
-    return 4;
-}
-int CPU::OP_0xA0()
-{
-    byteAND(m_Registers.a,m_Registers.b);
-    return 4;
-}
-int CPU::OP_0xA1()
-{
-    byteAND(m_Registers.a,m_Registers.c);
-    return 4;
-}
-int CPU::OP_0xA2()
-{
-    byteAND(m_Registers.a,m_Registers.d);
-    return 4;
-}
-int CPU::OP_0xA3()
-{
-    byteAND(m_Registers.a,m_Registers.e);
-    return 4;
-}
-int CPU::OP_0xA4()
-{
-    byteAND(m_Registers.a,m_Registers.h);
-    return 4;
-}
-int CPU::OP_0xA5()
-{
-    byteAND(m_Registers.a,m_Registers.l);
-    return 4;
-}
-int CPU::OP_0xA6()
-{
-    byteAND(m_Registers.a,m_Memory.readByte(m_Registers.get_hl()));
-    return 8;
-}
-int CPU::OP_0xE6()
-{
-    byteAND(m_Registers.a,readNextByte());
-    return 8;
-}
-//OR A, n
-int CPU::OP_0xB7()
-{
-    byteOR(m_Registers.a,m_Registers.a);
-    return 4;
-}
-int CPU::OP_0xB0()
-{
-    byteOR(m_Registers.a,m_Registers.b);
-    return 4;
-}
-int CPU::OP_0xB1()
-{
-    byteOR(m_Registers.a,m_Registers.c);
-    return 4;
-}
-int CPU::OP_0xB2()
-{
-    byteOR(m_Registers.a,m_Registers.d);
-    return 4;
-}
-int CPU::OP_0xB3()
-{
-    byteOR(m_Registers.a,m_Registers.e);
-    return 4;
-}
-int CPU::OP_0xB4()
-{
-    byteOR(m_Registers.a,m_Registers.h);
-    return 4;
-}
-int CPU::OP_0xB5()
-{
-    byteOR(m_Registers.a,m_Registers.l);
-    return 4;
-}
-int CPU::OP_0xB6()
-{
-    byteOR(m_Registers.a,m_Memory.readByte(m_Registers.get_hl()));
-    return 8;
-}
-int CPU::OP_0xF6()
-{
-    byteOR(m_Registers.a,readNextByte());
-    return 8;
-}
-//XOR A, n
-int CPU::OP_0xAF()
-{
-    byteXOR(m_Registers.a,m_Registers.a);
-    return 4;
-}
-int CPU::OP_0xA8()
-{
-    byteXOR(m_Registers.a,m_Registers.b);
-    return 4;
-}
-int CPU::OP_0xA9()
-{
-    byteXOR(m_Registers.a,m_Registers.c);
-    return 4;
-}
-int CPU::OP_0xAA()
-{
-    byteXOR(m_Registers.a,m_Registers.d);
-    return 4;
-}
-int CPU::OP_0xAB()
-{
-    byteXOR(m_Registers.a,m_Registers.e);
-    return 4;
-}
-int CPU::OP_0xAC()
-{
-    byteXOR(m_Registers.a,m_Registers.h);
-    return 4;
-}
-int CPU::OP_0xAD()
-{
-    byteXOR(m_Registers.a,m_Registers.l);
-    return 4;
-}
-int CPU::OP_0xAE()
-{
-    byteXOR(m_Registers.a,m_Memory.readByte(m_Registers.get_hl()));
-    return 8;
-}
-int CPU::OP_0xEE()
-{
-    byteXOR(m_Registers.a,readNextByte());
-    return 8;
-}
-//CP A, n
-int CPU::OP_0xBF()
-{
-    byteCP(m_Registers.a, m_Registers.a);
-    return 4;
-}
-int CPU::OP_0xB8()
-{
-    byteCP(m_Registers.a, m_Registers.b);
-    return 4;
-}
-int CPU::OP_0xB9()
-{
-    byteCP(m_Registers.a, m_Registers.c);
-    return 4;
-}
-int CPU::OP_0xBA()
-{
-    byteCP(m_Registers.a, m_Registers.d);
-    return 4;
-}
-int CPU::OP_0xBB()
-{
-    byteCP(m_Registers.a, m_Registers.e);
-    return 4;
-}
-int CPU::OP_0xBC()
-{
-    byteCP(m_Registers.a, m_Registers.h);
-    return 4;
-}
-int CPU::OP_0xBD()
-{
-    byteCP(m_Registers.a, m_Registers.l);
-    return 4;
-}
-int CPU::OP_0xBE()
-{
-    byteCP(m_Registers.a, m_Memory.readByte(m_Registers.get_hl()));
-    return 8;
-}
-int CPU::OP_0xFE()
-{
-    byteCP(m_Registers.a,readNextByte());
-    return 8;
-}
+
+
+
 //INC n
 int CPU::OP_0x3C()
 {
