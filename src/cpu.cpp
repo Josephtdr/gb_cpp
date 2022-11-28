@@ -25,14 +25,16 @@ void CPU::frameUpdate()
 
     while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
     {
-        //if (!halted) something like this
-        int cycles{ cycle() };
-        cyclesThisUpdate += cycles;
-        updateTimers(cycles);
-        // UpdateGraphics(cycles);
-        interupts();
-        if (m_lineByLine)
+        if (!halted)
+        {
+            int cycles{ cycle() };
+            cyclesThisUpdate += cycles;
+            updateTimers(cycles);
+            // UpdateGraphics(cycles);
+            if (m_lineByLine)
             getchar();
+        }
+        interupts();
     }
     m_log(LOG_ERROR) << "Frame finished!" << "\n";
     // RenderScreen();
@@ -160,12 +162,20 @@ void CPU::interupts()
                 {
                     if (testBit(enabled,i)) //and interupt (i) is enabled 
                     {
-                        //remove halt?
+                        halted = false;
                         performInterupt(i);
                     }
                 }
             }
         }
+    }
+    else if (halted)
+    {
+        byte_t requests = m_Memory.readByte(c_INTERUPTS_REQ_ADDRESS);
+        byte_t enabled = m_Memory.readByte(c_INTERUPTS_ENABLED_ADDRESS);
+
+        if (requests & enabled)
+            halted = false;
     }
 }
 

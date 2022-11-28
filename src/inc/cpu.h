@@ -53,8 +53,8 @@ private:
     void interupts();
     void requestInterupt(int interupt);
     void performInterupt(int interupt);
-    void halt();
     
+//******************************************************************************************//
     void push(word_t value);
     word_t pop();
 

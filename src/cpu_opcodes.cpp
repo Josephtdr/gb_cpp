@@ -642,17 +642,17 @@ int CPU::OP_0xE8()
 //INC nn
 int CPU::OP_0x03()
 {
-    m_Registers.set_bc(m_Registers.get_bc() + 1);
+    m_Registers.set_bc(m_Registers.get_bc() + 1u);
     return 8;
 }
 int CPU::OP_0x13()
 {
-    m_Registers.set_de(m_Registers.get_de() + 1);
+    m_Registers.set_de(m_Registers.get_de() + 1u);
     return 8;
 }
 int CPU::OP_0x23()
 {
-    m_Registers.set_hl(m_Registers.get_hl() + 1);
+    m_Registers.set_hl(m_Registers.get_hl() + 1u);
     return 8;
 }
 int CPU::OP_0x33()
@@ -663,17 +663,17 @@ int CPU::OP_0x33()
 //DEC nn
 int CPU::OP_0x0B()
 {
-    m_Registers.set_bc(m_Registers.get_bc() - 1);
+    m_Registers.set_bc(m_Registers.get_bc() - 1u);
     return 8;
 }
 int CPU::OP_0x1B()
 {
-    m_Registers.set_de(m_Registers.get_de() - 1);
+    m_Registers.set_de(m_Registers.get_de() - 1u);
     return 8;
 }
 int CPU::OP_0x2B()
 {
-    m_Registers.set_hl(m_Registers.get_hl() - 1);
+    m_Registers.set_hl(m_Registers.get_hl() - 1u);
     return 8;
 }
 int CPU::OP_0x3B()
@@ -850,9 +850,8 @@ int CPU::OP_0x00()
 //HALT
 int CPU::OP_0x76()
 {
-    m_log(LOG_ERROR) << "Halt not implemented" << "\n";
-    std::exit(EXIT_FAILURE);
     m_log(LOG_INFO) << "Executed Halt!" << "\n";
+    halted = true;
     return 4;
 }
 //STOP
