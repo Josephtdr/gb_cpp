@@ -154,7 +154,6 @@ void CPU::jumpRelative(JumpTest type, const byte_t& unsignedData)
     {
         int offset{ (unsignedData & 0b01111111) - 0b10000000 };
         int intAddress{ m_PC + offset };
-        // intAddress %= 0xFFFF;
 
         word_t newAddress{ static_cast<word_t>(intAddress) };
 
