@@ -169,84 +169,6 @@ void CPU::jumpRelative(JumpTest type, const byte_t& unsignedData)
     }
 }
 
-/**
- * @brief Loads a byte value from the source into the target.
- * HCI etc. means the address location of the value stored in HC,
- * D8 and D16 mean the next byte or word read from memory
- * A lowercase p indicates plus, FF00pC means 0xFF00 + the value in register C.
- * @param ldTarget where the value is loaded into.
- * @param ldSource where the value is taken from.
- */
-void CPU::byteLoad(ByteLoadTarget ldTarget, ByteLoadSource ldSource)
-{
-    byte_t value{};
-    switch (ldSource)
-    {
-        case ByteLoadSource::A:
-            value = m_Registers.a; break;
-        case ByteLoadSource::B:
-            value = m_Registers.b; break;
-        case ByteLoadSource::C:
-            value = m_Registers.c; break;
-        case ByteLoadSource::D:
-            value = m_Registers.d; break;
-        case ByteLoadSource::E:
-            value = m_Registers.e; break;
-        case ByteLoadSource::H:
-            value = m_Registers.h; break;
-        case ByteLoadSource::L:
-            value = m_Registers.l; break;
-        case ByteLoadSource::D8:
-            value = readNextByte(); break;
-        case ByteLoadSource::BCI:
-            value = m_Memory.readByte(m_Registers.get_bc()); break;
-        case ByteLoadSource::DEI:
-            value = m_Memory.readByte(m_Registers.get_de()); break;
-        case ByteLoadSource::HLI:
-            value = m_Memory.readByte(m_Registers.get_hl()); break;
-        case ByteLoadSource::D16I:
-            value = m_Memory.readByte(readNextWord()); break;
-        case ByteLoadSource::FF00pC:
-            value = m_Memory.readByte(0xFF00u+m_Registers.c); break;
-        case ByteLoadSource::FF00pD8:
-            value = m_Memory.readByte(0xFF00u+readNextByte()); break;
-        default:
-            throw std::runtime_error("Invalid load source!");
-    }
-    switch (ldTarget)
-    {
-        case ByteLoadTarget::A:
-            m_Registers.a = value; break;
-        case ByteLoadTarget::B:
-            m_Registers.b = value; break;
-        case ByteLoadTarget::C:
-            m_Registers.c = value; break;
-        case ByteLoadTarget::D:
-            m_Registers.d = value; break;
-        case ByteLoadTarget::E:
-            m_Registers.e = value; break;
-        case ByteLoadTarget::H:
-            m_Registers.h = value; break;
-        case ByteLoadTarget::L:
-            m_Registers.l = value; break;
-        case ByteLoadTarget::BCI:
-            m_Memory.writeByte(m_Registers.get_bc(), value); break;
-        case ByteLoadTarget::DEI:
-            m_Memory.writeByte(m_Registers.get_de(), value); break;
-        case ByteLoadTarget::HLI:
-            m_Memory.writeByte(m_Registers.get_hl(), value); break;
-        case ByteLoadTarget::D16I:
-            m_Memory.writeByte(readNextWord(), value); break;
-        case ByteLoadTarget::FF00pC:
-            m_Memory.writeByte(0xFF00u+m_Registers.c, value); break;
-        case ByteLoadTarget::FF00pD8:
-            m_Memory.writeByte(0xFF00u+readNextByte(), value); break;
-        default:
-            throw std::runtime_error("Invalid load target!");
-    }
-}
-
-
 byte_t& CPU::getRegister(int index)
 {
     static const std::vector<std::reference_wrapper<byte_t>> standardDataReg
@@ -273,6 +195,39 @@ int CPU::cpu_restart(const byte_t& opcode)
     m_PC = (0x0000 + offsetVector[index]);
 
     return 16;
+}
+
+int CPU::cpu_byteLoad(const byte_t& opcode)
+{
+    int dataIndex{ opcode % 8 };
+    int targetIndex{ (static_cast<int>(opcode)/8) % 8 };
+    byte_t data{};
+    int ticks{ 4 };
+
+    if (dataIndex == 6)
+    {
+        ticks += 4;
+        if (opcode < 0x40)
+            data = readNextByte();
+        else
+            data = m_Memory.readByte(m_Registers.get_hl());
+    } 
+    else
+    {
+        data = getRegister(dataIndex);
+    }
+
+    if (targetIndex == 6)
+    {
+        ticks += 4;
+        m_Memory.writeByte(m_Registers.get_hl(), data);
+    } 
+    else 
+    {
+        getRegister(targetIndex) = data;
+    }
+
+    return ticks;
 }
 
 int CPU::cpu_byteArithmetic(const byte_t& opcode)
