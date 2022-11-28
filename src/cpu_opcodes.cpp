@@ -851,7 +851,7 @@ int CPU::OP_0x00()
 int CPU::OP_0x76()
 {
     m_log(LOG_INFO) << "Executed Halt!" << "\n";
-    halted = true;
+    m_Halted = true;
     return 4;
 }
 //STOP

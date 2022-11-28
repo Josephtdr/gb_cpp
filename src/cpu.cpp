@@ -25,7 +25,7 @@ void CPU::frameUpdate()
 
     while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
     {
-        if (!halted)
+        if (!m_Halted)
         {
             int cycles{ cycle() };
             cyclesThisUpdate += cycles;
@@ -162,20 +162,20 @@ void CPU::interupts()
                 {
                     if (testBit(enabled,i)) //and interupt (i) is enabled 
                     {
-                        halted = false;
+                        m_Halted = false;
                         performInterupt(i);
                     }
                 }
             }
         }
     }
-    else if (halted)
+    else if (m_Halted)
     {
         byte_t requests = m_Memory.readByte(c_INTERUPTS_REQ_ADDRESS);
         byte_t enabled = m_Memory.readByte(c_INTERUPTS_ENABLED_ADDRESS);
 
         if (requests & enabled)
-            halted = false;
+            m_Halted = false;
     }
 }
 

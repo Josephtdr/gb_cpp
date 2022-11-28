@@ -18,7 +18,7 @@ private:
     word_t m_SP{};
     
     bool m_InteruptsEnabled{};
-    bool halted{};
+    bool m_Halted{};
     bool m_lineByLine{};
 
     using opcodeFnPtr = int(CPU::*)();

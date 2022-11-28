@@ -29,11 +29,6 @@ byte_t CPU::readNextByte()
     return out;
 }
 
-void CPU::halt()
-{
-    halted = true;
-}
-
 /**
  * @brief Adds the given value to the stack, a byte at a time, msb first, 
  * also decrements the sp twice.
