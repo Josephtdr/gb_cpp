@@ -213,14 +213,10 @@ void CPU::setupTables()
     instructionTable[0xDC] = &CPU::OP_0xDC;
     //Restarts
     //RST n
-    instructionTable[0xC7] = &CPU::OP_0xC7;
-    instructionTable[0xCF] = &CPU::OP_0xCF;
-    instructionTable[0xD7] = &CPU::OP_0xD7;
-    instructionTable[0xDF] = &CPU::OP_0xDF;
-    instructionTable[0xE7] = &CPU::OP_0xE7;
-    instructionTable[0xEF] = &CPU::OP_0xEF;
-    instructionTable[0xF7] = &CPU::OP_0xF7;
-    instructionTable[0xFF] = &CPU::OP_0xFF;
+    for (byte_t i{ 0xC7 }; i >= 0xC7; i+=0x8)
+    {
+        instructionTable2[i] = &CPU::cpu_restart;
+    }
     //Returns
     //RET
     instructionTable[0xC9] = &CPU::OP_0xC9;
@@ -1208,48 +1204,6 @@ int CPU::OP_0xDC()
 {
     call(JumpTest::Carry, readNextWord());
     return 12;
-}
-//Restarts
-//RST n
-int CPU::OP_0xC7()
-{
-    restart(0x00);
-    return  32;
-}
-int CPU::OP_0xCF()
-{
-    restart(0x08);
-    return  32;
-}
-int CPU::OP_0xD7()
-{
-    restart(0x10);
-    return  32;
-}
-int CPU::OP_0xDF()
-{
-    restart(0x18);
-    return  32;
-}
-int CPU::OP_0xE7()
-{
-    restart(0x20);
-    return  32;
-}
-int CPU::OP_0xEF()
-{
-    restart(0x28);
-    return  32;
-}
-int CPU::OP_0xF7()
-{
-    restart(0x30);
-    return  32;
-}
-int CPU::OP_0xFF()
-{
-    restart(0x38);
-    return  32;
 }
 //RET
 int CPU::OP_0xC9()

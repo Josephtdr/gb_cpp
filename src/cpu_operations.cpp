@@ -261,6 +261,20 @@ byte_t& CPU::getRegister(int index)
     return standardDataReg[index].get(); 
 }
 
+int CPU::cpu_restart(const byte_t& opcode)
+{
+    static const std::vector<byte_t> offsetVector
+    {
+        0x0u, 0x8u, 0x10u, 0x18u, 0x20u, 0x28u, 0x30u, 0x38u
+    };
+    int index{ (opcode /8) % 8 };
+
+    push(m_PC);
+    m_PC = (0x0000 + offsetVector[index]);
+
+    return 16;
+}
+
 int CPU::cpu_byteArithmetic(const byte_t& opcode)
 {
     using arithmeticFunctionPtr = void(CPU::*)(const byte_t&);

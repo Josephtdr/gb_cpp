@@ -62,7 +62,7 @@ private:
 
     byte_t& getRegister(int index);
     int opcode_Translator(byte_t opcode);
-
+    int cpu_restart(const byte_t& opcode);
     int cpu_byteArithmetic(const byte_t& opcode);
     void byteAdd(const byte_t& data);
     void byteAddWithCarry(const byte_t& data);
@@ -321,16 +321,6 @@ private:
     int OP_0xCC();
     int OP_0xD4();
     int OP_0xDC();
-    //Restarts
-    //RST n
-    int OP_0xC7();
-    int OP_0xCF();
-    int OP_0xD7();
-    int OP_0xDF();
-    int OP_0xE7();
-    int OP_0xEF();
-    int OP_0xF7();
-    int OP_0xFF();
     //Returns
     //RET
     int OP_0xC9();
