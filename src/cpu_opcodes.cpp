@@ -244,7 +244,7 @@ int CPU::CBopcode_Translator(byte_t opcode)
     }
 }
 
-//Non prefixed Instructions
+//Specific Commands
 //byte Loads
 //LD A,n
 int CPU::OP_0x0A()
@@ -365,12 +365,16 @@ int CPU::OP_0xF9()
 //LDHL SP,n
 int CPU::OP_0xF8()
 {
-    m_log(LOG_ERROR) << "opcode 0xF8 needs to be signed!" << "\n";
+    m_log(LOG_ERROR) << "opcode 0xF8 needs to have correct registers!" << "\n";
+
+    byte_t usignedValue{ readNextByte() };
+    word_t sum{ unsignedAddition(m_SP, usignedValue) };
+    m_Registers.set_hl(sum);
+
     std::exit(EXIT_FAILURE);
 
-    // byte_t d8{ readNextByte() };
-    // m_Registers.f.zero = false;
-    // m_Registers.f.subtract = false;
+    m_Registers.f.zero = false;
+    m_Registers.f.subtract = false;
 
     // unsigned int v{ static_cast<unsigned int>(m_SP)+static_cast<unsigned int>(d8) };
     // bool carry{ v > 0xFFFF };
