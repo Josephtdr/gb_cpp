@@ -93,18 +93,6 @@ void CPU::return_(JumpTest type)
 }
 
 /**
- * @brief add the current pc to the stack then
- * resets the program counter to 0x0000 + the given address value
- * 
- * @param address a byte
- */
-void CPU::restart(byte_t address)
-{
-    push(m_PC);
-    m_PC = (0x0000 + address);
-}
-
-/**
  * @brief return whether the given jumptest is currently valid or not
  * 
  * @param type the type of jump being tested
@@ -151,9 +139,9 @@ void CPU::jumpRelative(JumpTest type, const byte_t& unsignedData)
 
         word_t newAddress{ static_cast<word_t>(intAddress) };
 
-        m_log(LOG_INFO) << "old address: " << +m_PC << ", new address: " << +newAddress 
-            << ", offset: " << std::dec << offset << std::hex
-                        <<".\n";
+        // m_log(LOG_INFO) << "old address: " << +m_PC << ", new address: " << +newAddress 
+        //     << ", offset: " << std::dec << offset << std::hex
+        //                 <<".\n";
 
         jump(type, newAddress);
 
@@ -177,6 +165,14 @@ byte_t& CPU::getRegister(int index)
 
     return standardDataReg[index].get(); 
 }
+std::string_view CPU::getRegisterStr(int index)
+{
+    static const std::vector<std::string> regString
+    {
+        "B", "C", "D", "E", "H", "L", "(HL)", "A"
+    };
+    return regString[index]; 
+}
 
 int CPU::cpu_restart(const byte_t& opcode)
 {
@@ -186,9 +182,10 @@ int CPU::cpu_restart(const byte_t& opcode)
     };
     int index{ (opcode /8) % 8 };
 
-    push(m_PC);
-    m_PC = (0x0000 + offsetVector[index]);
+    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", RST " << +offsetVector[index] << "\n"; 
 
+    push(m_PC);
+    m_PC = offsetVector[index];
     return 16;
 }
 
@@ -198,6 +195,10 @@ int CPU::cpu_byteLoad(const byte_t& opcode)
     int targetIndex{ (static_cast<int>(opcode)/8) % 8 };
     byte_t data{};
     int ticks{ 4 };
+
+    std::string_view dataRegString{ (opcode < 0x40) ? "d8" : getRegisterStr(dataIndex) };
+    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", LD " 
+                    << getRegisterStr(targetIndex) << " " << dataRegString << "\n"; 
 
     if (dataIndex == 6)
     {
@@ -239,8 +240,12 @@ int CPU::cpu_byteArithmetic(const byte_t& opcode)
     int ticks{ 4 };
     int dataIndex{ opcode % 8 };
     int functionIndex{ (static_cast<int>(opcode)/8) % 8 };
-    m_log(LOG_INFO) << "Arithmetic Function of type: " << arithmeticFunction[functionIndex].second <<"\n";
-    
+
+    std::string_view dataRegString{ (opcode > 0xC0) ? "d8" : getRegisterStr(dataIndex) };
+    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", "
+                    << arithmeticFunction[functionIndex].second << " " 
+                    << dataRegString << "\n";
+
     if (dataIndex == 6)
     {
         ticks += 4;
@@ -384,7 +389,7 @@ void CPU::wordAdd(word_t& reg, const word_t& addValue)
  * 
  * @param reg 
  */
-void CPU::swapNibbles(byte_t& reg)
+void CPU::swapNibbles(byte_t& reg, int)
 {
     byte_t lsn{ static_cast<byte_t>(reg & 0xFu) };
     byte_t msn{ static_cast<byte_t>(reg >> 4) };
@@ -455,7 +460,7 @@ void CPU::resetBit(byte_t& byte, int bit)
  * otherwise rotated normally but the carry is also set
  * to old bit 7. 
  */
-void CPU::leftRotate(byte_t& byte)
+void CPU::leftRotate(byte_t& byte, int)
 {
     byte_t carry{ m_Registers.f.carry };
     byte_t oldBit7{ static_cast<byte_t>(byte >> 7) };
@@ -468,7 +473,7 @@ void CPU::leftRotate(byte_t& byte)
     m_Registers.f.half_carry = false;
 }
 
-void CPU::leftRotateWithCarry(byte_t& byte)
+void CPU::leftRotateWithCarry(byte_t& byte, int)
 {
     byte_t carry{ m_Registers.f.carry };
     byte_t oldBit7{ static_cast<byte_t>(byte >> 7) };
@@ -490,7 +495,7 @@ void CPU::leftRotateWithCarry(byte_t& byte)
  * otherwise rotated normally but the carry is also set
  * to old bit 0. 
  */
-void CPU::rightRotate(byte_t& byte)
+void CPU::rightRotate(byte_t& byte, int)
 {
     byte_t carry{ m_Registers.f.carry };
     byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
@@ -503,7 +508,7 @@ void CPU::rightRotate(byte_t& byte)
     m_Registers.f.half_carry = false;
 }
 
-void CPU::rightRotateWithCarry(byte_t& byte)
+void CPU::rightRotateWithCarry(byte_t& byte, int)
 {
     byte_t carry{ m_Registers.f.carry };
     byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
@@ -516,7 +521,7 @@ void CPU::rightRotateWithCarry(byte_t& byte)
     m_Registers.f.half_carry = false;
 }
 
-void CPU::leftShift(byte_t& byte)
+void CPU::leftShift(byte_t& byte, int)
 {
     byte_t oldBit7{ static_cast<byte_t>(byte >> 7) };
 
@@ -527,7 +532,7 @@ void CPU::leftShift(byte_t& byte)
     m_Registers.f.subtract = false;
     m_Registers.f.half_carry = false;
 }
-void CPU::rightShift(byte_t& byte)
+void CPU::rightShift(byte_t& byte, int)
 {
     byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
     byte_t oldBit7{ static_cast<byte_t>(byte & 0b10000000) };
@@ -540,7 +545,7 @@ void CPU::rightShift(byte_t& byte)
     m_Registers.f.half_carry = false;
 }
 
-void CPU::rightShiftArithmetic(byte_t& byte)
+void CPU::rightShiftArithmetic(byte_t& byte, int)
 {
     byte_t oldBit0{ static_cast<byte_t>(byte & 0b1) };
     byte_t oldBit7{ static_cast<byte_t>(byte & 0b10000000) };

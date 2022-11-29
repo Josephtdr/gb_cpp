@@ -23,15 +23,9 @@ private:
 
     using opcodeFnPtr = int(CPU::*)();
     using opcodeFnPtr2 = int(CPU::*)(const byte_t&);
-    using preCB0x40_FunctionPtr = void(CPU::*)(byte_t&);
-    using postCB0x40_FunctionPtr = void(CPU::*)(byte_t&, int);
-
     opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
     opcodeFnPtr2 instructionTable2[c_INSTRUCTION_TABLE_SIZE]{};
-
-    preCB0x40_FunctionPtr preCB0x40_FunctionTable[(0x40)]{};
-    postCB0x40_FunctionPtr postCB0x40_FunctionTable[(0xFF-0x40)]{};
-
+    
 public:
     CPU();
     void frameUpdate();
@@ -59,6 +53,7 @@ private:
     word_t pop();
 
     byte_t& getRegister(int index);
+    std::string_view getRegisterStr(int index);
     int opcode_Translator(byte_t opcode);
     int cpu_restart(const byte_t& opcode);
     int cpu_byteLoad(const byte_t& opcode);
@@ -76,18 +71,14 @@ private:
     //Jumps
     enum class JumpTest 
     {
-        NotZero,
-        Zero,
-        NotCarry,
-        Carry,
-        Always
+        NotZero, Zero, NotCarry,
+        Carry, Always,
     };
     bool testJumpTest(JumpTest type);
     void jump(JumpTest type, const word_t& address);
     void jumpRelative(JumpTest type, const byte_t& unsignedData);
     void call(JumpTest type, const word_t& address);
     void return_(JumpTest type);
-    void restart(byte_t address);
     void checkDAA(byte_t& byte);
     void byteINC(byte_t& target); //increment
     void byteDEC(byte_t& target); //decrement
@@ -102,14 +93,14 @@ private:
     void testBit_OP(byte_t& byte, int bit);
     void resetBit(byte_t& byte, int bit);
     void setBit(byte_t& byte, int bit);
-    void swapNibbles(byte_t& reg);
-    void leftRotate(byte_t& byte);
-    void leftRotateWithCarry(byte_t& byte);
-    void rightRotate(byte_t& byte);
-    void rightRotateWithCarry(byte_t& byte);
-    void leftShift(byte_t& byte);
-    void rightShift(byte_t& byte);
-    void rightShiftArithmetic(byte_t& byte);
+    void swapNibbles(byte_t& reg, int);
+    void leftRotate(byte_t& byte, int);
+    void leftRotateWithCarry(byte_t& byte, int);
+    void rightRotate(byte_t& byte, int);
+    void rightRotateWithCarry(byte_t& byte, int);
+    void leftShift(byte_t& byte, int);
+    void rightShift(byte_t& byte, int);
+    void rightShiftArithmetic(byte_t& byte, int);
     
 
     int OP_NOT_IMPLEMTED();

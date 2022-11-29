@@ -184,52 +184,6 @@ void CPU::setupTables()
     instructionTable[0x0F] = &CPU::OP_0x0F;
     //RRA
     instructionTable[0x1F] = &CPU::OP_0x1F;
-
-    //Prefix Instruction
-    for (byte_t i = 0; i < 0x8; ++i)
-    {
-        preCB0x40_FunctionTable[i] = &CPU::leftRotate;
-    }
-    for (byte_t i = 0x8; i < 0x10; ++i)
-    {
-        preCB0x40_FunctionTable[i] = &CPU::rightRotate;
-    }
-    for (byte_t i = 0x10; i < 0x18; ++i)
-    {
-        preCB0x40_FunctionTable[i] = &CPU::leftRotateWithCarry;
-    }
-    for (byte_t i = 0x18; i < 0x20; ++i)
-    {
-        preCB0x40_FunctionTable[i] = &CPU::rightRotateWithCarry;
-    }
-    for (byte_t i = 0x20; i < 0x28; ++i)
-    {
-        preCB0x40_FunctionTable[i] = &CPU::leftShift;
-    }
-    for (byte_t i = 0x28; i < 0x30; ++i)
-    {
-        preCB0x40_FunctionTable[i] = &CPU::rightShiftArithmetic;
-    }
-    for (byte_t i = 0x30; i < 0x38; ++i)
-    {
-        preCB0x40_FunctionTable[i] = &CPU::swapNibbles;
-    }
-    for (byte_t i = 0x38; i < 0x40; ++i)
-    {
-        preCB0x40_FunctionTable[i] = &CPU::rightShift;
-    }
-    for (byte_t i = 0x40; i < 0x80; ++i)
-    {
-        postCB0x40_FunctionTable[i-0x40] = &CPU::testBit_OP;
-    }
-    for (byte_t i = 0x80; i < 0xC0; ++i)
-    {
-        postCB0x40_FunctionTable[i-0x40] = &CPU::resetBit;
-    }
-    for (byte_t i = 0xC0; i >= 0xC0; ++i)
-    {
-        postCB0x40_FunctionTable[i-0x40] = &CPU::setBit;
-    }
 }
 
 int CPU::OP_NOT_IMPLEMTED()
@@ -263,48 +217,39 @@ int CPU::opcode_Translator(byte_t opcode)
 
 int CPU::CBopcode_Translator(byte_t opcode)
 {
-    unsigned int regInt{ opcode & 0xFu }; 
-    bool usingHLI{ regInt == 6 || regInt == 14 };
-
-    if (opcode < 0x40)
+    using cbFunctionPtr = void(CPU::*)(byte_t&, int);
+    static const std::vector<std::pair<cbFunctionPtr, std::string>> bitFunction
     {
-        if (!usingHLI)
-        {
-            byte_t& reg = getRegister(opcode%8);
-            std::cout <<"\n";
-            m_log(LOG_INFO) << "reg before is: " << +reg << ", f: "<< +m_Registers.f << ".\n";
-            ((*this).*(preCB0x40_FunctionTable[opcode]))(reg);
-            m_log(LOG_INFO) << "reg after is: " << +reg << ", f: "<< +m_Registers.f <<".\n";
-            return 8;
-        }
-        else
-        {
-            byte_t HL{ m_Memory.readByte(m_Registers.get_hl()) };
-            ((*this).*(preCB0x40_FunctionTable[opcode]))(HL);
-            m_Memory.writeByte(m_Registers.get_hl(), HL);
-            return 16;
-        }
+        {&CPU::leftRotate, "RLC"}, {&CPU::rightRotate, "RRC"}, 
+        {&CPU::leftRotateWithCarry, "RL"}, {&CPU::rightRotateWithCarry, "RR"},
+        {&CPU::leftShift, "SLA"}, {&CPU::rightShiftArithmetic, "SRA"}, 
+        {&CPU::swapNibbles, "SWAP"}, {&CPU::rightShift, "SRL"},
+        {&CPU::testBit_OP, "BIT"}, {&CPU::resetBit, "RES"}, {&CPU::setBit, "SET"}
+    };
+
+    int regIdx{ opcode%8 }; 
+    int funcIdx{ opcode < 0x40 ? opcode/8 : 8+((opcode-0x40)/0x40) };
+    int bit{ (opcode % 0x40) / 8 };
+
+    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: CB 0x" << +opcode << ", "
+                    << bitFunction[funcIdx].second << " "
+                    << ((opcode >= 0x40) ? std::to_string(bit) : "") << " "  
+                    << getRegisterStr(regIdx) << "\n";
+    if (opcode != 0x7c)
+        getchar();
+
+    if (regIdx != 6)
+    {
+        byte_t& reg = getRegister(opcode%8);
+        ((*this).*(bitFunction[funcIdx]).first)(reg, bit);
+        return 8;
     }
     else
     {
-        int bit{ (opcode % 0x40) / 8 };
-        m_log(LOG_DEBUG) << "CB Opcode: " << +opcode << ", performing on bit: " << bit << "\n";  
-        if (!usingHLI)
-        {
-            byte_t& reg = getRegister(opcode%8);
-            std::cout <<"\n";
-            m_log(LOG_INFO) << "reg before is: " << +reg << ", f: "<< +m_Registers.f <<".\n";
-            ((*this).*(postCB0x40_FunctionTable[opcode-0x40]))(reg, bit);
-            m_log(LOG_INFO) << "reg after is: " << +reg << ", f: "<< +m_Registers.f <<".\n";
-            return 8;
-        }
-        else
-        {
-            byte_t HL{ m_Memory.readByte(m_Registers.get_hl()) };
-            ((*this).*(postCB0x40_FunctionTable[opcode-0x40]))(HL, bit);
-            m_Memory.writeByte(m_Registers.get_hl(), HL);
-            return opcode < 0x80 ? 12 : 16;
-        }
+        byte_t HL{ m_Memory.readByte(m_Registers.get_hl()) };
+        ((*this).*(bitFunction[funcIdx]).first)(HL, bit);
+        m_Memory.writeByte(m_Registers.get_hl(), HL);
+        return (funcIdx!=8) ? 16 : 12;
     }
 }
 
@@ -881,24 +826,24 @@ int CPU::OP_0xFB()
 //RLCA
 int CPU::OP_0x07()
 {
-    leftRotate(m_Registers.a);
+    leftRotate(m_Registers.a, 0);
     return 4;
 }
 //RLA
 int CPU::OP_0x17()
 {
-    leftRotateWithCarry(m_Registers.a);
+    leftRotateWithCarry(m_Registers.a, 0);
     return 4;
 }
 //RRCA
 int CPU::OP_0x0F()
 {
-    rightRotate(m_Registers.a);
+    rightRotate(m_Registers.a, 0);
     return 4;
 }
 //RRA
 int CPU::OP_0x1F()
 {
-    rightRotateWithCarry(m_Registers.a);
+    rightRotateWithCarry(m_Registers.a, 0);
     return 4;
 }
