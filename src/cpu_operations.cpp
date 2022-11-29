@@ -64,33 +64,6 @@ word_t CPU::pop()
     return out;
 }
 
-/**
- * @brief 
- * 
- * @param type 
- * @param address 
- */
-void CPU::call(JumpTest type, const word_t& address)
-{
-    if (testJumpTest(type))
-    {
-        push(m_PC);
-        m_PC = address;
-    }
-}
-
-/**
- * @brief Checks if the return is valid, if so 
- * pops the value from the top of the stack and sets the pc to it
- * otherwise does nothing.
- * 
- * @param valid jumptest type to check if the return is valid
- */
-void CPU::return_(JumpTest type)
-{
-    if (testJumpTest(type))
-        { m_PC = pop(); }
-}
 
 /**
  * @brief return whether the given jumptest is currently valid or not
@@ -116,35 +89,86 @@ bool CPU::testJumpTest(JumpTest type)
     }
 }
 
-/**
- * @brief 
- * Check if the pc should jump, and if so, does
- * @param type The type of test to use, to determine wether to jump or not
- * @param address the address to jump to
- */
-void CPU::jump(JumpTest type, const word_t& address)
-{   
-    if (testJumpTest(type))
-        { m_PC = address; }
-}
-
 int CPU::cpu_jumpRelative(const byte_t& opcode)
 {
-    static const std::vector<std::string> jumpTypes
-    {
-        "NZ", "Z", "NC", "C", ""
-    };
     byte_t unsignedData{ readNextByte() };
     int type{ ((opcode/8)-4) };
     if (type < 0) type = 4;
 
     m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", JR " 
-                    << jumpTypes[type] << " i8\n"; 
+                    << getJumpTestStr(type) << " i8\n"; 
 
     if (testJumpTest(static_cast<JumpTest>(type)))
     {
         m_PC = unsignedAddition(m_PC, unsignedData);
         return 12;
+    }
+    return 8;
+}
+
+int CPU::cpu_jump(const byte_t& opcode)
+{
+    static const std::vector<std::string> funcStr
+    {
+        "RET", "JP", "CALL"
+    };
+    
+    int funcIdx{ (opcode % 8)/2 };
+    int testType{ testBit(opcode, 0) ? 4 : 0 }; // check if always true
+    if (!testType)
+        testType = (opcode >> 3) & 0b11;
+
+    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode 
+        << ", " << funcStr[funcIdx] << " " << getJumpTestStr(testType) 
+        << ((!funcIdx) ? "" : "u16")  << "\n";
+    switch(funcIdx)
+    {
+        case 0: return return_(static_cast<JumpTest>(testType)); break;
+        case 1: return jump(static_cast<JumpTest>(testType)); break;
+        case 2: return call(static_cast<JumpTest>(testType)); break;
+        default:
+            throw std::runtime_error("INVALID FUNCIDX IN CPU_JUMP");
+    }
+}
+
+std::string_view CPU::getJumpTestStr(int type)
+{
+    static const std::vector<std::string> jumpTypes
+    {
+        "NZ", "Z", "NC", "C", ""
+    };
+
+    return jumpTypes[type];
+}
+
+
+int CPU::jump(JumpTest type)
+{   
+    word_t address{ readNextWord() };
+    if (testJumpTest(type))
+    {
+        m_PC = address;
+        return 16;
+    }
+    return 12;
+}
+int CPU::call(JumpTest type)
+{
+    word_t address{ readNextWord() };
+    if (testJumpTest(type))
+    {
+        push(m_PC);
+        m_PC = address;
+        return 24;
+    }
+    return 12;
+}
+int CPU::return_(JumpTest type)
+{
+    if (testJumpTest(type))
+    { 
+        m_PC = pop();
+        return (type!=JumpTest::Always) ? 20 : 16;
     }
     return 8;
 }
@@ -210,7 +234,7 @@ int CPU::cpu_byteLoad(const byte_t& opcode)
     byte_t data{};
     int ticks{ 4 };
 
-    std::string_view dataRegString{ (opcode < 0x40) ? "d8" : getRegisterStr(dataIndex) };
+    std::string_view dataRegString{ (opcode < 0x40) ? "u8" : getRegisterStr(dataIndex) };
     m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", LD " 
                     << getRegisterStr(targetIndex) << " " << dataRegString << "\n"; 
 
@@ -255,7 +279,7 @@ int CPU::cpu_byteArithmetic(const byte_t& opcode)
     int dataIndex{ opcode % 8 };
     int functionIndex{ (static_cast<int>(opcode)/8) % 8 };
 
-    std::string_view dataRegString{ (opcode > 0xC0) ? "d8" : getRegisterStr(dataIndex) };
+    std::string_view dataRegString{ (opcode > 0xC0) ? "u8" : getRegisterStr(dataIndex) };
     m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", "
                     << arithmeticFunction[functionIndex].second << " " 
                     << dataRegString << "\n";

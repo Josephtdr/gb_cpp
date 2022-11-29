@@ -58,6 +58,17 @@ private:
     int cpu_restart(const byte_t& opcode);
     int cpu_byteLoad(const byte_t& opcode);
 
+    int cpu_jump(const byte_t& opcode);
+    enum class JumpTest 
+    {
+        NotZero, Zero, NotCarry, Carry, Always,  
+    };
+    std::string_view getJumpTestStr(int type);
+    bool testJumpTest(JumpTest type);
+    int jump(JumpTest type);
+    int call(JumpTest type);
+    int return_(JumpTest type);
+
     int cpu_jumpRelative(const byte_t& opcode);
     word_t unsignedAddition(const word_t& target, const byte_t& unsignedData);
 
@@ -78,17 +89,6 @@ private:
     void byteDEC(byte_t& target); 
 
     void wordAdd(word_t& reg, const word_t& addValue);
-
-    //Jumps
-    enum class JumpTest 
-    {
-        NotZero, Zero, NotCarry,
-        Carry, Always,  
-    };
-    bool testJumpTest(JumpTest type);
-    void jump(JumpTest type, const word_t& address);
-    void call(JumpTest type, const word_t& address);
-    void return_(JumpTest type);
 
     //CB commands
     int CBopcode_Translator(byte_t opcode);
@@ -179,31 +179,9 @@ private:
     int OP_0x3B();
 
     //Jumps
-    //JP nn
-    int OP_0xC3();
-    //JP cc,nn
-    int OP_0xC2();
-    int OP_0xCA();
-    int OP_0xD2();
-    int OP_0xDA();
     //JP (HL)
     int OP_0xE9();
-    //Calls
-    //Call nn
-    int OP_0xCD();
-    //CALL cc,nn
-    int OP_0xC4();
-    int OP_0xCC();
-    int OP_0xD4();
-    int OP_0xDC();
     //Returns
-    //RET
-    int OP_0xC9();
-    //RET cc
-    int OP_0xC0();
-    int OP_0xC8();
-    int OP_0xD0();
-    int OP_0xD8();
     //RETI
     int OP_0xD9();
     
