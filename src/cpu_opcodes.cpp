@@ -74,29 +74,19 @@ void CPU::setupTables()
     {
         instructionTable2[i] = &CPU::cpu_byteArithmetic;
     }
-    for (byte_t i{ 0xC6 }; i >= 0xC6; i+=0x8)
+    for (byte_t i{0xC6}; i >= 0xC6; i+=0x8)
     {
         instructionTable2[i] = &CPU::cpu_byteArithmetic;
     }
 
-    //INC n
-    instructionTable[0x3C] = &CPU::OP_0x3C;
-    instructionTable[0x04] = &CPU::OP_0x04;
-    instructionTable[0x0C] = &CPU::OP_0x0C;
-    instructionTable[0x14] = &CPU::OP_0x14;
-    instructionTable[0x1C] = &CPU::OP_0x1C;
-    instructionTable[0x24] = &CPU::OP_0x24;
-    instructionTable[0x2C] = &CPU::OP_0x2C;
-    instructionTable[0x34] = &CPU::OP_0x34;
-    //DEC n
-    instructionTable[0x3D] = &CPU::OP_0x3D;
-    instructionTable[0x05] = &CPU::OP_0x05;
-    instructionTable[0x0D] = &CPU::OP_0x0D;
-    instructionTable[0x15] = &CPU::OP_0x15;
-    instructionTable[0x1D] = &CPU::OP_0x1D;
-    instructionTable[0x25] = &CPU::OP_0x25;
-    instructionTable[0x2D] = &CPU::OP_0x2D;
-    instructionTable[0x35] = &CPU::OP_0x35;
+    for (byte_t i{0x04}; i <= 0x3C; i+=0x8)
+    {
+        instructionTable2[i] = &CPU::cpu_byteInc;
+    }
+    for (byte_t i{0x05}; i <= 0x3D; i+=0x8)
+    {
+        instructionTable2[i] = &CPU::cpu_byteDec;
+    }
     //Word arithmatic
     //ADD HL,n
     instructionTable[0x09] = &CPU::OP_0x09;
@@ -189,8 +179,9 @@ int CPU::OP_NOT_IMPLEMTED()
     throw std::runtime_error("OPCODE NOT IMPLEMENTED in table 1!");
 }
 
-int CPU::OP_NOT_IMPLEMTED2(const byte_t&)
+int CPU::OP_NOT_IMPLEMTED2(const byte_t& opcode)
 {
+    std::cout << +opcode << "\n";
     throw std::runtime_error("OPCODE NOT IMPLEMENTED in table 2!");
 }
 
@@ -203,7 +194,8 @@ int CPU::opcode_Translator(byte_t opcode)
         (opcode>=0x40 && opcode<0x80 && opcode!=0x76) || //byteLoad
         (opcode<0x40 && (opcode%8)==6) || //byteLoad
         (opcode>=0xC0 && (opcode%8)==7) || //rst
-        (opcode>=0x18 && opcode <= 0x38 && (opcode%8)==0) // Jr
+        (opcode>=0x18 && opcode <= 0x38 && (opcode%8)==0) ||// Jr
+        (opcode>=0x04 && opcode <=0x3D && ((opcode%8)==4 || (opcode%8)==5)) // Inc, Dec
     ) 
     {
         return ((*this).*(instructionTable2[opcode]))(opcode);
@@ -457,94 +449,6 @@ int CPU::OP_0xE1()
     return 12;
 }
 
-
-
-//INC n
-int CPU::OP_0x3C()
-{
-    byteINC(m_Registers.a);
-    return 4;
-}
-int CPU::OP_0x04()
-{
-    byteINC(m_Registers.b);
-    return 4;
-}
-int CPU::OP_0x0C()
-{
-    byteINC(m_Registers.c);
-    return 4;
-}
-int CPU::OP_0x14()
-{
-    byteINC(m_Registers.d);
-    return 4;
-}
-int CPU::OP_0x1C()
-{
-    byteINC(m_Registers.e);
-    return 4;
-}
-int CPU::OP_0x24()
-{
-    byteINC(m_Registers.h);
-    return 4;
-}
-int CPU::OP_0x2C()
-{
-    byteINC(m_Registers.l);
-    return 4;
-}
-int CPU::OP_0x34()
-{
-    byte_t hli{ m_Memory.readByte(m_Registers.get_hl()) };
-    byteINC(hli);
-    m_Memory.writeByte(m_Registers.get_hl(), hli);
-    return 12;
-}
-//DEC n
-int CPU::OP_0x3D()
-{
-    byteDEC(m_Registers.a);
-    return 4;
-}
-int CPU::OP_0x05()
-{
-    byteDEC(m_Registers.b);
-    return 4;
-}
-int CPU::OP_0x0D()
-{
-    byteDEC(m_Registers.c);
-    return 4;
-}
-int CPU::OP_0x15()
-{
-    byteDEC(m_Registers.d);
-    return 4;
-}
-int CPU::OP_0x1D()
-{
-    byteDEC(m_Registers.e);
-    return 4;
-}
-int CPU::OP_0x25()
-{
-    byteDEC(m_Registers.h);
-    return 4;
-}
-int CPU::OP_0x2D()
-{
-    byteDEC(m_Registers.l);
-    return 4;
-}
-int CPU::OP_0x35()
-{
-    byte_t hli{ m_Memory.readByte(m_Registers.get_hl()) };
-    byteDEC(hli);
-    m_Memory.writeByte(m_Registers.get_hl(), hli);
-    return 12;
-}
 //Word arithmatic
 //ADD HL,n
 int CPU::OP_0x09()

@@ -346,13 +346,48 @@ void CPU::byteCP(const byte_t& data)
     m_Registers.f.subtract = true;
 }
 
-/**
- * @brief Increments a passed byte, 
- * sets zero flag if zero, resets subtract flag,
- *  and sets half carry flag if carry from bit 3 occurs.
- * 
- * @param reg the byte to be incremented
- */
+int CPU::cpu_byteInc(const byte_t& opcode)
+{
+    int regIndex{ opcode/8 };
+
+    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", INC " 
+                    << getRegisterStr(regIndex) << "\n"; 
+
+    if (regIndex==6)
+    {
+        byte_t HLI{ m_Memory.readByte(m_Registers.get_hl()) };
+        byteINC(HLI);
+        m_Memory.writeByte(m_Registers.get_hl(), HLI);
+        return 12;
+    }
+    else
+    {
+        byteINC(getRegister(regIndex));
+        return 4;
+    }
+}
+
+int CPU::cpu_byteDec(const byte_t& opcode)
+{
+    int regIndex{ opcode/8 };
+
+    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", DEC " 
+                    << getRegisterStr(regIndex) << "\n"; 
+
+    if (regIndex==6)
+    {
+        byte_t HLI{ m_Memory.readByte(m_Registers.get_hl()) };
+        byteDEC(HLI);
+        m_Memory.writeByte(m_Registers.get_hl(), HLI);
+        return 12;
+    }
+    else
+    {
+        byteDEC(getRegister(regIndex));
+        return 4;
+    }
+}
+
 void CPU::byteINC(byte_t& reg)
 {
     byte_t unchanged{ reg };
@@ -362,13 +397,7 @@ void CPU::byteINC(byte_t& reg)
     m_Registers.f.subtract = false;
     m_Registers.f.half_carry = unchanged==0xFu;
 }
-/**
- * @brief Decrements a passed byte, 
- * sets zero flag if zero, sets subtract flag,
- *  and sets half carry flag if borrow from bit 3 occurs.
- * 
- * @param reg the byte to be decremented
- */
+
 void CPU::byteDEC(byte_t& reg)
 {
     signed int htest{ reg & 0xF };

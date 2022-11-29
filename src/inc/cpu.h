@@ -70,11 +70,15 @@ private:
     void byteOR(const byte_t& data);
     void byteXOR(const byte_t& data);
     void byteCP(const byte_t& data); //compare
-
     void checkDAA(byte_t& byte);
-    void byteINC(byte_t& target); //increment
-    void byteDEC(byte_t& target); //decrement
-    
+
+    int cpu_byteInc(const byte_t& opcode);
+    int cpu_byteDec(const byte_t& opcode);
+    void byteINC(byte_t& target); 
+    void byteDEC(byte_t& target); 
+
+    void wordAdd(word_t& reg, const word_t& addValue);
+
     //Jumps
     enum class JumpTest 
     {
@@ -85,10 +89,6 @@ private:
     void jump(JumpTest type, const word_t& address);
     void call(JumpTest type, const word_t& address);
     void return_(JumpTest type);
-    
-    
-    //Word Arithmetic
-    void wordAdd(word_t& reg, const word_t& addValue);
 
     //CB commands
     int CBopcode_Translator(byte_t opcode);
@@ -159,26 +159,6 @@ private:
     int OP_0xC1();
     int OP_0xD1();
     int OP_0xE1();
-    
-    //INC n
-    int OP_0x3C();
-    int OP_0x04();
-    int OP_0x0C();
-    int OP_0x14();
-    int OP_0x1C();
-    int OP_0x24();
-    int OP_0x2C();
-    int OP_0x34();
-    //DEC n
-    int OP_0x3D();
-    int OP_0x05();
-    int OP_0x0D();
-    int OP_0x15();
-    int OP_0x1D();
-    int OP_0x25();
-    int OP_0x2D();
-    int OP_0x35();
-
     //Word arithmatic
     //ADD HL,n
     int OP_0x09();
