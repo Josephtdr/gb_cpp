@@ -211,6 +211,8 @@ int CPU::opcode_Translator(byte_t opcode)
     }
     else
     {
+        m_log(LOG_INFO) << "PC: " << +(m_PC) << ", Opcode: 0x" 
+                        << +opcode  << " \n";
         return ((*this).*(instructionTable[opcode]))();
     }
 }
@@ -235,8 +237,6 @@ int CPU::CBopcode_Translator(byte_t opcode)
                     << bitFunction[funcIdx].second << " "
                     << ((opcode >= 0x40) ? std::to_string(bit) : "") << " "  
                     << getRegisterStr(regIdx) << "\n";
-    if (opcode != 0x7c)
-        getchar();
 
     if (regIdx != 6)
     {

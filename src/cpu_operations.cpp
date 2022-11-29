@@ -38,8 +38,8 @@ void CPU::push(word_t value)
 {
     byte_t lsb{ static_cast<byte_t>(value & 0xFFu) };
     byte_t msb{ static_cast<byte_t>(value >> 8) };
-    m_log(LOG_DEBUG) << "SP: " << +m_SP << ", will push " << +msb 
-                     << ", " << +lsb << " to stack!" << "\n"; 
+    // m_log(LOG_DEBUG) << "SP: " << +m_SP << ", will push " << +msb 
+    //                  << ", " << +lsb << " to stack!" << "\n"; 
 
     --m_SP;
     m_Memory.writeByte(m_SP, msb);
@@ -60,7 +60,7 @@ word_t CPU::pop()
     ++m_SP;
     word_t out{ static_cast<word_t>((msb << 8) | lsb) };
 
-    m_log(LOG_DEBUG) << "SP: " << +(m_SP-2) << ", Popped " << +out << " from stack!" << "\n"; 
+    // m_log(LOG_DEBUG) << "SP: " << +(m_SP-2) << ", Popped " << +out << " from stack!" << "\n"; 
     return out;
 }
 

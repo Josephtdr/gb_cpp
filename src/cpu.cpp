@@ -57,16 +57,6 @@ int CPU::cycle()
 
 int CPU::execute(byte_t instructionByte, bool prefixed)
 {
-    // if(m_lineByLine)
-    // {
-    //     m_log(LOG_INFO) << "PC:" << +(m_PC-1) << ", Running opcode " << std::hex 
-    //                  << ((prefixed) ? "CB_0x" : "0x") << +instructionByte  << " ";
-    // }
-    // else
-    // {
-    //     m_log(LOG_INFO) << "PC:" << +(m_PC-1) << ", Running opcode " << std::hex 
-    //                  << ((prefixed) ? "CB_0x" : "0x") << +instructionByte  << "\n";
-    // }
     try 
     {
         if (!prefixed)
