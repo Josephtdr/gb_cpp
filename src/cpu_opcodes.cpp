@@ -126,12 +126,10 @@ void CPU::setupTables()
     //JP (HL)
     instructionTable[0xE9] = &CPU::OP_0xE9;
     // JR n
-    instructionTable[0x18] = &CPU::OP_0x18;
-    //JR cc,n
-    instructionTable[0x20] = &CPU::OP_0x20;
-    instructionTable[0x28] = &CPU::OP_0x28;
-    instructionTable[0x30] = &CPU::OP_0x30;
-    instructionTable[0x38] = &CPU::OP_0x38;
+    for (byte_t i{0x18}; i <= 0x38; i+=0x8)
+    {
+        instructionTable2[i] = &CPU::cpu_jumpRelative;
+    }
     //Calls
     //Call nn
     instructionTable[0xCD] = &CPU::OP_0xCD;
@@ -204,7 +202,8 @@ int CPU::opcode_Translator(byte_t opcode)
         (opcode>=0x80 && (opcode%8)==6) || //arithmetic
         (opcode>=0x40 && opcode<0x80 && opcode!=0x76) || //byteLoad
         (opcode<0x40 && (opcode%8)==6) || //byteLoad
-        (opcode>=0xC0 && (opcode%8)==7) //rst
+        (opcode>=0xC0 && (opcode%8)==7) || //rst
+        (opcode>=0x18 && opcode <= 0x38 && (opcode%8)==0) // Jr
     ) 
     {
         return ((*this).*(instructionTable2[opcode]))(opcode);
@@ -659,38 +658,6 @@ int CPU::OP_0xE9()
 {
     jump(JumpTest::Always, m_Registers.get_hl());
     return 4;
-}
-// JR n
-int CPU::OP_0x18()
-{
-    byte_t offset{ readNextByte() };
-    jumpRelative(JumpTest::Always, offset);
-    return 8;
-}
-//JR cc,n
-int CPU::OP_0x20()
-{
-    byte_t offset{ readNextByte() };
-    jumpRelative(JumpTest::NotZero, offset);
-    return 8;
-}
-int CPU::OP_0x28()
-{
-    byte_t offset{ readNextByte() };
-    jumpRelative(JumpTest::Zero, offset);
-    return 8;
-}
-int CPU::OP_0x30()
-{
-    byte_t offset{ readNextByte() };
-    jumpRelative(JumpTest::NotCarry, offset);
-    return 8;
-}
-int CPU::OP_0x38()
-{
-    byte_t offset{ readNextByte() };
-    jumpRelative(JumpTest::Carry, offset);
-    return 8;
 }
 //Calls
 //Call nn

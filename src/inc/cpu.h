@@ -25,7 +25,7 @@ private:
     using opcodeFnPtr2 = int(CPU::*)(const byte_t&);
     opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
     opcodeFnPtr2 instructionTable2[c_INSTRUCTION_TABLE_SIZE]{};
-    
+
 public:
     CPU();
     void frameUpdate();
@@ -58,6 +58,9 @@ private:
     int cpu_restart(const byte_t& opcode);
     int cpu_byteLoad(const byte_t& opcode);
 
+    int cpu_jumpRelative(const byte_t& opcode);
+    word_t unsignedAddition(const word_t& target, const byte_t& unsignedData);
+
     int cpu_byteArithmetic(const byte_t& opcode);
     void byteAdd(const byte_t& data);
     void byteAddWithCarry(const byte_t& data);
@@ -68,20 +71,21 @@ private:
     void byteXOR(const byte_t& data);
     void byteCP(const byte_t& data); //compare
 
+    void checkDAA(byte_t& byte);
+    void byteINC(byte_t& target); //increment
+    void byteDEC(byte_t& target); //decrement
+    
     //Jumps
     enum class JumpTest 
     {
         NotZero, Zero, NotCarry,
-        Carry, Always,
+        Carry, Always,  
     };
     bool testJumpTest(JumpTest type);
     void jump(JumpTest type, const word_t& address);
-    void jumpRelative(JumpTest type, const byte_t& unsignedData);
     void call(JumpTest type, const word_t& address);
     void return_(JumpTest type);
-    void checkDAA(byte_t& byte);
-    void byteINC(byte_t& target); //increment
-    void byteDEC(byte_t& target); //decrement
+    
     
     //Word Arithmetic
     void wordAdd(word_t& reg, const word_t& addValue);
@@ -204,13 +208,6 @@ private:
     int OP_0xDA();
     //JP (HL)
     int OP_0xE9();
-    // JR n
-    int OP_0x18();
-    //JR cc,n
-    int OP_0x20();
-    int OP_0x28();
-    int OP_0x30();
-    int OP_0x38();
     //Calls
     //Call nn
     int OP_0xCD();

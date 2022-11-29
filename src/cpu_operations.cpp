@@ -128,27 +128,41 @@ void CPU::jump(JumpTest type, const word_t& address)
         { m_PC = address; }
 }
 
-void CPU::jumpRelative(JumpTest type, const byte_t& unsignedData)
+int CPU::cpu_jumpRelative(const byte_t& opcode)
+{
+    static const std::vector<std::string> jumpTypes
+    {
+        "NZ", "Z", "NC", "C", ""
+    };
+    byte_t unsignedData{ readNextByte() };
+    int type{ ((opcode/8)-4) };
+    if (type < 0) type = 4;
+
+    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", JR " 
+                    << jumpTypes[type] << " i8\n"; 
+
+    if (testJumpTest(static_cast<JumpTest>(type)))
+    {
+        m_PC = unsignedAddition(m_PC, unsignedData);
+        return 12;
+    }
+    return 8;
+}
+
+word_t CPU::unsignedAddition(const word_t& target, const byte_t& unsignedData)
 {
     int sign{ (unsignedData >> 7) };
 
     if (sign)
     {
         int offset{ (unsignedData & 0b01111111) - 0b10000000 };
-        int intAddress{ m_PC + offset };
+        int intAddress{ target + offset };
 
-        word_t newAddress{ static_cast<word_t>(intAddress) };
-
-        // m_log(LOG_INFO) << "old address: " << +m_PC << ", new address: " << +newAddress 
-        //     << ", offset: " << std::dec << offset << std::hex
-        //                 <<".\n";
-
-        jump(type, newAddress);
-
+        return static_cast<word_t>(intAddress);
     }
     else
     {
-        jump(type, m_PC + (unsignedData >> 1));
+        return target + unsignedData;   
     }
 }
 
