@@ -9,6 +9,8 @@ CPU::CPU()
    m_log{ std::cout, __PRETTY_FUNCTION__ }
 {
     m_log.set_log_level(LOG_DEBUG);
+    // m_lineByLine = true;
+    std::cout << std::hex;
 
     m_Registers.set_af(0x01B0);
     m_Registers.set_bc(0x0013);
@@ -24,14 +26,16 @@ void CPU::frameUpdate()
 
     while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
     {
-        //if (!halted) something like this
-        int cycles{ cycle() };
-        cyclesThisUpdate += cycles;
-        updateTimers(cycles);
-        // UpdateGraphics(cycles);
-        interupts();
-        if (m_lineByLine)
+        if (!m_Halted)
+        {
+            int cycles{ cycle() };
+            cyclesThisUpdate += cycles;
+            updateTimers(cycles);
+            // UpdateGraphics(cycles);
+            if (m_lineByLine)
             getchar();
+        }
+        interupts();
     }
     m_log(LOG_ERROR) << "Frame finished!" << "\n";
     // RenderScreen();
@@ -53,28 +57,17 @@ int CPU::cycle()
 
 int CPU::execute(byte_t instructionByte, bool prefixed)
 {
-    if(m_lineByLine)
-    {
-        m_log(LOG_INFO) << "PC:" << +(m_PC-1) << ", Running opcode " << std::hex 
-                     << ((prefixed) ? "CB_0x" : "0x") << +instructionByte  << " ";
-    }
-    else
-    {
-        m_log(LOG_INFO) << "PC:" << +(m_PC-1) << ", Running opcode " << std::hex 
-                     << ((prefixed) ? "CB_0x" : "0x") << +instructionByte  << "\n";
-    }
-
     try 
     {
         if (!prefixed)
-            { return ((*this).*(instructionTable[instructionByte]))(); }
+            { return opcode_Translator(instructionByte); }
         else
             { return CBopcode_Translator(instructionByte); }
     }
     catch (std::runtime_error e)
     {
         m_log(LOG_ERROR) << e.what() << "\n";
-        // std::exit(EXIT_FAILURE);
+        std::exit(EXIT_FAILURE);
     }
 }
 
@@ -160,12 +153,20 @@ void CPU::interupts()
                 {
                     if (testBit(enabled,i)) //and interupt (i) is enabled 
                     {
-                        //remove halt?
+                        m_Halted = false;
                         performInterupt(i);
                     }
                 }
             }
         }
+    }
+    else if (m_Halted)
+    {
+        byte_t requests = m_Memory.readByte(c_INTERUPTS_REQ_ADDRESS);
+        byte_t enabled = m_Memory.readByte(c_INTERUPTS_ENABLED_ADDRESS);
+
+        if (requests & enabled)
+            m_Halted = false;
     }
 }
 
