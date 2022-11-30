@@ -9,8 +9,9 @@
 class CPU
 {
 private:
-    int m_TimerCounter{};
-    int m_DividerCounter{};
+    int m_TimerCounter{}; //Tracks when to throw timer interupts
+    int m_DividerCounter{}; //Tracks when to increment Divider Register
+    int m_ScanlineCounter{}; //Tracks when to increment current scanline
     logger m_log;
     MemoryBus m_Memory{m_TimerCounter, m_log};
     Registers m_Registers{};
@@ -19,6 +20,8 @@ private:
     
     bool m_InteruptsEnabled{};
     bool m_Halted{};
+
+
     bool m_lineByLine{};
 
     using opcodeFnPtr = int(CPU::*)();
@@ -37,23 +40,44 @@ private:
     void setupTables();
     word_t readNextWord();
     byte_t readNextByte();
+    byte_t readByte(word_t address) const;
+    void writeByte(word_t address, byte_t value);
 
     void updateDividerRegister(int cycles);
     void updateTimers(int cycles);
     bool isClockEnabled() const;
-    void setClockFreq();
+    void updateClockFreq();
     byte_t getClockFreq() const;
     
     void interupts();
     void requestInterupt(int interupt);
     void performInterupt(int interupt);
+//******************************************************************************************//
     
+
+    void updateGraphics(int cycles);
+    void updateLCDStatus();
+    bool isLCDEnabled();
+
+    void initiateDMATransfer(byte_t value);
+    //LCDC stuff
+    void updateAddressingMode();
+
+    struct Tile
+    {
+
+    };
+    
+    //Tile Drawing
+    Tile getTile(word_t address);
+
 //******************************************************************************************//
     void push(word_t value);
     word_t pop();
 
     byte_t& getRegister(int index);
     std::string_view getRegisterStr(int index);
+    int extractBits(const byte_t& byte, int start, int num);
     int opcode_Translator(byte_t opcode);
     int cpu_restart(const byte_t& opcode);
     int cpu_byteLoad(const byte_t& opcode);
@@ -105,7 +129,6 @@ private:
     void leftShift(byte_t& byte, int);
     void rightShift(byte_t& byte, int);
     void rightShiftArithmetic(byte_t& byte, int);
-    int extractBits(const byte_t& byte, int start, int num);
 
     int OP_NOT_IMPLEMTED();
     int OP_NOT_IMPLEMTED2(const byte_t&);

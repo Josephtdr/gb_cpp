@@ -31,9 +31,9 @@ void CPU::frameUpdate()
             int cycles{ cycle() };
             cyclesThisUpdate += cycles;
             updateTimers(cycles);
-            // UpdateGraphics(cycles);
+            updateGraphics(cycles);
             if (m_lineByLine)
-            getchar();
+                getchar();
         }
         interupts();
     }
@@ -76,6 +76,29 @@ void CPU::loadGame(const char* fileName)
     m_Memory.loadGame(fileName);
 }
 
+byte_t CPU::readByte(word_t address) const
+{
+    return m_Memory.readByte(address);
+}
+void CPU::writeByte(word_t address, byte_t value)
+{
+    if (address == r_DMAT)
+    {
+        initiateDMATransfer(value);
+    }
+    else if (address == r_TMC)
+    {
+        m_log(LOG_DEBUG) << "Writing new TMC value:" << +value << "\n";
+
+        byte_t currentfreq = getClockFreq();
+        m_Memory.writeByte(r_TMC, value);
+        if (currentfreq != getClockFreq())
+            updateClockFreq();
+    }
+    else
+        m_Memory.writeByte(address, value);
+}
+
 void CPU::updateTimers(int cycles)
 {
     updateDividerRegister(cycles);
@@ -89,17 +112,17 @@ void CPU::updateTimers(int cycles)
         {
             m_log(LOG_INFO) << "Timer reset!" << "\n";
             // reset m_TimerTracer to the correct value
-            setClockFreq();
+            updateClockFreq();
 
             // timer about to overflow
-            if (m_Memory.readByte(c_TIMA_ADDRESS) == 255)
+            if (readByte(r_TIMA) == 255)
             {
-                m_Memory.writeByte(c_TIMA_ADDRESS,m_Memory.readByte(c_TMA_ADDRESS)) ;
+                writeByte(r_TIMA,readByte(r_TMA)) ;
                 requestInterupt(2);
             }
             else
             {
-                m_Memory.writeByte(c_TIMA_ADDRESS, m_Memory.readByte(c_TIMA_ADDRESS)+1) ;
+                writeByte(r_TIMA,readByte(r_TIMA)+1) ;
             }
         }
     }
@@ -107,13 +130,13 @@ void CPU::updateTimers(int cycles)
 
 bool CPU::isClockEnabled() const
 {
-    return testBit(m_Memory.readByte(c_TMC_ADDRESS), 2);
+    return testBit(readByte(r_TMC), 2);
 }
 byte_t CPU::getClockFreq() const
 {
-    return m_Memory.readByte(c_TMC_ADDRESS) & 0b11u;
+    return readByte(r_TMC) & 0b11u;
 }
-void CPU::setClockFreq()
+void CPU::updateClockFreq()
 {
     byte_t freq = getClockFreq();
     switch (freq)
@@ -131,7 +154,7 @@ void CPU::updateDividerRegister(int cycles)
     if (m_DividerCounter >= c_DIVIDER_CYCLE_FREQ)
     {
         m_DividerCounter = 0 ;
-        m_Memory.incrementDivRegister();
+        m_Memory.increment(r_DIV);
     }
 }
 
@@ -143,8 +166,8 @@ void CPU::interupts()
 {
     if (m_InteruptsEnabled)
     {
-        byte_t requests = m_Memory.readByte(c_INTERUPTS_REQ_ADDRESS);
-        byte_t enabled = m_Memory.readByte(c_INTERUPTS_ENABLED_ADDRESS);
+        byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
+        byte_t enabled = readByte(c_INTERUPTS_ENABLED_ADDRESS);
         if (requests)
         {
             for (byte_t i=0; i<5; ++i) //for each interupt bit 0/1/2/4
@@ -162,20 +185,24 @@ void CPU::interupts()
     }
     else if (m_Halted)
     {
-        byte_t requests = m_Memory.readByte(c_INTERUPTS_REQ_ADDRESS);
-        byte_t enabled = m_Memory.readByte(c_INTERUPTS_ENABLED_ADDRESS);
+        byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
+        byte_t enabled = readByte(c_INTERUPTS_ENABLED_ADDRESS);
 
         if (requests & enabled)
             m_Halted = false;
     }
 }
 
+
+/**
+ * @brief 0 Vblank, 1 LCD, 2 Timer, 4 Joypad input
+ */
 void CPU::requestInterupt(int interupt) //0,1,2,4
 {
-    byte_t requests = m_Memory.readByte(c_INTERUPTS_REQ_ADDRESS);
+    byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
     //set relevent bit
     setBit(requests, interupt);
-    m_Memory.writeByte(c_INTERUPTS_REQ_ADDRESS, requests);
+    writeByte(c_INTERUPTS_REQ_ADDRESS, requests);
 }
 
 /**
@@ -188,9 +215,9 @@ void CPU::performInterupt(int interupt)
     m_log(LOG_INFO) << "Starting interupt " << interupt << "!" << "\n";
     m_InteruptsEnabled = false;
 
-    byte_t requests = m_Memory.readByte(c_INTERUPTS_REQ_ADDRESS);
+    byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
     resetBit(requests, interupt);
-    m_Memory.writeByte(c_INTERUPTS_REQ_ADDRESS, requests);
+    writeByte(c_INTERUPTS_REQ_ADDRESS, requests);
 
     push(m_PC);
     switch(interupt)

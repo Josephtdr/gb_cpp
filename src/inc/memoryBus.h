@@ -41,7 +41,7 @@ public:
     byte_t readByte(word_t address) const;
     void writeByte(word_t address, byte_t value);
     void loadGame(const char* file);
-    void incrementDivRegister();
+    void increment(word_t address);
 };
 
 

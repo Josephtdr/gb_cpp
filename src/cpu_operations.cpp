@@ -10,9 +10,9 @@
  */
 word_t CPU::readNextWord()
 {
-    byte_t lsb{ m_Memory.readByte(m_PC) };
+    byte_t lsb{ readByte(m_PC) };
     ++m_PC;
-    byte_t msb{ m_Memory.readByte(m_PC) };
+    byte_t msb{ readByte(m_PC) };
     ++m_PC;
     
     return (msb << 8) | lsb;
@@ -24,7 +24,7 @@ word_t CPU::readNextWord()
  */
 byte_t CPU::readNextByte()
 {
-    byte_t out{ m_Memory.readByte(m_PC) };
+    byte_t out{ readByte(m_PC) };
     ++m_PC;
     return out;
 }
@@ -42,9 +42,9 @@ void CPU::push(word_t value)
     //                  << ", " << +lsb << " to stack!" << "\n"; 
 
     --m_SP;
-    m_Memory.writeByte(m_SP, msb);
+    writeByte(m_SP, msb);
     --m_SP;
-    m_Memory.writeByte(m_SP, lsb);
+    writeByte(m_SP, lsb);
 }
 
 /**
@@ -54,9 +54,9 @@ void CPU::push(word_t value)
  */
 word_t CPU::pop()
 {
-    byte_t lsb{ m_Memory.readByte(m_SP) };
+    byte_t lsb{ readByte(m_SP) };
     ++m_SP;
-    byte_t msb{ m_Memory.readByte(m_SP) };
+    byte_t msb{ readByte(m_SP) };
     ++m_SP;
     word_t out{ static_cast<word_t>((msb << 8) | lsb) };
 
@@ -243,7 +243,7 @@ int CPU::cpu_byteLoad(const byte_t& opcode)
         if (opcode < 0x40)
             data = readNextByte();
         else
-            data = m_Memory.readByte(m_Registers.get_hl());
+            data = readByte(m_Registers.get_hl());
     } 
     else
         data = getRegister(dataIndex);
@@ -251,7 +251,7 @@ int CPU::cpu_byteLoad(const byte_t& opcode)
     if (targetIndex == 6)
     {
         ticks += 4;
-        m_Memory.writeByte(m_Registers.get_hl(), data);
+        writeByte(m_Registers.get_hl(), data);
     } 
     else 
         getRegister(targetIndex) = data;
@@ -284,7 +284,7 @@ int CPU::cpu_byteArithmetic(const byte_t& opcode)
         if (opcode > 0xC0)
             data = readNextByte();
         else
-            data = m_Memory.readByte(m_Registers.get_hl());
+            data = readByte(m_Registers.get_hl());
     }
     else
         data = getRegister(dataIndex);
@@ -373,9 +373,9 @@ int CPU::cpu_byteInc(const byte_t& opcode)
 
     if (regIndex==6)
     {
-        byte_t HLI{ m_Memory.readByte(m_Registers.get_hl()) };
+        byte_t HLI{ readByte(m_Registers.get_hl()) };
         byteINC(HLI);
-        m_Memory.writeByte(m_Registers.get_hl(), HLI);
+        writeByte(m_Registers.get_hl(), HLI);
         return 12;
     }
     else
@@ -394,9 +394,9 @@ int CPU::cpu_byteDec(const byte_t& opcode)
 
     if (regIndex==6)
     {
-        byte_t HLI{ m_Memory.readByte(m_Registers.get_hl()) };
+        byte_t HLI{ readByte(m_Registers.get_hl()) };
         byteDEC(HLI);
-        m_Memory.writeByte(m_Registers.get_hl(), HLI);
+        writeByte(m_Registers.get_hl(), HLI);
         return 12;
     }
     else

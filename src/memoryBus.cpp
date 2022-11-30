@@ -56,26 +56,29 @@ byte_t MemoryBus::readByte(word_t address) const
     //rom banking area so access cartridge memory instead
     else if ((address>=0x4000) && (address <= 0x7FFF))
     {
-        // m_log(LOG_DEBUG) << "Read rom bank: " << m_CurrentROMBank << "\n";
-        word_t newAddress{ address - c_ROM_BANK_SIZE };
+        word_t newAddress{ static_cast<word_t>(address - c_ROM_BANK_SIZE) };
         return m_CartridgeMemory[newAddress + (m_CurrentROMBank*c_ROM_BANK_SIZE)];
+    }
+    //Vram Area
+    else if ((address>=0x8000) && (address < 0xA000))
+    {
+        std::exit(EXIT_FAILURE);
+        return 0;
+        //do vram stuff
     }
     // ram memory bank area
     else if ((address >= 0xA000) && (address <= 0xBFFF))
     {
-        // m_log(LOG_DEBUG) << "Read ram bank: " << m_CurrentRAMBank << "\n";
-        word_t newAddress{ address - 0xA000 };
+        word_t newAddress{ static_cast<word_t>(address - 0xA000) };
         return m_RAMBankMemory[newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)];
     }
     // restricted memory area
     else if ((0xFEA0u <= address) && (address <= 0xFEFFu))
     {
-        // m_log(LOG_DEBUG) << "Read restricted, address: " << +address << "!" << "\n";
         return 0u;
     }
     else
     {
-        // m_log(LOG_DEBUG) << "Read normal, address: " << +address << ", value: " << +m_Memory[address] << "." << "\n";
         return m_Memory[address];
     }
 }
@@ -92,7 +95,7 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     {
         if (m_EnableRAM)
         {
-            word_t newAddress{ address - 0xA000 };
+            word_t newAddress{ static_cast<word_t>(address-0xA000) };
             // m_log(LOG_DEBUG) << "Write to Ram Bank:" << m_CurrentRAMBank 
             //                  << ", address: " << +(newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)) 
             //                  << ", value: " << +value << "." << "\n";
@@ -106,38 +109,23 @@ void MemoryBus::writeByte(word_t address, byte_t value)
         m_Memory[address] = value;
         writeByte(address-0x2000, value);
     }
-    //restricted memory area
-    else if ((0xFEA0u <= address) && (address <= 0xFEFFu))
+    //reset the current scanline if the game tries to write to it
+    else if (address == r_LY)
     {
-        return;
+        m_Memory[address] = 0;
     }
-    //harcoded and hacky because of oop setup
-    else if (address == c_TMC_ADDRESS)
+    else if (address == r_DIV)
     {
-        m_log(LOG_INFO) << "Writing new TMC value:" << +value << "\n";
-
-        byte_t currentfreq = m_Memory[c_TMC_ADDRESS] & 0b11u;
-        m_Memory[c_TMC_ADDRESS] = value;
-        byte_t newfreq = m_Memory[c_TMC_ADDRESS] & 0b11u;
-
-        if (currentfreq != newfreq)
-        {
-            switch (newfreq)
-            {
-                case 0: m_timerCounterRef = 1024; break; // freq 4096
-                case 1: m_timerCounterRef = 16; break;// freq 262144
-                case 2: m_timerCounterRef = 64; break;// freq 65536
-                case 3: m_timerCounterRef = 256; break;// freq 16382
-            }
-        }
-    }
-    else if (address == c_DIV_REGISTER_ADDRESS)
-    {
-        m_Memory[c_DIV_REGISTER_ADDRESS] = 0 ;
+        m_Memory[address] = 0 ;
     }
     else if ((address == 0xFF50) && value) //unmap  bootrom
     {
         unloadBootRom();
+    }
+    //restricted memory area
+    else if ((0xFEA0u <= address) && (address <= 0xFEFFu))
+    {
+        return;
     }
     else
     {
@@ -147,6 +135,10 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     }
 }
 
+void MemoryBus::increment(word_t address)
+{
+    ++m_Memory[address];
+}
 
 void MemoryBus::loadGame(const char* filename)
 {
@@ -301,9 +293,4 @@ void MemoryBus::changeROMRAMMode(byte_t value)
     m_ROMBanking = !newData;
     if (m_ROMBanking)
         m_CurrentRAMBank = 0 ;
-}
-
-void MemoryBus::incrementDivRegister()
-{
-    ++m_Memory[c_DIV_REGISTER_ADDRESS];
 }

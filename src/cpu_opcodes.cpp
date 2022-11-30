@@ -235,9 +235,9 @@ int CPU::CBopcode_Translator(byte_t opcode)
     }
     else
     {
-        byte_t HL{ m_Memory.readByte(m_Registers.get_hl()) };
+        byte_t HL{ readByte(m_Registers.get_hl()) };
         ((*this).*(bitFunction[funcInt]).first)(HL, bit);
-        m_Memory.writeByte(m_Registers.get_hl(), HL);
+        writeByte(m_Registers.get_hl(), HL);
         return (funcInt!=8) ? 16 : 12;
     }
 }
@@ -247,85 +247,85 @@ int CPU::CBopcode_Translator(byte_t opcode)
 //LD A,n
 int CPU::OP_0x0A()
 {
-    m_Registers.a = m_Memory.readByte(m_Registers.get_bc());
+    m_Registers.a = readByte(m_Registers.get_bc());
     return 8;
 }
 int CPU::OP_0x1A()
 {
-    m_Registers.a = m_Memory.readByte(m_Registers.get_de());
+    m_Registers.a = readByte(m_Registers.get_de());
     return 8;
 }
 int CPU::OP_0xFA()
 {
-    m_Registers.a = m_Memory.readByte(readNextWord());
+    m_Registers.a = readByte(readNextWord());
     return 16;
 }
 //LD n,A
 int CPU::OP_0x02()
 {
-    m_Memory.writeByte(m_Registers.get_bc(), m_Registers.a);
+    writeByte(m_Registers.get_bc(), m_Registers.a);
     return  8;
 }
 int CPU::OP_0x12()
 {
-    m_Memory.writeByte(m_Registers.get_de(), m_Registers.a);
+    writeByte(m_Registers.get_de(), m_Registers.a);
     return  8;
 }
 int CPU::OP_0xEA()
 {
-    m_Memory.writeByte(readNextWord(), m_Registers.a);
+    writeByte(readNextWord(), m_Registers.a);
     return  16;
 }
 //LD A,(C)
 int CPU::OP_0xF2()
 {
-    m_Registers.a = m_Memory.readByte(0xFF00u + m_Registers.c);
+    m_Registers.a = readByte(0xFF00u + m_Registers.c);
     return 8;
 }
 //LD (C),A
 int CPU::OP_0xE2()
 {
-    m_Memory.writeByte(0xFF00u + m_Registers.c, m_Registers.a);
+    writeByte(0xFF00u + m_Registers.c, m_Registers.a);
     return 8;
 }
 //LD A,(HL-)
 int CPU::OP_0x3A()
 {
-    m_Registers.a = m_Memory.readByte(m_Registers.get_hl());
+    m_Registers.a = readByte(m_Registers.get_hl());
     m_Registers.set_hl( m_Registers.get_hl()-1u );
     return 8;
 }
 //LD (HL-),A
 int CPU::OP_0x32()
 {
-    m_Memory.writeByte(m_Registers.get_hl(), m_Registers.a);
+    writeByte(m_Registers.get_hl(), m_Registers.a);
     m_Registers.set_hl( m_Registers.get_hl()-1u );
     return 8;
 }
 //LD A,(HL+)
 int CPU::OP_0x2A()
 {
-    m_Registers.a = m_Memory.readByte(m_Registers.get_hl());
+    m_Registers.a = readByte(m_Registers.get_hl());
     m_Registers.set_hl( m_Registers.get_hl()+1u );
     return 8;
 }
 //LD (HL+),A
 int CPU::OP_0x22()
 {
-    m_Memory.writeByte(m_Registers.get_hl(), m_Registers.a);
+    writeByte(m_Registers.get_hl(), m_Registers.a);
     m_Registers.set_hl( m_Registers.get_hl()+1u );
     return 8;
 }
 //LDH (n),A
 int CPU::OP_0xE0()
 {
-    m_Memory.writeByte(0xFF00u + readNextByte(), m_Registers.a);
+    writeByte(0xFF00u + readNextByte(), m_Registers.a);
     return 12;
 }
 //LDH A,(n)
 int CPU::OP_0xF0()
 {
-    m_Registers.a = m_Memory.readByte(0xFF00u + readNextByte());
+    m_Registers.a = readByte(0xFF00u + readNextByte());
     return 12;
 }
 
@@ -393,8 +393,8 @@ int CPU::OP_0x08()
     byte_t lsb{ static_cast<byte_t>(m_SP & 0xF) };
     byte_t msb{ static_cast<byte_t>(m_SP >> 4) };
     
-    m_Memory.writeByte(address, lsb);
-    m_Memory.writeByte(address+1, msb);
+    writeByte(address, lsb);
+    writeByte(address+1, msb);
 
     return 20;
 }
