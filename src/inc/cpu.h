@@ -105,7 +105,7 @@ private:
     void leftShift(byte_t& byte, int);
     void rightShift(byte_t& byte, int);
     void rightShiftArithmetic(byte_t& byte, int);
-    
+    int extractBits(const byte_t& byte, int start, int num);
 
     int OP_NOT_IMPLEMTED();
     int OP_NOT_IMPLEMTED2(const byte_t&);

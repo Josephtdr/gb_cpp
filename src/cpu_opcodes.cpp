@@ -198,6 +198,15 @@ int CPU::opcode_Translator(byte_t opcode)
     }    
 }
 
+/**
+ * @brief Extract 'num' bits starting from bit 'start'.
+ * 0 indicates the rightmost bit (the lsb). 
+ */
+int CPU::extractBits(const byte_t& byte, int start, int num)
+{
+    return (((1 << num) - 1) & (byte >> start));
+}
+
 int CPU::CBopcode_Translator(byte_t opcode)
 {
     using cbFunctionPtr = void(CPU::*)(byte_t&, int);
@@ -210,27 +219,26 @@ int CPU::CBopcode_Translator(byte_t opcode)
         {&CPU::testBit_OP, "BIT"}, {&CPU::resetBit, "RES"}, {&CPU::setBit, "SET"}
     };
 
-    int regIdx{ opcode%8 }; 
-    int funcIdx{ opcode < 0x40 ? opcode/8 : 8+((opcode-0x40)/0x40) };
-    int bit{ (opcode % 0x40) / 8 };
+    int regInt{ extractBits(opcode,0,3) }; 
+    int bit{ extractBits(opcode,3,3) };
+    int funcInt{ opcode < 0x40 ? extractBits(opcode,3,3) : 8+extractBits(opcode,6,2) };
 
     m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: CB 0x" << +opcode << ", "
-                    << bitFunction[funcIdx].second << " "
+                    << bitFunction[funcInt].second << " "
                     << ((opcode >= 0x40) ? std::to_string(bit) : "") << " "  
-                    << getRegisterStr(regIdx) << "\n";
+                    << getRegisterStr(regInt) << "\n";
 
-    if (regIdx != 6)
+    if (regInt != 6)
     {
-        byte_t& reg = getRegister(opcode%8);
-        ((*this).*(bitFunction[funcIdx]).first)(reg, bit);
+        ((*this).*(bitFunction[funcInt]).first)(getRegister(regInt), bit);
         return 8;
     }
     else
     {
         byte_t HL{ m_Memory.readByte(m_Registers.get_hl()) };
-        ((*this).*(bitFunction[funcIdx]).first)(HL, bit);
+        ((*this).*(bitFunction[funcInt]).first)(HL, bit);
         m_Memory.writeByte(m_Registers.get_hl(), HL);
-        return (funcIdx!=8) ? 16 : 12;
+        return (funcInt!=8) ? 16 : 12;
     }
 }
 

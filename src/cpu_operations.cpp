@@ -113,10 +113,8 @@ int CPU::cpu_jump(const byte_t& opcode)
         "RET", "JP", "CALL"
     };
     
-    int funcIdx{ (opcode % 8)/2 };
-    int testType{ testBit(opcode, 0) ? 4 : 0 }; // check if always true
-    if (!testType)
-        testType = (opcode >> 3) & 0b11;
+    int funcIdx{ extractBits(opcode,1,2) };
+    int testType{ testBit(opcode,0) ? 4 : extractBits(opcode,3,2) }; // check if always true
 
     m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode 
         << ", " << funcStr[funcIdx] << " " << getJumpTestStr(testType) 
@@ -218,9 +216,10 @@ int CPU::cpu_restart(const byte_t& opcode)
     {
         0x0u, 0x8u, 0x10u, 0x18u, 0x20u, 0x28u, 0x30u, 0x38u
     };
-    int index{ (opcode /8) % 8 };
+    int index{ extractBits(opcode,3,3) };
 
-    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", RST " << +offsetVector[index] << "\n"; 
+    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", RST " 
+                    << +offsetVector[index] << "\n"; 
 
     push(m_PC);
     m_PC = offsetVector[index];
@@ -229,14 +228,14 @@ int CPU::cpu_restart(const byte_t& opcode)
 
 int CPU::cpu_byteLoad(const byte_t& opcode)
 {
-    int dataIndex{ opcode % 8 };
-    int targetIndex{ (static_cast<int>(opcode)/8) % 8 };
+    int dataIndex{ extractBits(opcode,0,3) };
+    int targetIndex{ extractBits(opcode,3,3) };
+    int ticks{4};
     byte_t data{};
-    int ticks{ 4 };
 
-    std::string_view dataRegString{ (opcode < 0x40) ? "u8" : getRegisterStr(dataIndex) };
     m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", LD " 
-                    << getRegisterStr(targetIndex) << " " << dataRegString << "\n"; 
+                    << getRegisterStr(targetIndex) << " " 
+                    << ((opcode < 0x40) ? "u8" : getRegisterStr(dataIndex)) << "\n"; 
 
     if (dataIndex == 6)
     {
@@ -247,9 +246,7 @@ int CPU::cpu_byteLoad(const byte_t& opcode)
             data = m_Memory.readByte(m_Registers.get_hl());
     } 
     else
-    {
         data = getRegister(dataIndex);
-    }
 
     if (targetIndex == 6)
     {
@@ -257,10 +254,8 @@ int CPU::cpu_byteLoad(const byte_t& opcode)
         m_Memory.writeByte(m_Registers.get_hl(), data);
     } 
     else 
-    {
         getRegister(targetIndex) = data;
-    }
-
+    
     return ticks;
 }
 
@@ -275,14 +270,13 @@ int CPU::cpu_byteArithmetic(const byte_t& opcode)
     };
 
     byte_t data{};
-    int ticks{ 4 };
-    int dataIndex{ opcode % 8 };
-    int functionIndex{ (static_cast<int>(opcode)/8) % 8 };
+    int ticks{4};
+    int dataIndex{ extractBits(opcode,0,3) };
+    int functionIndex{ extractBits(opcode,3,3) };
 
-    std::string_view dataRegString{ (opcode > 0xC0) ? "u8" : getRegisterStr(dataIndex) };
     m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", "
                     << arithmeticFunction[functionIndex].second << " " 
-                    << dataRegString << "\n";
+                    << ((opcode > 0xC0) ? "u8" : getRegisterStr(dataIndex)) << "\n";
 
     if (dataIndex == 6)
     {
@@ -372,7 +366,7 @@ void CPU::byteCP(const byte_t& data)
 
 int CPU::cpu_byteInc(const byte_t& opcode)
 {
-    int regIndex{ opcode/8 };
+    int regIndex{ extractBits(opcode,3,3) };
 
     m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", INC " 
                     << getRegisterStr(regIndex) << "\n"; 
@@ -393,7 +387,7 @@ int CPU::cpu_byteInc(const byte_t& opcode)
 
 int CPU::cpu_byteDec(const byte_t& opcode)
 {
-    int regIndex{ opcode/8 };
+    int regIndex{ extractBits(opcode,3,3) };
 
     m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", DEC " 
                     << getRegisterStr(regIndex) << "\n"; 
