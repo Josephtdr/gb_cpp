@@ -53,23 +53,30 @@ private:
     void requestInterupt(int interupt);
     void performInterupt(int interupt);
 //******************************************************************************************//
+    int m_ScreenData[160][144][3]{};
+    enum class Colour
+    {
+        White, Light_Gray, Dark_Gray, Black
+    };
     
-
     void updateGraphics(int cycles);
+    void drawScanLine();
+    void renderTiles();
+    void renderSprites();
+    void renderScreen();
+
+    word_t getTileLocation(word_t tileDataBase, bool signed_, word_t tileAddress);
+    int getColourInt(word_t tileLocation, int yPos, int xPos);
+    Colour getColour(int colourInt, word_t palletAddress);
+    
     void updateLCDStatus();
     bool isLCDEnabled();
 
+
+
     void initiateDMATransfer(byte_t value);
     //LCDC stuff
-    void updateAddressingMode();
-
-    struct Tile
-    {
-
-    };
     
-    //Tile Drawing
-    Tile getTile(word_t address);
 
 //******************************************************************************************//
     void push(word_t value);

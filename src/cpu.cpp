@@ -38,7 +38,7 @@ void CPU::frameUpdate()
         interupts();
     }
     m_log(LOG_ERROR) << "Frame finished!" << "\n";
-    // RenderScreen();
+    renderScreen();
 }
 
 int CPU::cycle()
