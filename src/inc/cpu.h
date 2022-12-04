@@ -9,17 +9,17 @@
 class CPU
 {
 private:
-    int m_TimerCounter{};
-    int m_DividerCounter{};
-    logger m_log;
-    MemoryBus m_Memory{m_TimerCounter, m_log};
+    int m_TimerCounter{}; //Tracks when to throw timer interupts
+    int m_DividerCounter{}; //Tracks when to increment Divider Register
     Registers m_Registers{};
     word_t m_PC{};
     word_t m_SP{};
+
+    logger& m_log;
+    MemoryBus& m_Memory;
     
     bool m_InteruptsEnabled{};
-    bool m_Halted{};
-    bool m_lineByLine{};
+    
 
     using opcodeFnPtr = int(CPU::*)();
     using opcodeFnPtr2 = int(CPU::*)(const byte_t&);
@@ -27,28 +27,32 @@ private:
     opcodeFnPtr2 instructionTable2[c_INSTRUCTION_TABLE_SIZE]{};
 
 public:
-    CPU();
-    void frameUpdate();
-    void loadGame(const char* fileName);
+    CPU(MemoryBus& memoryRef, logger& logRef);
+    int cycle();
+    void updateTimers(int cycles);
+    void interupts();
+
+    bool m_Halted{};
+    bool m_lineByLine{false};
 
 private:
-    int cycle();
     int execute(byte_t instructionByte, bool prefixed);
     void setupTables();
     word_t readNextWord();
     byte_t readNextByte();
-
+    byte_t readByte(word_t address) const;
+    void writeByte(word_t address, byte_t value);
+    
     void updateDividerRegister(int cycles);
-    void updateTimers(int cycles);
     bool isClockEnabled() const;
-    void setClockFreq();
+    void updateClockFreq();
     byte_t getClockFreq() const;
     
-    void interupts();
     void requestInterupt(int interupt);
     void performInterupt(int interupt);
-    
-//******************************************************************************************//
+    void initiateDMATransfer(byte_t value);
+
+    //Opcode Commands
     void push(word_t value);
     word_t pop();
 
@@ -57,6 +61,17 @@ private:
     int opcode_Translator(byte_t opcode);
     int cpu_restart(const byte_t& opcode);
     int cpu_byteLoad(const byte_t& opcode);
+
+    int cpu_jump(const byte_t& opcode);
+    enum class JumpTest 
+    {
+        NotZero, Zero, NotCarry, Carry, Always,  
+    };
+    std::string_view getJumpTestStr(int type);
+    bool testJumpTest(JumpTest type);
+    int jump(JumpTest type);
+    int call(JumpTest type);
+    int return_(JumpTest type);
 
     int cpu_jumpRelative(const byte_t& opcode);
     word_t unsignedAddition(const word_t& target, const byte_t& unsignedData);
@@ -79,24 +94,12 @@ private:
 
     void wordAdd(word_t& reg, const word_t& addValue);
 
-    //Jumps
-    enum class JumpTest 
-    {
-        NotZero, Zero, NotCarry,
-        Carry, Always,  
-    };
-    bool testJumpTest(JumpTest type);
-    void jump(JumpTest type, const word_t& address);
-    void call(JumpTest type, const word_t& address);
-    void return_(JumpTest type);
-
     //CB commands
     int CBopcode_Translator(byte_t opcode);
     
-    bool testBit(const byte_t& byte, int bit) const;
     void testBit_OP(byte_t& byte, int bit);
-    void resetBit(byte_t& byte, int bit);
-    void setBit(byte_t& byte, int bit);
+    void resetBit_OP(byte_t& byte, int bit);
+    void setBit_OP(byte_t& byte, int bit);
     void swapNibbles(byte_t& reg, int);
     void leftRotate(byte_t& byte, int);
     void leftRotateWithCarry(byte_t& byte, int);
@@ -105,7 +108,6 @@ private:
     void leftShift(byte_t& byte, int);
     void rightShift(byte_t& byte, int);
     void rightShiftArithmetic(byte_t& byte, int);
-    
 
     int OP_NOT_IMPLEMTED();
     int OP_NOT_IMPLEMTED2(const byte_t&);
@@ -179,31 +181,9 @@ private:
     int OP_0x3B();
 
     //Jumps
-    //JP nn
-    int OP_0xC3();
-    //JP cc,nn
-    int OP_0xC2();
-    int OP_0xCA();
-    int OP_0xD2();
-    int OP_0xDA();
     //JP (HL)
     int OP_0xE9();
-    //Calls
-    //Call nn
-    int OP_0xCD();
-    //CALL cc,nn
-    int OP_0xC4();
-    int OP_0xCC();
-    int OP_0xD4();
-    int OP_0xDC();
     //Returns
-    //RET
-    int OP_0xC9();
-    //RET cc
-    int OP_0xC0();
-    int OP_0xC8();
-    int OP_0xD0();
-    int OP_0xD8();
     //RETI
     int OP_0xD9();
     

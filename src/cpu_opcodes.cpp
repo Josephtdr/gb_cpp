@@ -1,4 +1,5 @@
 #include "inc/cpu.h"
+#include "inc/bitfuncs.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -107,12 +108,12 @@ void CPU::setupTables()
     instructionTable[0x3B] = &CPU::OP_0x3B;
     //Jumps
     //JP nn
-    instructionTable[0xC3] = &CPU::OP_0xC3;
+    instructionTable2[0xC3] = &CPU::cpu_jump;
     //JP cc,nn
-    instructionTable[0xC2] = &CPU::OP_0xC2;
-    instructionTable[0xCA] = &CPU::OP_0xCA;
-    instructionTable[0xD2] = &CPU::OP_0xD2;
-    instructionTable[0xDA] = &CPU::OP_0xDA;
+    instructionTable2[0xC2] = &CPU::cpu_jump;
+    instructionTable2[0xCA] = &CPU::cpu_jump;
+    instructionTable2[0xD2] = &CPU::cpu_jump;
+    instructionTable2[0xDA] = &CPU::cpu_jump;
     //JP (HL)
     instructionTable[0xE9] = &CPU::OP_0xE9;
     // JR n
@@ -122,12 +123,12 @@ void CPU::setupTables()
     }
     //Calls
     //Call nn
-    instructionTable[0xCD] = &CPU::OP_0xCD;
+    instructionTable2[0xCD] = &CPU::cpu_jump;
     //CALL cc,nn
-    instructionTable[0xC4] = &CPU::OP_0xC4;
-    instructionTable[0xCC] = &CPU::OP_0xCC;
-    instructionTable[0xD4] = &CPU::OP_0xD4;
-    instructionTable[0xDC] = &CPU::OP_0xDC;
+    instructionTable2[0xC4] = &CPU::cpu_jump;
+    instructionTable2[0xCC] = &CPU::cpu_jump;
+    instructionTable2[0xD4] = &CPU::cpu_jump;
+    instructionTable2[0xDC] = &CPU::cpu_jump;
     //Restarts
     //RST n
     for (byte_t i{ 0xC7 }; i >= 0xC7; i+=0x8)
@@ -136,12 +137,12 @@ void CPU::setupTables()
     }
     //Returns
     //RET
-    instructionTable[0xC9] = &CPU::OP_0xC9;
+    instructionTable2[0xC9] = &CPU::cpu_jump;
     //RET cc
-    instructionTable[0xC0] = &CPU::OP_0xC0;
-    instructionTable[0xC8] = &CPU::OP_0xC8;
-    instructionTable[0xD0] = &CPU::OP_0xD0;
-    instructionTable[0xD8] = &CPU::OP_0xD8;
+    instructionTable2[0xC0] = &CPU::cpu_jump;
+    instructionTable2[0xC8] = &CPU::cpu_jump;
+    instructionTable2[0xD0] = &CPU::cpu_jump;
+    instructionTable2[0xD8] = &CPU::cpu_jump;
     //RETI
     instructionTable[0xD9] = &CPU::OP_0xD9;
     //Miscellaneous
@@ -181,31 +182,21 @@ int CPU::OP_NOT_IMPLEMTED()
 
 int CPU::OP_NOT_IMPLEMTED2(const byte_t& opcode)
 {
-    std::cout << +opcode << "\n";
-    throw std::runtime_error("OPCODE NOT IMPLEMENTED in table 2!");
+    return -1;
 }
-
 
 int CPU::opcode_Translator(byte_t opcode)
 {
-    if (
-        (opcode>=0x80 && opcode<0xC0) || //arithmetic
-        (opcode>=0x80 && (opcode%8)==6) || //arithmetic
-        (opcode>=0x40 && opcode<0x80 && opcode!=0x76) || //byteLoad
-        (opcode<0x40 && (opcode%8)==6) || //byteLoad
-        (opcode>=0xC0 && (opcode%8)==7) || //rst
-        (opcode>=0x18 && opcode <= 0x38 && (opcode%8)==0) ||// Jr
-        (opcode>=0x04 && opcode <=0x3D && ((opcode%8)==4 || (opcode%8)==5)) // Inc, Dec
-    ) 
-    {
-        return ((*this).*(instructionTable2[opcode]))(opcode);
-    }
+    int cycles{ ((*this).*(instructionTable2[opcode]))(opcode) };
+
+    if (cycles >= 0)
+        return cycles;
     else
     {
         m_log(LOG_INFO) << "PC: " << +(m_PC) << ", Opcode: 0x" 
                         << +opcode  << " \n";
         return ((*this).*(instructionTable[opcode]))();
-    }
+    }    
 }
 
 int CPU::CBopcode_Translator(byte_t opcode)
@@ -217,30 +208,29 @@ int CPU::CBopcode_Translator(byte_t opcode)
         {&CPU::leftRotateWithCarry, "RL"}, {&CPU::rightRotateWithCarry, "RR"},
         {&CPU::leftShift, "SLA"}, {&CPU::rightShiftArithmetic, "SRA"}, 
         {&CPU::swapNibbles, "SWAP"}, {&CPU::rightShift, "SRL"},
-        {&CPU::testBit_OP, "BIT"}, {&CPU::resetBit, "RES"}, {&CPU::setBit, "SET"}
+        {&CPU::testBit_OP, "BIT"}, {&CPU::resetBit_OP, "RES"}, {&CPU::setBit_OP, "SET"}
     };
 
-    int regIdx{ opcode%8 }; 
-    int funcIdx{ opcode < 0x40 ? opcode/8 : 8+((opcode-0x40)/0x40) };
-    int bit{ (opcode % 0x40) / 8 };
+    int regInt{ extractBits(opcode,0,3) }; 
+    int bit{ extractBits(opcode,3,3) };
+    int funcInt{ opcode < 0x40 ? extractBits(opcode,3,3) : 8+extractBits(opcode,6,2) };
 
     m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: CB 0x" << +opcode << ", "
-                    << bitFunction[funcIdx].second << " "
+                    << bitFunction[funcInt].second << " "
                     << ((opcode >= 0x40) ? std::to_string(bit) : "") << " "  
-                    << getRegisterStr(regIdx) << "\n";
+                    << getRegisterStr(regInt) << "\n";
 
-    if (regIdx != 6)
+    if (regInt != 6)
     {
-        byte_t& reg = getRegister(opcode%8);
-        ((*this).*(bitFunction[funcIdx]).first)(reg, bit);
+        ((*this).*(bitFunction[funcInt]).first)(getRegister(regInt), bit);
         return 8;
     }
     else
     {
-        byte_t HL{ m_Memory.readByte(m_Registers.get_hl()) };
-        ((*this).*(bitFunction[funcIdx]).first)(HL, bit);
-        m_Memory.writeByte(m_Registers.get_hl(), HL);
-        return (funcIdx!=8) ? 16 : 12;
+        byte_t HL{ readByte(m_Registers.get_hl()) };
+        ((*this).*(bitFunction[funcInt]).first)(HL, bit);
+        writeByte(m_Registers.get_hl(), HL);
+        return (funcInt!=8) ? 16 : 12;
     }
 }
 
@@ -249,85 +239,85 @@ int CPU::CBopcode_Translator(byte_t opcode)
 //LD A,n
 int CPU::OP_0x0A()
 {
-    m_Registers.a = m_Memory.readByte(m_Registers.get_bc());
+    m_Registers.a = readByte(m_Registers.get_bc());
     return 8;
 }
 int CPU::OP_0x1A()
 {
-    m_Registers.a = m_Memory.readByte(m_Registers.get_de());
+    m_Registers.a = readByte(m_Registers.get_de());
     return 8;
 }
 int CPU::OP_0xFA()
 {
-    m_Registers.a = m_Memory.readByte(readNextWord());
+    m_Registers.a = readByte(readNextWord());
     return 16;
 }
 //LD n,A
 int CPU::OP_0x02()
 {
-    m_Memory.writeByte(m_Registers.get_bc(), m_Registers.a);
+    writeByte(m_Registers.get_bc(), m_Registers.a);
     return  8;
 }
 int CPU::OP_0x12()
 {
-    m_Memory.writeByte(m_Registers.get_de(), m_Registers.a);
+    writeByte(m_Registers.get_de(), m_Registers.a);
     return  8;
 }
 int CPU::OP_0xEA()
 {
-    m_Memory.writeByte(readNextWord(), m_Registers.a);
+    writeByte(readNextWord(), m_Registers.a);
     return  16;
 }
 //LD A,(C)
 int CPU::OP_0xF2()
 {
-    m_Registers.a = m_Memory.readByte(0xFF00u + m_Registers.c);
+    m_Registers.a = readByte(0xFF00u + m_Registers.c);
     return 8;
 }
 //LD (C),A
 int CPU::OP_0xE2()
 {
-    m_Memory.writeByte(0xFF00u + m_Registers.c, m_Registers.a);
+    writeByte(0xFF00u + m_Registers.c, m_Registers.a);
     return 8;
 }
 //LD A,(HL-)
 int CPU::OP_0x3A()
 {
-    m_Registers.a = m_Memory.readByte(m_Registers.get_hl());
+    m_Registers.a = readByte(m_Registers.get_hl());
     m_Registers.set_hl( m_Registers.get_hl()-1u );
     return 8;
 }
 //LD (HL-),A
 int CPU::OP_0x32()
 {
-    m_Memory.writeByte(m_Registers.get_hl(), m_Registers.a);
+    writeByte(m_Registers.get_hl(), m_Registers.a);
     m_Registers.set_hl( m_Registers.get_hl()-1u );
     return 8;
 }
 //LD A,(HL+)
 int CPU::OP_0x2A()
 {
-    m_Registers.a = m_Memory.readByte(m_Registers.get_hl());
+    m_Registers.a = readByte(m_Registers.get_hl());
     m_Registers.set_hl( m_Registers.get_hl()+1u );
     return 8;
 }
 //LD (HL+),A
 int CPU::OP_0x22()
 {
-    m_Memory.writeByte(m_Registers.get_hl(), m_Registers.a);
+    writeByte(m_Registers.get_hl(), m_Registers.a);
     m_Registers.set_hl( m_Registers.get_hl()+1u );
     return 8;
 }
 //LDH (n),A
 int CPU::OP_0xE0()
 {
-    m_Memory.writeByte(0xFF00u + readNextByte(), m_Registers.a);
+    writeByte(0xFF00u + readNextByte(), m_Registers.a);
     return 12;
 }
 //LDH A,(n)
 int CPU::OP_0xF0()
 {
-    m_Registers.a = m_Memory.readByte(0xFF00u + readNextByte());
+    m_Registers.a = readByte(0xFF00u + readNextByte());
     return 12;
 }
 
@@ -395,8 +385,8 @@ int CPU::OP_0x08()
     byte_t lsb{ static_cast<byte_t>(m_SP & 0xF) };
     byte_t msb{ static_cast<byte_t>(m_SP >> 4) };
     
-    m_Memory.writeByte(address, lsb);
-    m_Memory.writeByte(address+1, msb);
+    writeByte(address, lsb);
+    writeByte(address+1, msb);
 
     return 20;
 }
@@ -534,98 +524,16 @@ int CPU::OP_0x3B()
     return 8;
 }
 
-//JP nn
-int CPU::OP_0xC3()
-{
-    jump(JumpTest::Always, readNextWord());
-    return 12;
-}
-//JP cc,nn
-int CPU::OP_0xC2()
-{
-    jump(JumpTest::NotZero, readNextWord());
-    return 12;
-}
-int CPU::OP_0xCA()
-{
-    jump(JumpTest::Zero, readNextWord());
-    return 12;
-}
-int CPU::OP_0xD2()
-{
-    jump(JumpTest::NotCarry, readNextWord());
-    return 12;
-}
-int CPU::OP_0xDA()
-{
-    jump(JumpTest::Carry, readNextWord());
-    return 12;
-}
 //JP (HL)
 int CPU::OP_0xE9()
 {
-    jump(JumpTest::Always, m_Registers.get_hl());
+    m_PC = m_Registers.get_hl();
     return 4;
-}
-//Calls
-//Call nn
-int CPU::OP_0xCD()
-{
-    call(JumpTest::Always, readNextWord());
-    return 12;
-}
-//CALL cc,nn
-int CPU::OP_0xC4()
-{
-    call(JumpTest::NotZero, readNextWord());
-    return 12;
-}
-int CPU::OP_0xCC()
-{
-    call(JumpTest::Zero, readNextWord());
-    return 12;
-}
-int CPU::OP_0xD4()
-{
-    call(JumpTest::NotCarry, readNextWord());
-    return 12;
-}
-int CPU::OP_0xDC()
-{
-    call(JumpTest::Carry, readNextWord());
-    return 12;
-}
-//RET
-int CPU::OP_0xC9()
-{
-    return_(JumpTest::Always);
-    return 8;
-}
-//RET cc
-int CPU::OP_0xC0()
-{
-    return_(JumpTest::NotZero);
-    return 8;
-}
-int CPU::OP_0xC8()
-{
-    return_(JumpTest::Zero);
-    return 8;
-}
-int CPU::OP_0xD0()
-{
-    return_(JumpTest::NotCarry);
-    return 8;
-}
-int CPU::OP_0xD8()
-{
-    return_(JumpTest::Carry);
-    return 8;
 }
 //RETI
 int CPU::OP_0xD9()
 {
-    return_(JumpTest::Always);
+    m_PC = pop();
     m_InteruptsEnabled = true;
     return 8;
 }

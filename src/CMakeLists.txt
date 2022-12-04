@@ -1,10 +1,8 @@
-# find_package(SDL2 REQUIRED)
+find_package(SDL2 REQUIRED)
 
-# include_directories(${PROJECT_NAME} 
-#     ${SDL2_INCLUDE_DIRS}
-# )
 include_directories(
     ${MyProject_SOURCE_DIR}/src/inc
+    ${SDL2_INCLUDE_DIRS}
     # ${MyProject_SOURCE_DIR}/external/BSlogger/src
 )
 # link_directories(
@@ -18,11 +16,13 @@ add_executable(${PROJECT_NAME}
     cpu.cpp
     cpu_operations.cpp
     cpu_opcodes.cpp
-    gpu.cpp
+    ppu.cpp
+    bitfuncs.cpp
+    platform.cpp
 )
 
 # target_link_libraries(${PROJECT_NAME} bslogger)
 
-# target_link_libraries(${PROJECT_NAME} 
-#     ${SDL2_LIBRARIES}
-# )
+target_link_libraries(${PROJECT_NAME} 
+    ${SDL2_LIBRARIES}
+)

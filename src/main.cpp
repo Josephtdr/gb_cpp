@@ -3,6 +3,9 @@
 
 #include "unistd.h"
 #include "inc/cpu.h"
+#include "inc/ppu.h"
+#include "inc/platform.h"
+#include "inc/BSlogger.h"
 
 //https://www.learncpp.com/cpp-tutorial/timing-your-code/
 class Timer
@@ -26,9 +29,34 @@ public:
     }
     double nextFrameIn() const
     {
-        return frameRate - elapsed();
+        if (frameRate - elapsed() > 0)
+            return frameRate - elapsed();
+        else
+            return 0.;
     }
 };
+
+
+void frameUpdate(CPU& cpu, PPU& ppu, logger& log)
+{
+    int cyclesThisUpdate = 0;
+
+    while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
+    {
+        if (!cpu.m_Halted)
+        {
+            int cycles{ cpu.cycle() };
+            cyclesThisUpdate += cycles;
+            cpu.updateTimers(cycles);
+            ppu.updateGraphics(cycles);
+            // if (cpu.m_lineByLine)
+            //     getchar();
+        }
+        cpu.interupts();
+    }
+    log(LOG_ERROR) << "Frame finished!" << "\n";
+    ppu.renderScreen();
+}
 
 int main(int argc, char *argv[])
 {
@@ -37,26 +65,32 @@ int main(int argc, char *argv[])
 		std::cerr << "Usage: " << argv[0] << " <ROM>\n";
 		std::exit(EXIT_FAILURE);
 	}
-
-    std::cout << "Starting up!" << "\n";
-
     char const* romFilename = argv[1];
 
-    CPU cpu{};
+    logger log{ std::cout, __PRETTY_FUNCTION__ };
+    log.set_log_level(LOG_DEBUG);
+    log(LOG_INFO) << "Starting up!" << "\n";
 
-    std::cout << "CPU initialised!" << "\n";
-
-    cpu.loadGame(romFilename);
+    MemoryBus memory{ log };
+    CPU cpu{ memory, log };
+    log(LOG_INFO) << "CPU initialised!" << "\n";
+    Platform platform{"GBem", c_VIDEO_WIDTH*2,c_VIDEO_HEIGHT*2,c_VIDEO_WIDTH,c_VIDEO_HEIGHT};
+    PPU ppu{ memory, log, platform };
+    log(LOG_INFO) << "PPU initialised!" << "\n";
+    memory.loadGame(romFilename);
+    log(LOG_INFO) << "Game Loaded!" << "\n";
 
     bool quit{};
     Timer t{};
 
+    uint8_t keypad[16]{};
+
     while(!quit)
     {
+        quit = platform.ProcessInput(keypad);
+
         t.reset();
-        cpu.frameUpdate();
+        frameUpdate(cpu, ppu, log);
         sleep(t.nextFrameIn()); //sleep until next frame cycle can start
     }
-
-
 }
