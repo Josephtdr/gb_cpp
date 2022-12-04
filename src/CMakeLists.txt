@@ -18,7 +18,8 @@ add_executable(${PROJECT_NAME}
     cpu.cpp
     cpu_operations.cpp
     cpu_opcodes.cpp
-    gpu.cpp
+    ppu.cpp
+    bitfuncs.cpp
 )
 
 # target_link_libraries(${PROJECT_NAME} bslogger)

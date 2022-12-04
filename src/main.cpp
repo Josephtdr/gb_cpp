@@ -3,6 +3,8 @@
 
 #include "unistd.h"
 #include "inc/cpu.h"
+#include "inc/ppu.h"
+#include "inc/BSlogger.h"
 
 //https://www.learncpp.com/cpp-tutorial/timing-your-code/
 class Timer
@@ -33,6 +35,28 @@ public:
     }
 };
 
+
+void frameUpdate(CPU& cpu, PPU& ppu, logger& log)
+{
+    int cyclesThisUpdate = 0;
+
+    while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
+    {
+        if (!cpu.m_Halted)
+        {
+            int cycles{ cpu.cycle() };
+            cyclesThisUpdate += cycles;
+            cpu.updateTimers(cycles);
+            ppu.updateGraphics(cycles);
+            // if (cpu.m_lineByLine)
+            //     getchar();
+        }
+        cpu.interupts();
+    }
+    log(LOG_ERROR) << "Frame finished!" << "\n";
+    ppu.renderScreen();
+}
+
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -40,16 +64,19 @@ int main(int argc, char *argv[])
 		std::cerr << "Usage: " << argv[0] << " <ROM>\n";
 		std::exit(EXIT_FAILURE);
 	}
-
-    std::cout << "Starting up!" << "\n";
-
     char const* romFilename = argv[1];
 
-    CPU cpu{};
+    logger log{ std::cout, __PRETTY_FUNCTION__ };
+    log.set_log_level(LOG_DEBUG);
+    log(LOG_INFO) << "Starting up!" << "\n";
 
-    std::cout << "CPU initialised!" << "\n";
-
-    cpu.loadGame(romFilename);
+    MemoryBus memory{ log };
+    CPU cpu{ memory, log };
+    log(LOG_INFO) << "CPU initialised!" << "\n";
+    PPU ppu{ memory, log };
+    log(LOG_INFO) << "PPU initialised!" << "\n";
+    memory.loadGame(romFilename);
+    log(LOG_INFO) << "Game Loaded!" << "\n";
 
     bool quit{};
     Timer t{};
@@ -57,7 +84,7 @@ int main(int argc, char *argv[])
     while(!quit)
     {
         t.reset();
-        cpu.frameUpdate();
+        frameUpdate(cpu, ppu, log);
         sleep(t.nextFrameIn()); //sleep until next frame cycle can start
     }
 

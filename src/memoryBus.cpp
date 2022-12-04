@@ -5,9 +5,8 @@
 #include <fstream> //streams
 #include <iostream>
 
-MemoryBus::MemoryBus(int& timerRef, logger& logRef)
-    : m_timerCounterRef{ timerRef },
-      m_log{ logRef }
+MemoryBus::MemoryBus(logger& logRef)
+    : m_log{ logRef }
 {
     m_Memory[0xFF05] = 0x00u; //   ; TIMA
     m_Memory[0xFF06] = 0x00u; //   ; TMA

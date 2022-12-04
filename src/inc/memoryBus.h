@@ -23,8 +23,6 @@ private:
     bool m_EnableRAM{};
     bool m_bootRomLoaded{};
 
-    int& m_timerCounterRef;
-
     void loadBootRom();
     void unloadBootRom();
     void getRomBankingMode();
@@ -36,7 +34,7 @@ private:
     void changeROMRAMMode(byte_t value);
 
 public:
-    MemoryBus(int& timerRef, logger& logRef);
+    MemoryBus(logger& logRef);
 
     byte_t readByte(word_t address) const;
     void writeByte(word_t address, byte_t value);

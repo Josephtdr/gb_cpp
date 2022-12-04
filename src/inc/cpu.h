@@ -11,18 +11,15 @@ class CPU
 private:
     int m_TimerCounter{}; //Tracks when to throw timer interupts
     int m_DividerCounter{}; //Tracks when to increment Divider Register
-    int m_ScanlineCounter{}; //Tracks when to increment current scanline
-    logger m_log;
-    MemoryBus m_Memory{m_TimerCounter, m_log};
     Registers m_Registers{};
     word_t m_PC{};
     word_t m_SP{};
+
+    logger& m_log;
+    MemoryBus& m_Memory;
     
     bool m_InteruptsEnabled{};
-    bool m_Halted{};
-
-
-    bool m_lineByLine{};
+    
 
     using opcodeFnPtr = int(CPU::*)();
     using opcodeFnPtr2 = int(CPU::*)(const byte_t&);
@@ -30,74 +27,38 @@ private:
     opcodeFnPtr2 instructionTable2[c_INSTRUCTION_TABLE_SIZE]{};
 
 public:
-    CPU();
-    void frameUpdate();
-    void loadGame(const char* fileName);
+    CPU(MemoryBus& memoryRef, logger& logRef);
+    int cycle();
+    void updateTimers(int cycles);
+    void interupts();
+
+    bool m_Halted{};
+    bool m_lineByLine{false};
 
 private:
-    int cycle();
+    
     int execute(byte_t instructionByte, bool prefixed);
     void setupTables();
     word_t readNextWord();
     byte_t readNextByte();
     byte_t readByte(word_t address) const;
     void writeByte(word_t address, byte_t value);
-
+    
     void updateDividerRegister(int cycles);
-    void updateTimers(int cycles);
     bool isClockEnabled() const;
     void updateClockFreq();
     byte_t getClockFreq() const;
     
-    void interupts();
     void requestInterupt(int interupt);
     void performInterupt(int interupt);
-//******************************************************************************************//
-    uint32_t video[160 * 144]{};
-
-    enum class Colour
-    {
-        Transparent, White, Light_Gray, Dark_Gray, Black
-    };
-    struct Sprite
-    {
-        byte_t yPos{};
-        byte_t xPos{};
-        byte_t tileIndex{};
-        byte_t flags{};
-    };
-    struct Pixel
-    {
-        Colour colour{};
-        bool sprite{};
-        bool transparent{};
-    };
-    Pixel m_ScreenData[160][144]{};
-    
-    void updateLCDStatus();
-    bool isLCDEnabled();
     void initiateDMATransfer(byte_t value);
-    void renderScreen();
-    void updateGraphics(int cycles);
-    void drawScanLine();
 
-    void renderTiles();
-    void renderWhite();
-    word_t getTileLocation(word_t tileDataBase, bool signed_, word_t tileAddress);
-    
-    void renderSprites();
-    void getSprites(std::vector<Sprite>& sprites, byte_t LY, int height);
-
-    int getColourInt(word_t tileLocation, int yPos, int xPos);
-    Colour getColour(int colourInt, word_t palletAddress, bool obj=false);
-
-//******************************************************************************************//
+    //Opcode Commands
     void push(word_t value);
     word_t pop();
 
     byte_t& getRegister(int index);
     std::string_view getRegisterStr(int index);
-    int extractBits(const byte_t& byte, int start, int num);
     int opcode_Translator(byte_t opcode);
     int cpu_restart(const byte_t& opcode);
     int cpu_byteLoad(const byte_t& opcode);
@@ -137,10 +98,9 @@ private:
     //CB commands
     int CBopcode_Translator(byte_t opcode);
     
-    bool testBit(const byte_t& byte, int bit) const;
     void testBit_OP(byte_t& byte, int bit);
-    void resetBit(byte_t& byte, int bit);
-    void setBit(byte_t& byte, int bit);
+    void resetBit_OP(byte_t& byte, int bit);
+    void setBit_OP(byte_t& byte, int bit);
     void swapNibbles(byte_t& reg, int);
     void leftRotate(byte_t& byte, int);
     void leftRotateWithCarry(byte_t& byte, int);

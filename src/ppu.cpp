@@ -1,12 +1,15 @@
-#include "inc/cpu.h"
-#include <vector>
+#include "inc/ppu.h"
 
-const int c_TILE_SIZE = 16; // Bytes !
-const int c_VIDEO_WIDTH = 160; // Bytes !
-const int c_VIDEO_HEIGHT = 144; // Bytes !
+#include "inc/bitfuncs.h"
 
+PPU::PPU(MemoryBus& memoryRef, logger& logRef)
+    : m_Memory{ memoryRef },
+      m_log{ logRef }
+{
 
-void CPU::updateGraphics(int cycles)
+}
+
+void PPU::updateGraphics(int cycles)
 {
     updateLCDStatus();
 
@@ -30,11 +33,11 @@ void CPU::updateGraphics(int cycles)
             requestInterupt(0);
         // if gone past max scanline, 153, reset
         else if (currentline > 153)
-            m_Memory.writeByte(r_LY, 0);
+            writeByte(r_LY, 0);
     }
 }
 
-void CPU::renderScreen()
+void PPU::renderScreen()
 {
     for (byte_t line{0}; line<c_VIDEO_HEIGHT; ++line)
     {
@@ -48,14 +51,13 @@ void CPU::renderScreen()
                 case Colour::Dark_Gray: rgb = 0x77777777; break;
                 case Colour::Black: rgb = 0; break;
             }
-
-            video[pixel * c_VIDEO_WIDTH + line] = rgb;
+            video[line * c_VIDEO_WIDTH + pixel] = rgb;
         }
     }
     // platform.Update(video, sizeof(video[0])*160);
 }
 
-void CPU::drawScanLine()
+void PPU::drawScanLine()
 {
     byte_t lcdControl{ readByte(r_LCDC) };
     if (testBit(lcdControl,0)) //background enabled flag
@@ -67,7 +69,7 @@ void CPU::drawScanLine()
         renderSprites();
 }
 
-void CPU::renderWhite()
+void PPU::renderWhite()
 {
     for (byte_t line{0}; line<c_VIDEO_HEIGHT; ++line)
     {
@@ -78,7 +80,7 @@ void CPU::renderWhite()
     }
 }
 
-void CPU::renderTiles()
+void PPU::renderTiles()
 {
     byte_t lcdControl{ readByte(r_LCDC) };
     byte_t currentLine{ readByte(r_LY) };
@@ -153,7 +155,7 @@ void CPU::renderTiles()
     }
 }
 
-word_t CPU::getTileLocation(word_t tileDataAddress, bool signed_, word_t tileAddress)
+word_t PPU::getTileLocation(word_t tileDataAddress, bool signed_, word_t tileAddress)
 {
     signed_word_t tileInt{};
     if (signed_)
@@ -170,7 +172,7 @@ word_t CPU::getTileLocation(word_t tileDataAddress, bool signed_, word_t tileAdd
     return tileLocation;
 }
 
-void CPU::renderSprites()
+void PPU::renderSprites()
 {
     byte_t lcdControl{ readByte(r_LCDC) };
     byte_t currentLine{ readByte(r_LY) };
@@ -235,7 +237,7 @@ void CPU::renderSprites()
     }
 }
 
-void CPU::getSprites(std::vector<Sprite>& sprites, byte_t LY, int height)
+void PPU::getSprites(std::vector<Sprite>& sprites, byte_t LY, int height)
 {
     word_t OAMTable{0xFE00};
     int numSprites{};
@@ -256,7 +258,7 @@ void CPU::getSprites(std::vector<Sprite>& sprites, byte_t LY, int height)
     }
 }
 
-int CPU::getColourInt(word_t tileLocation, int tileY, int tileX)
+int PPU::getColourInt(word_t tileLocation, int tileY, int tileX)
 {
     byte_t dataLow = readByte(tileLocation + (tileY * 2));
     byte_t dataHigh = readByte(tileLocation + (tileY * 2) + 1);    
@@ -267,7 +269,7 @@ int CPU::getColourInt(word_t tileLocation, int tileY, int tileX)
     return (bit1 << 1) | bit0;
 }
 
-CPU::Colour CPU::getColour(int colourInt, word_t palletAddress, bool obj)
+PPU::Colour PPU::getColour(int colourInt, word_t palletAddress, bool obj)
 {
     byte_t pallet{ readByte(palletAddress) };
 
@@ -285,7 +287,7 @@ CPU::Colour CPU::getColour(int colourInt, word_t palletAddress, bool obj)
 }
 
 
-void CPU::updateLCDStatus()
+void PPU::updateLCDStatus()
 {
     byte_t status = readByte(r_STAT); 
 
@@ -303,7 +305,6 @@ void CPU::updateLCDStatus()
     byte_t currentMode = status & 0x3;
     byte_t newMode{};
     bool possibleInterupt{};
-
 
     if(currentLine < 144)
     {
@@ -356,24 +357,33 @@ void CPU::updateLCDStatus()
     writeByte(r_STAT, status);
 }
 
-bool CPU::isLCDEnabled()
+bool PPU::isLCDEnabled()
 {
     return testBit(readByte(r_LCDC),7);
 }
 
 /**
- * @brief Performs the Direct Memory Access transfer, which maps the sprite data 
- * at address 'value' * 100, to the sprite ram at (0xFE00-0xFE9F).
+ * @brief 0 Vblank, 1 LCD, 2 Timer, 4 Joypad input
  */
-void CPU::initiateDMATransfer(byte_t value)
+void PPU::requestInterupt(int interupt) //0,1,2,4
 {
-    word_t startAddress{ static_cast<word_t>(value << 8) };
-    for (int i{0}; i<0xA0; i++)
-    {
-        writeByte(0xFE00+i, readByte(startAddress+i));
-    }
+    byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
+    //set relevent bit
+    setBit(requests, interupt);
+    writeByte(c_INTERUPTS_REQ_ADDRESS, requests);
 }
 
-
-
-
+byte_t PPU::readByte(word_t address) const
+{
+    return m_Memory.readByte(address);
+}
+void PPU::writeByte(word_t address, byte_t value)
+{
+    //reset the current scanline if the game tries to write to it
+    if (address == r_LY)
+    {
+        m_Memory.writeByte(r_LY, 0);
+        m_ScanlineCounter = 456; //number of cycles per scanline
+    }
+    m_Memory.writeByte(address, value);
+}

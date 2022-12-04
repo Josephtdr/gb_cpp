@@ -1,4 +1,5 @@
 #include "inc/cpu.h"
+#include "inc/bitfuncs.h"
 
 #include <iostream>
 #include <stdexcept> // for std::runtime_error
@@ -447,8 +448,6 @@ void CPU::wordAdd(word_t& reg, const word_t& addValue)
 
 /**
  * @brief swap the upper and lower nibbles of the given value
- * 
- * @param reg 
  */
 void CPU::swapNibbles(byte_t& reg, int)
 {
@@ -480,25 +479,14 @@ void CPU::testBit_OP(byte_t& byte, int bit)
 }
 
 /**
- * @brief returns true if the bit is set in the byte
- * 
- * @param byte the byte
- * @param bit the nth bit from the right, starting at 0
- */
-bool CPU::testBit(const byte_t& byte, int bit) const
-{
-    return byte & (1 << bit);
-}
-
-/**
  * @brief sets a bit in a byte
  * 
  * @param byte the byte to be changed
  * @param bit the nth bit from the right, starting at 0
  */
-void CPU::setBit(byte_t& byte, int bit)
+void CPU::setBit_OP(byte_t& byte, int bit)
 {
-    byte |= (1 << bit); 
+    setBit(byte, bit);
 }
 
 /**
@@ -507,9 +495,9 @@ void CPU::setBit(byte_t& byte, int bit)
  * @param byte the byte to be changed
  * @param bit the nth bit from the right, starting at 0
  */
-void CPU::resetBit(byte_t& byte, int bit)
+void CPU::resetBit_OP(byte_t& byte, int bit)
 {
-    byte &= ~(1 << bit);
+    resetBit(byte, bit);
 }
 
 /**

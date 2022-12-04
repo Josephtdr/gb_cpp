@@ -1,14 +1,15 @@
 #include "inc/cpu.h"
+#include "inc/bitfuncs.h"
 
 #include <iostream> 
 #include <stdexcept>
 
-CPU::CPU()
+CPU::CPU(MemoryBus& memoryRef, logger& logRef)
  : m_PC{0},
    m_SP{ c_TOP_OF_STACK },
-   m_log{ std::cout, __PRETTY_FUNCTION__ }
+   m_log{ logRef },
+   m_Memory{ memoryRef }
 {
-    m_log.set_log_level(LOG_DEBUG);
     // m_lineByLine = true;
     std::cout << std::hex;
 
@@ -20,26 +21,6 @@ CPU::CPU()
     setupTables();
 }
 
-void CPU::frameUpdate()
-{
-    int cyclesThisUpdate = 0;
-
-    while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
-    {
-        if (!m_Halted)
-        {
-            int cycles{ cycle() };
-            cyclesThisUpdate += cycles;
-            updateTimers(cycles);
-            updateGraphics(cycles);
-            if (m_lineByLine)
-                getchar();
-        }
-        interupts();
-    }
-    m_log(LOG_ERROR) << "Frame finished!" << "\n";
-    renderScreen();
-}
 
 int CPU::cycle()
 {
@@ -71,11 +52,6 @@ int CPU::execute(byte_t instructionByte, bool prefixed)
     }
 }
 
-void CPU::loadGame(const char* fileName)
-{
-    m_Memory.loadGame(fileName);
-}
-
 byte_t CPU::readByte(word_t address) const
 {
     return m_Memory.readByte(address);
@@ -85,8 +61,10 @@ void CPU::writeByte(word_t address, byte_t value)
     //reset the current scanline if the game tries to write to it
     if (address == r_LY)
     {
-        m_Memory.writeByte(r_LY, 0);
-        m_ScanlineCounter = 456; //number of cycles per scanline
+        m_log(LOG_ERROR) << "Game Attemping to write to r_LY from CPU" << "\n";
+        std::exit(EXIT_FAILURE);
+        // m_Memory.writeByte(r_LY, 0);
+        // m_ScanlineCounter = 456; //number of cycles per scanline
     }
     else if (address == r_DMAT)
     {
@@ -232,5 +210,18 @@ void CPU::performInterupt(int interupt)
         case 1: m_PC = c_LCD_INTERUPT; break;
         case 2: m_PC = c_TIMER_INTERUPT; break;
         case 3: m_PC = c_JOYPAD_INTERUPT; break;
+    }
+}
+
+/**
+ * @brief Performs the Direct Memory Access transfer, which maps the sprite data 
+ * at address 'value' * 100, to the sprite ram at (0xFE00-0xFE9F).
+ */
+void CPU::initiateDMATransfer(byte_t value)
+{
+    word_t startAddress{ static_cast<word_t>(value << 8) };
+    for (int i{0}; i<0xA0; i++)
+    {
+        writeByte(0xFE00+i, readByte(startAddress+i));
     }
 }

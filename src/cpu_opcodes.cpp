@@ -1,4 +1,5 @@
 #include "inc/cpu.h"
+#include "inc/bitfuncs.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -198,15 +199,6 @@ int CPU::opcode_Translator(byte_t opcode)
     }    
 }
 
-/**
- * @brief Extract 'num' bits starting from bit 'start'.
- * 0 indicates the rightmost bit (the lsb). 
- */
-int CPU::extractBits(const byte_t& byte, int start, int num)
-{
-    return (((1 << num) - 1) & (byte >> start));
-}
-
 int CPU::CBopcode_Translator(byte_t opcode)
 {
     using cbFunctionPtr = void(CPU::*)(byte_t&, int);
@@ -216,7 +208,7 @@ int CPU::CBopcode_Translator(byte_t opcode)
         {&CPU::leftRotateWithCarry, "RL"}, {&CPU::rightRotateWithCarry, "RR"},
         {&CPU::leftShift, "SLA"}, {&CPU::rightShiftArithmetic, "SRA"}, 
         {&CPU::swapNibbles, "SWAP"}, {&CPU::rightShift, "SRL"},
-        {&CPU::testBit_OP, "BIT"}, {&CPU::resetBit, "RES"}, {&CPU::setBit, "SET"}
+        {&CPU::testBit_OP, "BIT"}, {&CPU::resetBit_OP, "RES"}, {&CPU::setBit_OP, "SET"}
     };
 
     int regInt{ extractBits(opcode,0,3) }; 
