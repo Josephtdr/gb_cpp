@@ -36,7 +36,6 @@ public:
     bool m_lineByLine{false};
 
 private:
-    
     int execute(byte_t instructionByte, bool prefixed);
     void setupTables();
     word_t readNextWord();

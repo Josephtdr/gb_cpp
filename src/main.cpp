@@ -4,6 +4,7 @@
 #include "unistd.h"
 #include "inc/cpu.h"
 #include "inc/ppu.h"
+#include "inc/platform.h"
 #include "inc/BSlogger.h"
 
 //https://www.learncpp.com/cpp-tutorial/timing-your-code/
@@ -73,7 +74,8 @@ int main(int argc, char *argv[])
     MemoryBus memory{ log };
     CPU cpu{ memory, log };
     log(LOG_INFO) << "CPU initialised!" << "\n";
-    PPU ppu{ memory, log };
+    Platform platform{"GBem", c_VIDEO_WIDTH*2,c_VIDEO_HEIGHT*2,c_VIDEO_WIDTH,c_VIDEO_HEIGHT};
+    PPU ppu{ memory, log, platform };
     log(LOG_INFO) << "PPU initialised!" << "\n";
     memory.loadGame(romFilename);
     log(LOG_INFO) << "Game Loaded!" << "\n";
@@ -81,8 +83,12 @@ int main(int argc, char *argv[])
     bool quit{};
     Timer t{};
 
+    uint8_t keypad[16]{};
+
     while(!quit)
     {
+        quit = platform.ProcessInput(keypad);
+
         t.reset();
         frameUpdate(cpu, ppu, log);
         sleep(t.nextFrameIn()); //sleep until next frame cycle can start

@@ -2,11 +2,12 @@
 
 #include "inc/bitfuncs.h"
 
-PPU::PPU(MemoryBus& memoryRef, logger& logRef)
+PPU::PPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef)
     : m_Memory{ memoryRef },
-      m_log{ logRef }
+      m_log{ logRef },
+      m_Platform{ platformRef }
 {
-
+    m_Platform.Update(m_textureBuffer, c_VIDEO_WIDTH * sizeof (uint32_t));
 }
 
 void PPU::updateGraphics(int cycles)
@@ -47,14 +48,14 @@ void PPU::renderScreen()
             switch(m_ScreenData[pixel][line].colour)
             {
                 case Colour::White: rgb = 0xFFFFFFFF; break;
-                case Colour::Light_Gray: rgb = 0xCCCCCCCC; break;
-                case Colour::Dark_Gray: rgb = 0x77777777; break;
-                case Colour::Black: rgb = 0; break;
+                case Colour::Light_Gray: rgb = 0xCCCCCCFF; break;
+                case Colour::Dark_Gray: rgb = 0x777777FF; break;
+                case Colour::Black: rgb = 0x000000FF; break;
             }
-            video[line * c_VIDEO_WIDTH + pixel] = rgb;
+            m_textureBuffer[line * c_VIDEO_WIDTH + pixel] = rgb;
         }
     }
-    // platform.Update(video, sizeof(video[0])*160);
+    m_Platform.Update(m_textureBuffer, c_VIDEO_WIDTH * sizeof (uint32_t));
 }
 
 void PPU::drawScanLine()

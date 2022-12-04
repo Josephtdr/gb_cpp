@@ -3,12 +3,9 @@
 #include "consts.h"
 #include "BSlogger.h"
 #include "memoryBus.h"
+#include "platform.h"
 
 #include <vector>
-
-const int c_TILE_SIZE = 16; // Bytes !
-const int c_VIDEO_WIDTH = 160;
-const int c_VIDEO_HEIGHT = 144;
 
 class PPU
 {
@@ -31,13 +28,15 @@ private:
         bool transparent{};
     };
     Pixel m_ScreenData[c_VIDEO_WIDTH][c_VIDEO_HEIGHT]{};
-    uint32_t video[c_VIDEO_WIDTH * c_VIDEO_HEIGHT]{};
+    uint32_t m_textureBuffer[c_VIDEO_WIDTH * c_VIDEO_HEIGHT]{};
     int m_ScanlineCounter{}; //Tracks when to increment current scanline
     MemoryBus& m_Memory;
     logger& m_log;
+    Platform& m_Platform;
+    
 
 public:
-    PPU(MemoryBus& memoryRef, logger& logRef);
+    PPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef);
 
     void renderScreen();
     void updateGraphics(int cycles);

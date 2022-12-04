@@ -9,6 +9,10 @@ using word_t = uint16_t;
 using signed_byte_t = int8_t;
 using signed_word_t = int16_t;
 
+const int c_TILE_SIZE = 16; // Bytes !
+const int c_VIDEO_WIDTH = 160;
+const int c_VIDEO_HEIGHT = 144;
+
 const unsigned int c_MEMORY_SIZE = 0xFFFF;
 const unsigned int c_CARTRIDGE_MEMORY_SIZE = 0x200000;
 const unsigned int c_RAM_BANKS_MEMORY_SIZE = 0x8000;
