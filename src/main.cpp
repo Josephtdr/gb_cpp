@@ -93,6 +93,4 @@ int main(int argc, char *argv[])
         frameUpdate(cpu, ppu, log);
         sleep(t.nextFrameIn()); //sleep until next frame cycle can start
     }
-
-
 }

@@ -72,12 +72,11 @@ void PPU::drawScanLine()
 
 void PPU::renderWhite()
 {
-    for (byte_t line{0}; line<c_VIDEO_HEIGHT; ++line)
+    byte_t currentLine{ readByte(r_LY) };
+
+    for (byte_t pixel{0}; pixel<c_VIDEO_WIDTH; ++pixel)
     {
-        for (byte_t pixel{0}; pixel<c_VIDEO_WIDTH; ++pixel)
-        {
-            m_ScreenData[pixel][line] = Pixel{ Colour::White, false, true};
-        }
+        m_ScreenData[pixel][currentLine] = Pixel{ Colour::White, false, true};
     }
 }
 
@@ -88,7 +87,7 @@ void PPU::renderTiles()
     byte_t scrollY{ readByte(r_SCY) };
     byte_t scrollX{ readByte(r_SCX) };
     byte_t windowY{ readByte(r_WY) };
-    byte_t windowX{ readByte(r_WX)-7 };
+    byte_t windowX{ static_cast<byte_t>(readByte(r_WX)-7) };
 
     bool drawingWindow{};
     bool signedTileLookup{};
@@ -117,13 +116,13 @@ void PPU::renderTiles()
         windowTilemap  = 0x9C00;
 
 
-    byte_t yPos{ currentLine + scrollY };
+    byte_t yPos{ static_cast<byte_t>(currentLine + scrollY) };
 
     for (int pixel{0}; pixel < 160; ++pixel)
     {
         bool inWindow{};
         word_t tilemap{ backgroundTilemap };
-        byte_t xPos{ pixel + scrollX };
+        byte_t xPos{ static_cast<byte_t>(pixel + scrollX) };
 
         //currently pixel is a window tile
         if (drawingWindow && pixel >= windowX)
@@ -142,8 +141,8 @@ void PPU::renderTiles()
 
         word_t tileLocation{ getTileLocation(tileDataAddress, signedTileLookup, tileAddress) };
         
-        byte_t tileY{ (yPos % 8) };
-        byte_t tileX{ -1*((xPos % 8) - 7) }; //bit 7 is pixel 0 etc...
+        byte_t tileY{ static_cast<byte_t>(yPos % 8) };
+        byte_t tileX{ static_cast<byte_t>(-1*((xPos % 8) - 7)) }; //bit 7 is pixel 0 etc...
         int colourInt{ getColourInt(tileLocation, tileY, tileX) };
 
         Colour pixelColour{ getColour(colourInt, r_BG_PALLET) };
@@ -190,7 +189,7 @@ void PPU::renderSprites()
     {
         word_t pallet{ testBit(sprite.flags, 4) ? r_SPRITE_PALLET2 : r_SPRITE_PALLET1 };
         word_t tileLocation = tileDataAddress + (sprite.tileIndex * c_TILE_SIZE);
-        byte_t tileY{ currentLine - (sprite.yPos-16) };
+        byte_t tileY{ static_cast<byte_t>(currentLine - (sprite.yPos-16)) };
         if (testBit(sprite.flags, 6)) //y flip flag
             tileY = -1*((tileY % height) - (height-1));
 
@@ -207,7 +206,7 @@ void PPU::renderSprites()
 
         for (int pixel{7}; pixel >= 0; --pixel)
         {
-            byte_t tileX{ pixel }; //bit 7 is pixel 0 etc...
+            byte_t tileX{ static_cast<byte_t>(pixel) }; //bit 7 is pixel 0 etc...
             if (testBit(sprite.flags, 5)) //x flip flag
                 tileX = -1*((tileX % 8) - 7);
 
@@ -228,11 +227,11 @@ void PPU::renderSprites()
                     if (!screenPixel.transparent) // and bg not transparent
                         continue;
                 }
+                if (colour==Colour::Transparent) //dont draw if transparent
+                    continue;
 
-                if (colour!=Colour::Transparent) //dont draw if transparent
-                {
-                    screenPixel = Pixel{ colour, true, false };
-                }
+                //finally can draw
+                screenPixel = Pixel{ colour, true, false };
             }
         }
     }

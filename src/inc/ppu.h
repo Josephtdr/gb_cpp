@@ -10,9 +10,20 @@
 class PPU
 {
 private:
+    MemoryBus& m_Memory;
+    logger& m_log;
+    Platform& m_Platform;
+    int m_ScanlineCounter{}; //Tracks when to increment current scanline
+
     enum class Colour
     {
         Transparent, White, Light_Gray, Dark_Gray, Black
+    };
+    struct Pixel
+    {
+        Colour colour{};
+        bool sprite{};
+        bool transparent{};
     };
     struct Sprite
     {
@@ -21,20 +32,10 @@ private:
         byte_t tileIndex{};
         byte_t flags{};
     };
-    struct Pixel
-    {
-        Colour colour{};
-        bool sprite{};
-        bool transparent{};
-    };
+
     Pixel m_ScreenData[c_VIDEO_WIDTH][c_VIDEO_HEIGHT]{};
     uint32_t m_textureBuffer[c_VIDEO_WIDTH * c_VIDEO_HEIGHT]{};
-    int m_ScanlineCounter{}; //Tracks when to increment current scanline
-    MemoryBus& m_Memory;
-    logger& m_log;
-    Platform& m_Platform;
     
-
 public:
     PPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef);
 
