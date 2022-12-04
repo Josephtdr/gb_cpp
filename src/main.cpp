@@ -26,7 +26,10 @@ public:
     }
     double nextFrameIn() const
     {
-        return frameRate - elapsed();
+        if (frameRate - elapsed() > 0)
+            return frameRate - elapsed();
+        else
+            return 0.;
     }
 };
 

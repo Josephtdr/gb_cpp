@@ -53,30 +53,43 @@ private:
     void requestInterupt(int interupt);
     void performInterupt(int interupt);
 //******************************************************************************************//
-    int m_ScreenData[160][144][3]{};
+    uint32_t video[160 * 144]{};
+
     enum class Colour
     {
-        White, Light_Gray, Dark_Gray, Black
+        Transparent, White, Light_Gray, Dark_Gray, Black
     };
-    
-    void updateGraphics(int cycles);
-    void drawScanLine();
-    void renderTiles();
-    void renderSprites();
-    void renderScreen();
-
-    word_t getTileLocation(word_t tileDataBase, bool signed_, word_t tileAddress);
-    int getColourInt(word_t tileLocation, int yPos, int xPos);
-    Colour getColour(int colourInt, word_t palletAddress);
+    struct Sprite
+    {
+        byte_t yPos{};
+        byte_t xPos{};
+        byte_t tileIndex{};
+        byte_t flags{};
+    };
+    struct Pixel
+    {
+        Colour colour{};
+        bool sprite{};
+        bool transparent{};
+    };
+    Pixel m_ScreenData[160][144]{};
     
     void updateLCDStatus();
     bool isLCDEnabled();
-
-
-
     void initiateDMATransfer(byte_t value);
-    //LCDC stuff
+    void renderScreen();
+    void updateGraphics(int cycles);
+    void drawScanLine();
+
+    void renderTiles();
+    void renderWhite();
+    word_t getTileLocation(word_t tileDataBase, bool signed_, word_t tileAddress);
     
+    void renderSprites();
+    void getSprites(std::vector<Sprite>& sprites, byte_t LY, int height);
+
+    int getColourInt(word_t tileLocation, int yPos, int xPos);
+    Colour getColour(int colourInt, word_t palletAddress, bool obj=false);
 
 //******************************************************************************************//
     void push(word_t value);

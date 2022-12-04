@@ -82,7 +82,13 @@ byte_t CPU::readByte(word_t address) const
 }
 void CPU::writeByte(word_t address, byte_t value)
 {
-    if (address == r_DMAT)
+    //reset the current scanline if the game tries to write to it
+    if (address == r_LY)
+    {
+        m_Memory.writeByte(r_LY, 0);
+        m_ScanlineCounter = 456; //number of cycles per scanline
+    }
+    else if (address == r_DMAT)
     {
         initiateDMATransfer(value);
     }

@@ -1,9 +1,9 @@
 #include "inc/cpu.h"
-
-
+#include <vector>
 
 const int c_TILE_SIZE = 16; // Bytes !
-
+const int c_VIDEO_WIDTH = 160; // Bytes !
+const int c_VIDEO_HEIGHT = 144; // Bytes !
 
 
 void CPU::updateGraphics(int cycles)
@@ -34,17 +34,49 @@ void CPU::updateGraphics(int cycles)
     }
 }
 
+void CPU::renderScreen()
+{
+    for (byte_t line{0}; line<c_VIDEO_HEIGHT; ++line)
+    {
+        for (byte_t pixel{0}; pixel<c_VIDEO_WIDTH; ++pixel)
+        {
+            uint32_t rgb{};
+            switch(m_ScreenData[pixel][line].colour)
+            {
+                case Colour::White: rgb = 0xFFFFFFFF; break;
+                case Colour::Light_Gray: rgb = 0xCCCCCCCC; break;
+                case Colour::Dark_Gray: rgb = 0x77777777; break;
+                case Colour::Black: rgb = 0; break;
+            }
+
+            video[pixel * c_VIDEO_WIDTH + line] = rgb;
+        }
+    }
+    // platform.Update(video, sizeof(video[0])*160);
+}
+
 void CPU::drawScanLine()
 {
     byte_t lcdControl{ readByte(r_LCDC) };
     if (testBit(lcdControl,0)) //background enabled flag
-        //TODO: default to white background if bit 0 disabled
         renderTiles();
+    else
+        renderWhite();
     if (testBit(lcdControl,1)) //sprites enabled flag
         return;
         renderSprites();
 }
 
+void CPU::renderWhite()
+{
+    for (byte_t line{0}; line<c_VIDEO_HEIGHT; ++line)
+    {
+        for (byte_t pixel{0}; pixel<c_VIDEO_WIDTH; ++pixel)
+        {
+            m_ScreenData[pixel][line] = Pixel{ Colour::White, false, true};
+        }
+    }
+}
 
 void CPU::renderTiles()
 {
@@ -84,8 +116,9 @@ void CPU::renderTiles()
 
     byte_t yPos{ currentLine + scrollY };
 
-    for (int pixel{0}; pixel < 160; pixel++)
+    for (int pixel{0}; pixel < 160; ++pixel)
     {
+        bool inWindow{};
         word_t tilemap{ backgroundTilemap };
         byte_t xPos{ pixel + scrollX };
 
@@ -95,6 +128,7 @@ void CPU::renderTiles()
             tilemap = windowTilemap;
             yPos = currentLine - windowY;
             xPos = pixel - windowX;
+            inWindow = true;
         }
 
         //which of the 8 verticle pixels within the tile
@@ -105,27 +139,17 @@ void CPU::renderTiles()
 
         word_t tileLocation{ getTileLocation(tileDataAddress, signedTileLookup, tileAddress) };
         
-        int colourInt{ getColourInt(tileLocation, yPos, xPos) };
-        Colour pixelColour{ getColour(colourInt, r_BG_PALLET) };
+        byte_t tileY{ (yPos % 8) };
+        byte_t tileX{ -1*((xPos % 8) - 7) }; //bit 7 is pixel 0 etc...
+        int colourInt{ getColourInt(tileLocation, tileY, tileX) };
 
-        int rgb{};
-        // setup the RGB values
-        switch(pixelColour)
-        {
-            case Colour::White: rgb = 255; break;
-            case Colour::Light_Gray: rgb = 0xCC; break;
-            case Colour::Dark_Gray: rgb = 0x77; break;
-            case Colour::Black: rgb = 0; break;
-        }
+        Colour pixelColour{ getColour(colourInt, r_BG_PALLET) };
 
         if ((currentLine<0)||(currentLine>143)||(pixel<0)||(pixel>159))
         {
             throw std::runtime_error("Incorrect Drawing thingy!");
         }
-
-        m_ScreenData[pixel][currentLine][0] = rgb;
-        m_ScreenData[pixel][currentLine][1] = rgb;
-        m_ScreenData[pixel][currentLine][2] = rgb;
+        m_ScreenData[pixel][currentLine] = Pixel{ pixelColour, false, colourInt==0 };
     }
 }
 
@@ -146,13 +170,96 @@ word_t CPU::getTileLocation(word_t tileDataAddress, bool signed_, word_t tileAdd
     return tileLocation;
 }
 
-int CPU::getColourInt(word_t tileLocation, int yPos, int xPos)
+void CPU::renderSprites()
 {
-    byte_t tileY{ (yPos % 8) * 2 }; //each line is two bytes long
-    byte_t tileX{ -1*((xPos % 8) - 7) }; //bit 7 is pixel 0 etc...
+    byte_t lcdControl{ readByte(r_LCDC) };
+    byte_t currentLine{ readByte(r_LY) };
+    word_t tileDataAddress{0x8000};
 
-    byte_t dataLow = readByte(tileLocation + tileY);
-    byte_t dataHigh = readByte(tileLocation + tileY + 1);    
+    int height{8};
+    if (testBit(lcdControl, 2)) //sprite height flag
+        height = 16;
+
+    std::vector<Sprite> sprites{10};
+    getSprites(sprites, currentLine, height);
+
+    for(const auto& sprite : sprites)
+    {
+        word_t pallet{ testBit(sprite.flags, 4) ? r_SPRITE_PALLET2 : r_SPRITE_PALLET1 };
+        word_t tileLocation = tileDataAddress + (sprite.tileIndex * c_TILE_SIZE);
+        byte_t tileY{ currentLine - (sprite.yPos-16) };
+        if (testBit(sprite.flags, 6)) //y flip flag
+            tileY = -1*((tileY % height) - (height-1));
+
+        if (height==16)
+        {
+            if (tileY < 8)
+                tileLocation = tileLocation & 0xFE;
+            else
+            {
+                tileLocation = tileLocation | 0x1;
+                tileY-= 8;
+            }
+        }
+
+        for (int pixel{7}; pixel >= 0; --pixel)
+        {
+            byte_t tileX{ pixel }; //bit 7 is pixel 0 etc...
+            if (testBit(sprite.flags, 5)) //x flip flag
+                tileX = -1*((tileX % 8) - 7);
+
+            int colourInt = getColourInt(tileLocation, tileY, tileX);
+
+            Colour colour{ getColour(colourInt, pallet, true) };
+
+            if (sprite.xPos - 8 + pixel >= 0 && sprite.xPos - 8 + pixel < 160)
+            {
+                Pixel& screenPixel{ m_ScreenData[sprite.xPos-8+pixel][currentLine] };
+
+                //dont draw over previous sprites
+                if (screenPixel.sprite)
+                    continue;
+                //dont draw if both priorities set to bg 
+                else if (testBit(lcdControl, 0) && testBit(sprite.flags, 7))
+                {
+                    if (!screenPixel.transparent) // and bg not transparent
+                        continue;
+                }
+
+                if (colour!=Colour::Transparent) //dont draw if transparent
+                {
+                    screenPixel = Pixel{ colour, true, false };
+                }
+            }
+        }
+    }
+}
+
+void CPU::getSprites(std::vector<Sprite>& sprites, byte_t LY, int height)
+{
+    word_t OAMTable{0xFE00};
+    int numSprites{};
+
+    for (byte_t i{0}; i < 40; ++i)
+    {
+        byte_t yPos{ readByte(OAMTable + i) };
+        byte_t xPos{ readByte(OAMTable + i + 1u) };
+        
+        if (numSprites <= 10 && (LY >= (yPos-16) && LY < (yPos-16+height)))
+        {
+            ++numSprites;
+            byte_t tileIndex{ readByte(OAMTable + i + 2u) };
+            byte_t flags{ readByte(OAMTable + i + 3u) };
+            
+            sprites[numSprites-1] = Sprite{ yPos, xPos, tileIndex, flags };
+        }
+    }
+}
+
+int CPU::getColourInt(word_t tileLocation, int tileY, int tileX)
+{
+    byte_t dataLow = readByte(tileLocation + (tileY * 2));
+    byte_t dataHigh = readByte(tileLocation + (tileY * 2) + 1);    
 
     int bit1{  testBit(dataHigh, tileX) };
     int bit0{  testBit(dataLow, tileX) };
@@ -160,7 +267,7 @@ int CPU::getColourInt(word_t tileLocation, int yPos, int xPos)
     return (bit1 << 1) | bit0;
 }
 
-CPU::Colour CPU::getColour(int colourInt, word_t palletAddress)
+CPU::Colour CPU::getColour(int colourInt, word_t palletAddress, bool obj)
 {
     byte_t pallet{ readByte(palletAddress) };
 
@@ -168,7 +275,7 @@ CPU::Colour CPU::getColour(int colourInt, word_t palletAddress)
 
     switch(transformedColour)
     {
-        case 0: return Colour::White;
+        case 0: return obj ? Colour::Transparent : Colour::White;
         case 1: return Colour::Light_Gray;
         case 2: return Colour::Dark_Gray;
         case 3: return Colour::Black;
