@@ -414,17 +414,7 @@ int CPU::OP_0xE5()
 //POP nn
 int CPU::OP_0xF1()
 {
-    m_log(LOG_ERROR) << "Opcode 0xF1 needs to affect flags somehow" << "\n";
-    std::exit(EXIT_FAILURE);
-
-    word_t data{ pop() };
-    
-    m_Registers.f.zero = !data;
-    // m_Registers.f.subtract
-    // m_Registers.f.half_carry
-    // m_Registers.f.carry
-
-    m_Registers.set_af(data);
+    m_Registers.set_af(pop());
     return 12;
 }
 int CPU::OP_0xC1()
