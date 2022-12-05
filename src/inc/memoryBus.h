@@ -40,6 +40,7 @@ public:
     void writeByte(word_t address, byte_t value);
     void loadGame(const char* file);
     void increment(word_t address);
+    std::string getTitle();
 };
 
 

@@ -4,36 +4,36 @@
 #include "consts.h"
 #include "registers.h"
 #include "memoryBus.h"
+#include "platform.h"
 #include "BSlogger.h"
 
 class CPU
 {
 private:
-    int m_TimerCounter{}; //Tracks when to throw timer interupts
-    int m_DividerCounter{}; //Tracks when to increment Divider Register
+    logger& m_log;
+    MemoryBus& m_Memory;
+    Platform& m_Platform;
     Registers m_Registers{};
     word_t m_PC{};
     word_t m_SP{};
 
-    logger& m_log;
-    MemoryBus& m_Memory;
-    
+    int m_TimerCounter{}; //Tracks when to throw timer interupts
+    int m_DividerCounter{}; //Tracks when to increment Divider Register
     bool m_InteruptsEnabled{};
+    bool m_Halted{};
     
-
     using opcodeFnPtr = int(CPU::*)();
     using opcodeFnPtr2 = int(CPU::*)(const byte_t&);
     opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
     opcodeFnPtr2 instructionTable2[c_INSTRUCTION_TABLE_SIZE]{};
 
 public:
-    CPU(MemoryBus& memoryRef, logger& logRef);
+    CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef);
     int cycle();
     void updateTimers(int cycles);
     void interupts();
-
-    bool m_Halted{};
-    bool m_lineByLine{false};
+    bool isHalted();
+    bool m_lineByLine{};
 
 private:
     int execute(byte_t instructionByte, bool prefixed);
@@ -97,17 +97,17 @@ private:
     //CB commands
     int CBopcode_Translator(byte_t opcode);
     
-    void testBit_OP(byte_t& byte, int bit);
-    void resetBit_OP(byte_t& byte, int bit);
-    void setBit_OP(byte_t& byte, int bit);
-    void swapNibbles(byte_t& reg, int);
-    void leftRotate(byte_t& byte, int);
-    void leftRotateWithCarry(byte_t& byte, int);
-    void rightRotate(byte_t& byte, int);
-    void rightRotateWithCarry(byte_t& byte, int);
-    void leftShift(byte_t& byte, int);
-    void rightShift(byte_t& byte, int);
-    void rightShiftArithmetic(byte_t& byte, int);
+    void cpu_testBit(byte_t& byte, int bit);
+    void cpu_resetBit(byte_t& byte, int bit);
+    void cpu_setBit(byte_t& byte, int bit);
+    void cpu_swapNibbles(byte_t& reg, int);
+    void cpu_leftRotate(byte_t& byte, int);
+    void cpu_leftRotateWithCarry(byte_t& byte, int);
+    void cpu_rightRotate(byte_t& byte, int);
+    void cpu_rightRotateWithCarry(byte_t& byte, int);
+    void cpu_leftShift(byte_t& byte, int);
+    void cpu_rightShift(byte_t& byte, int);
+    void cpu_rightShiftArithmetic(byte_t& byte, int);
 
     int OP_NOT_IMPLEMTED();
     int OP_NOT_IMPLEMTED2(const byte_t&);

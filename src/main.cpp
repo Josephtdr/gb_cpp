@@ -1,7 +1,6 @@
 #include <iostream>
 #include <chrono> // for std::chrono functions
 
-#include "unistd.h"
 #include "inc/cpu.h"
 #include "inc/ppu.h"
 #include "inc/platform.h"
@@ -27,15 +26,11 @@ public:
     {
         return std::chrono::duration_cast<Second>(Clock::now() - m_beg).count();
     }
-    double nextFrameIn() const
+    bool nextFrameReady() const
     {
-        if (frameRate - elapsed() > 0)
-            return frameRate - elapsed();
-        else
-            return 0.;
+        return elapsed() >= frameRate;
     }
 };
-
 
 void frameUpdate(CPU& cpu, PPU& ppu, logger& log)
 {
@@ -43,7 +38,7 @@ void frameUpdate(CPU& cpu, PPU& ppu, logger& log)
 
     while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
     {
-        if (!cpu.m_Halted)
+        if (!cpu.isHalted())
         {
             int cycles{ cpu.cycle() };
             cyclesThisUpdate += cycles;
@@ -72,25 +67,32 @@ int main(int argc, char *argv[])
     log(LOG_INFO) << "Starting up!" << "\n";
 
     MemoryBus memory{ log };
-    CPU cpu{ memory, log };
-    log(LOG_INFO) << "CPU initialised!" << "\n";
-    Platform platform{"GBem", c_VIDEO_WIDTH*2,c_VIDEO_HEIGHT*2,c_VIDEO_WIDTH,c_VIDEO_HEIGHT};
-    PPU ppu{ memory, log, platform };
-    log(LOG_INFO) << "PPU initialised!" << "\n";
     memory.loadGame(romFilename);
     log(LOG_INFO) << "Game Loaded!" << "\n";
 
-    bool quit{};
-    Timer t{};
 
-    uint8_t keypad[16]{};
+
+    Platform platform{ memory.getTitle().c_str(),c_VIDEO_WIDTH,c_VIDEO_HEIGHT,2 };
+
+    CPU cpu{ memory,log,platform };
+    log(LOG_INFO) << "CPU initialised!" << "\n";
+    PPU ppu{ memory,log,platform };
+    log(LOG_INFO) << "PPU initialised!" << "\n";
+
+    
+
+    bool quit{};
+    Timer timer{};
+    uint8_t keypad[8]{};
 
     while(!quit)
     {
         quit = platform.ProcessInput(keypad);
 
-        t.reset();
-        frameUpdate(cpu, ppu, log);
-        sleep(t.nextFrameIn()); //sleep until next frame cycle can start
+        if(timer.nextFrameReady())
+        {
+            timer.reset();
+            frameUpdate(cpu, ppu, log);
+        }
     }
 }

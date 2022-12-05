@@ -145,24 +145,38 @@ void MemoryBus::increment(word_t address)
 
 void MemoryBus::loadGame(const char* filename)
 {
-    m_log(LOG_INFO) << "Loading game into game rom!" << "\n";
     memset(m_CartridgeMemory,0,sizeof(m_CartridgeMemory)) ;
 
     FILE *in;
     in = fopen( filename, "rb" );
-    fread(m_CartridgeMemory, 1, 0x200000, in);
+    fread(m_CartridgeMemory, 1, c_CARTRIDGE_MEMORY_SIZE, in);
     fclose(in); 
 
+    m_log(LOG_INFO) << "Loaded game into game rom!" << "\n";
     getRomBankingMode();
     loadBootRom();
 }
 
+#include <string>
+
+std::string MemoryBus::getTitle()
+{
+    std::vector<byte_t> buffer{};
+
+
+    for (byte_t i{}; i<16; ++i)
+    {
+        byte_t& character = m_CartridgeMemory[r_CARTRIDGE_TITLE + i]; 
+        if (character==0) break;
+
+        buffer.push_back(character);
+    }
+    return std::string {buffer.begin(), buffer.end()};
+}
+
 void MemoryBus::loadBootRom()
 {
-    m_log(LOG_INFO) << "Loading boot rom into memory!" << "\n";
-
     char* buffer = new char[c_BOOT_ROM_SIZE];
-
     FILE *in;
     in = fopen( c_BOOT_ROM_LOCATION.c_str(), "rb" );
     fread(buffer, 1, c_BOOT_ROM_SIZE, in);
@@ -174,6 +188,7 @@ void MemoryBus::loadBootRom()
     }
 
     m_bootRomLoaded = true;
+    m_log(LOG_INFO) << "Loaded boot rom into memory!" << "\n";
     delete[] buffer;
 }
 
@@ -183,13 +198,12 @@ void MemoryBus::unloadBootRom()
     {
         m_log(LOG_INFO) << "Unmapping boot rom!" << "\n" << "\n";
         m_bootRomLoaded = false;
-        getchar();
     }
 }
 
 void MemoryBus::getRomBankingMode()
 {
-    switch (m_CartridgeMemory[0x147])   
+    switch (m_CartridgeMemory[r_CARTRIDGE_TYPE])   
     {
         case 1:
             m_MBC1 = true; break;

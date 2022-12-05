@@ -4,11 +4,12 @@
 #include <iostream> 
 #include <stdexcept>
 
-CPU::CPU(MemoryBus& memoryRef, logger& logRef)
+CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef)
  : m_PC{0},
    m_SP{ c_TOP_OF_STACK },
    m_log{ logRef },
-   m_Memory{ memoryRef }
+   m_Memory{ memoryRef },
+   m_Platform{ platformRef }
 {
     // m_lineByLine = true;
     std::cout << std::hex;
@@ -51,6 +52,8 @@ int CPU::execute(byte_t instructionByte, bool prefixed)
         std::exit(EXIT_FAILURE);
     }
 }
+
+bool CPU::isHalted() { return m_Halted; }
 
 byte_t CPU::readByte(word_t address) const
 {

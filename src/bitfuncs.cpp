@@ -15,6 +15,9 @@ void setBit(byte_t& byte, int bit)
     byte |= (1 << bit); 
 }
 
+/**
+ * @brief Return 'num' bits from 'start'. With 0 being the rightmost bit (the lsb).
+ */
 int extractBits(const byte_t& byte, int start, int num)
 {
     return (((1 << num) - 1) & (byte >> start));

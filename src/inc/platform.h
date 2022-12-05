@@ -9,8 +9,11 @@ private:
     SDL_Renderer* renderer{};
     SDL_Texture* texture{};
 
+    int m_textureWidth{};
+    int m_textureHeight{};
+
 public:
-    Platform(char const* title, int windowWidth, int windowHeight, int textureWidth, int textureHeight);
+    Platform(char const* title, int textureWidth, int textureHeight, int scale);
 	~Platform();
 	
 	void Update(void const* buffer, int pitch);

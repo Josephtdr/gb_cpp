@@ -204,11 +204,11 @@ int CPU::CBopcode_Translator(byte_t opcode)
     using cbFunctionPtr = void(CPU::*)(byte_t&, int);
     static const std::vector<std::pair<cbFunctionPtr, std::string>> bitFunction
     {
-        {&CPU::leftRotate, "RLC"}, {&CPU::rightRotate, "RRC"}, 
-        {&CPU::leftRotateWithCarry, "RL"}, {&CPU::rightRotateWithCarry, "RR"},
-        {&CPU::leftShift, "SLA"}, {&CPU::rightShiftArithmetic, "SRA"}, 
-        {&CPU::swapNibbles, "SWAP"}, {&CPU::rightShift, "SRL"},
-        {&CPU::testBit_OP, "BIT"}, {&CPU::resetBit_OP, "RES"}, {&CPU::setBit_OP, "SET"}
+        {&CPU::cpu_leftRotate, "RLC"}, {&CPU::cpu_rightRotate, "RRC"}, 
+        {&CPU::cpu_leftRotateWithCarry, "RL"}, {&CPU::cpu_rightRotateWithCarry, "RR"},
+        {&CPU::cpu_leftShift, "SLA"}, {&CPU::cpu_rightShiftArithmetic, "SRA"}, 
+        {&CPU::cpu_swapNibbles, "SWAP"}, {&CPU::cpu_rightShift, "SRL"},
+        {&CPU::cpu_testBit, "BIT"}, {&CPU::cpu_resetBit, "RES"}, {&CPU::cpu_setBit, "SET"}
     };
 
     int regInt{ extractBits(opcode,0,3) }; 
@@ -609,24 +609,24 @@ int CPU::OP_0xFB()
 //RLCA
 int CPU::OP_0x07()
 {
-    leftRotate(m_Registers.a, 0);
+    cpu_leftRotate(m_Registers.a, 0);
     return 4;
 }
 //RLA
 int CPU::OP_0x17()
 {
-    leftRotateWithCarry(m_Registers.a, 0);
+    cpu_leftRotateWithCarry(m_Registers.a, 0);
     return 4;
 }
 //RRCA
 int CPU::OP_0x0F()
 {
-    rightRotate(m_Registers.a, 0);
+    cpu_rightRotate(m_Registers.a, 0);
     return 4;
 }
 //RRA
 int CPU::OP_0x1F()
 {
-    rightRotateWithCarry(m_Registers.a, 0);
+    cpu_rightRotateWithCarry(m_Registers.a, 0);
     return 4;
 }
