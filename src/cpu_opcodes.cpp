@@ -193,7 +193,7 @@ int CPU::opcode_Translator(byte_t opcode)
         return cycles;
     else
     {
-        m_log(LOG_INFO) << "PC: " << +(m_PC) << ", Opcode: 0x" 
+        m_log(LOG_DEBUG) << "PC: " << +(m_PC) << ", Opcode: 0x" 
                         << +opcode  << " \n";
         return ((*this).*(instructionTable[opcode]))();
     }    
@@ -215,7 +215,7 @@ int CPU::CBopcode_Translator(byte_t opcode)
     int bit{ extractBits(opcode,3,3) };
     int funcInt{ opcode < 0x40 ? extractBits(opcode,3,3) : 8+extractBits(opcode,6,2) };
 
-    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: CB 0x" << +opcode << ", "
+    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: CB 0x" << +opcode << ", "
                     << bitFunction[funcInt].second << " "
                     << ((opcode >= 0x40) ? std::to_string(bit) : "") << " "  
                     << getRegisterStr(regInt) << "\n";

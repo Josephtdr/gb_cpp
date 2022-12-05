@@ -50,7 +50,6 @@ void frameUpdate(CPU& cpu, PPU& ppu, logger& log)
         }
         cpu.interupts();
     }
-    log(LOG_ERROR) << "Frame finished!" << "\n";
     ppu.renderScreen();
 }
 
@@ -64,7 +63,7 @@ int main(int argc, char *argv[])
     char const* romFilename = argv[1];
 
     logger log{ std::cout, __PRETTY_FUNCTION__ };
-    log.set_log_level(LOG_DEBUG);
+    log.set_log_level(LOG_INFO);
     log(LOG_INFO) << "Starting up!" << "\n";
 
     MemoryBus memory{ log };

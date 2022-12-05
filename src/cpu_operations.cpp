@@ -96,7 +96,7 @@ int CPU::cpu_jumpRelative(const byte_t& opcode)
     int type{ ((opcode/8)-4) };
     if (type < 0) type = 4;
 
-    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", JR " 
+    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", JR " 
                     << getJumpTestStr(type) << " i8\n"; 
 
     if (testJumpTest(static_cast<JumpTest>(type)))
@@ -117,7 +117,7 @@ int CPU::cpu_jump(const byte_t& opcode)
     int funcIdx{ extractBits(opcode,1,2) };
     int testType{ testBit(opcode,0) ? 4 : extractBits(opcode,3,2) }; // check if always true
 
-    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode 
+    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode 
         << ", " << funcStr[funcIdx] << " " << getJumpTestStr(testType) 
         << ((!funcIdx) ? "" : "u16")  << "\n";
     switch(funcIdx)
@@ -219,7 +219,7 @@ int CPU::cpu_restart(const byte_t& opcode)
     };
     int index{ extractBits(opcode,3,3) };
 
-    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", RST " 
+    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", RST " 
                     << +offsetVector[index] << "\n"; 
 
     push(m_PC);
@@ -234,7 +234,7 @@ int CPU::cpu_byteLoad(const byte_t& opcode)
     int ticks{4};
     byte_t data{};
 
-    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", LD " 
+    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", LD " 
                     << getRegisterStr(targetIndex) << " " 
                     << ((opcode < 0x40) ? "u8" : getRegisterStr(dataIndex)) << "\n"; 
 
@@ -275,7 +275,7 @@ int CPU::cpu_byteArithmetic(const byte_t& opcode)
     int dataIndex{ extractBits(opcode,0,3) };
     int functionIndex{ extractBits(opcode,3,3) };
 
-    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", "
+    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", "
                     << arithmeticFunction[functionIndex].second << " " 
                     << ((opcode > 0xC0) ? "u8" : getRegisterStr(dataIndex)) << "\n";
 
@@ -369,7 +369,7 @@ int CPU::cpu_byteInc(const byte_t& opcode)
 {
     int regIndex{ extractBits(opcode,3,3) };
 
-    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", INC " 
+    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", INC " 
                     << getRegisterStr(regIndex) << "\n"; 
 
     if (regIndex==6)
@@ -390,7 +390,7 @@ int CPU::cpu_byteDec(const byte_t& opcode)
 {
     int regIndex{ extractBits(opcode,3,3) };
 
-    m_log(LOG_INFO) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", DEC " 
+    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", DEC " 
                     << getRegisterStr(regIndex) << "\n"; 
 
     if (regIndex==6)
