@@ -145,6 +145,52 @@ void CPU::updateDividerRegister(int cycles)
     }
 }
 
+void CPU::updateJoypads()
+{
+    byte_t joyp{ readByte(r_JOYP) };
+    byte_t newJoyp{ static_cast<byte_t>(joyp & 0xF0) };
+
+    byte_t keys{ 0xFF };
+    m_Platform.ProcessInput(keys);
+
+    if (!testBit(joyp,4))
+    {
+        newJoyp |= extractBits(keys,0,4);
+
+        //if no change, exit
+        if (joyp==newJoyp)
+            return;
+        //test if a bit went from high to low
+        for(int bit{}; bit<4; ++bit)
+        {
+            if (testBit(joyp, bit))
+            {
+                if (!testBit(newJoyp, bit))
+                    requestInterupt(4);
+            }
+        }
+        writeByte(r_JOYP, newJoyp);
+    }
+    else if (!testBit(joyp,5))
+    {
+        newJoyp |= extractBits(keys,4,4);
+        
+        //if no change, exit
+        if (joyp==newJoyp)
+            return;
+        //test if a bit went from high to low
+        for(int bit{}; bit<4; ++bit)
+        {
+            if (testBit(joyp, bit))
+            {
+                if (!testBit(newJoyp, bit))
+                    requestInterupt(4);
+            }
+        }
+        writeByte(r_JOYP, newJoyp);
+    }
+}
+
 /**
  * @brief checks and executes any valid requested interupts in the priority 
  * 0 (V-BLANK), 1 (LCD), 2 (TIMER), 3 (JOYPAD).

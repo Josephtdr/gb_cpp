@@ -31,6 +31,7 @@ public:
     CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef);
     int cycle();
     void updateTimers(int cycles);
+    void updateJoypads();
     void interupts();
     bool isHalted();
     bool m_lineByLine{};

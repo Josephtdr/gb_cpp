@@ -43,6 +43,7 @@ void frameUpdate(CPU& cpu, PPU& ppu, logger& log)
             int cycles{ cpu.cycle() };
             cyclesThisUpdate += cycles;
             cpu.updateTimers(cycles);
+            cpu.updateJoypads();
             ppu.updateGraphics(cycles);
             // if (cpu.m_lineByLine)
             //     getchar();
@@ -83,7 +84,7 @@ int main(int argc, char *argv[])
 
     bool quit{};
     Timer timer{};
-    uint8_t keypad[8]{};
+    byte_t keypad{};
 
     while(!quit)
     {

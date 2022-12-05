@@ -1,5 +1,5 @@
 #include "inc/platform.h"
-
+#include "inc/bitfuncs.h"
 
 Platform::Platform(char const* title, int textureWidth, int textureHeight, int scale)
     : m_textureWidth{ textureWidth }, m_textureHeight{ textureHeight }
@@ -26,10 +26,9 @@ void Platform::Update(void const* buffer, int pitch)
     SDL_RenderPresent(renderer);
 }
 
-bool Platform::ProcessInput(uint8_t* keys)
+bool Platform::ProcessInput(byte_t& keys)
 {
     bool quit = false;
-
     SDL_Event event;
 
     while (SDL_PollEvent(&event))
@@ -45,10 +44,17 @@ bool Platform::ProcessInput(uint8_t* keys)
             {
                 switch (event.key.keysym.sym)
                 {
-                    case SDLK_ESCAPE:
-                    {
-                        quit = true;
-                    } break;
+                    case SDLK_ESCAPE: quit = true; break;
+
+                    case SDLK_DOWN:     resetBit(keys,3); break;
+                    case SDLK_UP:       resetBit(keys,2); break;
+                    case SDLK_LEFT:     resetBit(keys,1); break;
+                    case SDLK_RIGHT:    resetBit(keys,0); break;
+
+                    case SDLK_q:        resetBit(keys,7); break;
+                    case SDLK_KP_ENTER: resetBit(keys,6); break;
+                    case SDLK_d:        resetBit(keys,5); break;
+                    case SDLK_a:        resetBit(keys,4); break;
                 }
             } break;
 
@@ -56,11 +62,18 @@ bool Platform::ProcessInput(uint8_t* keys)
             {
                 switch (event.key.keysym.sym)
                 {
-                    
+                    case SDLK_DOWN:     setBit(keys,3); break;
+                    case SDLK_UP:       setBit(keys,2); break;
+                    case SDLK_LEFT:     setBit(keys,1); break;
+                    case SDLK_RIGHT:    setBit(keys,0); break;
+
+                    case SDLK_q:        setBit(keys,7); break;
+                    case SDLK_KP_ENTER: setBit(keys,6); break;
+                    case SDLK_d:        setBit(keys,5); break;
+                    case SDLK_a:        setBit(keys,4); break;
                 }
             } break;
         }
     }
-
     return quit;
 }

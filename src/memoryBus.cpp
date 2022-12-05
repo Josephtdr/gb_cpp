@@ -119,6 +119,12 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     {
         m_Memory[address] = value;
     }
+    //joypad read request
+    else if (address == r_JOYP)
+    {
+    //     m_log(LOG_DEBUG) << "Writing value: " << +value << ", to r_JOYP!\n";
+        m_Memory[r_JOYP] = value;
+    }
     else if (address == r_DIV)
     {
         m_Memory[address] = 0;

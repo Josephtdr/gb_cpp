@@ -48,8 +48,8 @@ void PPU::renderScreen()
             switch(m_ScreenData[pixel][line].colour)
             {
                 case Colour::White: rgb = 0xFFFFFFFF; break;
-                case Colour::Light_Gray: rgb = 0xCCCCCCFF; break;
-                case Colour::Dark_Gray: rgb = 0x777777FF; break;
+                case Colour::Light_Gray: rgb = 0xAAAAAAFF; break;
+                case Colour::Dark_Gray: rgb = 0x555555FF; break;
                 case Colour::Black: rgb = 0x000000FF; break;
             }
             m_textureBuffer[line * c_VIDEO_WIDTH + pixel] = rgb;

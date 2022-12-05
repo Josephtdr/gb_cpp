@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+#include "consts.h"
 
 class Platform
 {
@@ -17,5 +18,5 @@ public:
 	~Platform();
 	
 	void Update(void const* buffer, int pitch);
-	bool ProcessInput(uint8_t* keys);
+	bool ProcessInput(byte_t& keys);
 };
