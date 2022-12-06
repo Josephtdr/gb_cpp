@@ -7,7 +7,7 @@
 /**
  * @brief Reads the next word from memory according to the pc, 
  * lsb first, also increments the pc twice.
- * @return byte_t 
+ * @return word_t 
  */
 word_t CPU::readNextWord()
 {
@@ -624,17 +624,27 @@ void CPU::cpu_rightShiftArithmetic(byte_t& byte, int)
     m_Registers.f.half_carry = false;
 }
 
+//Thank you to: https://forums.nesdev.org/viewtopic.php?t=15944
 void CPU::checkDAA(byte_t& byte)
 {
-    m_Registers.f.carry = false;
-    if ((byte & 0x0F) > 0x9)
-        byte += 0x6;
-    if (((byte & 0xF0) >> 4) > 0x9)
-    {
-        byte += 0x60;
-        m_Registers.f.carry = true;
+    if (!m_Registers.f.subtract) 
+    {  // after an addition, adjust if (half-)carry occurred or if result is out of bounds
+        if (m_Registers.f.carry || byte > 0x99) 
+        { 
+            byte += 0x60;
+            m_Registers.f.carry = true;
+        }
+        if (m_Registers.f.half_carry || (byte & 0x0f) > 0x09) 
+            byte += 0x6;
+    } 
+    else
+    {  // after a subtraction, only adjust if (half-)carry occurred
+        if (m_Registers.f.carry) 
+            byte -= 0x60;
+        if (m_Registers.f.half_carry)
+            byte -= 0x6;
     }
-
-    m_Registers.f.zero = byte==0;
+    
+    m_Registers.f.zero = !byte;
     m_Registers.f.half_carry = false;
 }
