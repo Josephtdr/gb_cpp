@@ -99,10 +99,6 @@ byte_t MemoryBus::readByte(word_t address)
         }
         return m_CartridgeMemory[address];
     }
-    else if (address == r_JOYP)
-    {
-        return getJoypadState();
-    }
     //rom banking area so access cartridge memory instead
     else if ((address>=0x4000u) && (address <= 0x7FFFu))
     {   
@@ -118,20 +114,29 @@ byte_t MemoryBus::readByte(word_t address)
         //do vram stuff
     }
     // ram memory bank area
-    else if ((address >= 0xA000u) && (address <= 0xBFFFu))
+    else if ((address >= 0xA000u) && (address < 0xC000u))
     {
         word_t newAddress{ static_cast<word_t>(address - 0xA000) };
         return m_RAMBankMemory[newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)];
     }
-    // OAM ram
-    else if ((address >= 0xFE00u) && (address <= 0xFE9Fu))
+    //read from echo ram
+    else if ((address >= 0xE000u) && (address < 0xFE00u))
+    {
+        readByte(address-0x2000);
+    }
+    //OAM attribute table
+    else if ((address >= 0xFE00u) && (address < 0xFEA0u))
     {
         return m_Memory[address];
     }
     // restricted memory area
-    else if ((0xFEA0u <= address) && (address <= 0xFEFFu))
+    else if ((address >= 0xFEA0u) && (address <= 0xFEFFu))
     {
         return 0u;
+    }
+    else if (address == r_JOYP)
+    {
+        return getJoypadState();
     }
     else
     {
@@ -147,6 +152,11 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     { 
         updateBanking(address, value);
     }
+    //Vram Area
+    else if ((address>=0x8000u) && (address < 0xA000u))
+    {
+        m_Memory[address] = value;
+    }
     else if ((address >= 0xA000) && (address < 0xC000))
     {
         if (m_EnableRAM)
@@ -155,22 +165,20 @@ void MemoryBus::writeByte(word_t address, byte_t value)
             m_RAMBankMemory[newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)] = value ;
         }
     }
-    //maybe TODO: echo into echo ram?
     //echo from echo ram
-    else if ((0xE000u <= address) && (address <= 0xFE00u))
+    else if ((address >= 0xE000u) && (address < 0xFE00u))
     {
-        m_Memory[address] = value;
         writeByte(address-0x2000, value);
-    }
-    //Vram Area
-    else if ((address>=0x8000u) && (address < 0xA000u))
-    {
-        m_Memory[address] = value;
     }
     // OAM ram
     else if ((address >= 0xFE00u) && (address < 0xFEA0u))
     {
         m_Memory[address] = value;
+    }
+    //restricted memory area
+    else if ((address >= 0xFEA0u) && (address <= 0xFEFFu))
+    {
+        return;
     }
     //joypad write
     else if (address == r_JOYP)
@@ -184,11 +192,6 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     else if ((address == 0xFF50) && value) //unmap  bootrom
     {
         unloadBootRom();
-    }
-    //restricted memory area
-    else if ((0xFEA0u <= address) && (address <= 0xFEFFu))
-    {
-        return;
     }
     else
     {
