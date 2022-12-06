@@ -593,18 +593,21 @@ int CPU::OP_0xFB()
 int CPU::OP_0x07()
 {
     cpu_leftRotate(m_Registers.a, 0);
+    m_Registers.f.zero = false;
     return 4;
 }
 //RLA
 int CPU::OP_0x17()
 {
     cpu_leftRotateWithCarry(m_Registers.a, 0);
+    m_Registers.f.zero = false;
     return 4;
 }
 //RRCA
 int CPU::OP_0x0F()
 {
     cpu_rightRotate(m_Registers.a, 0);
+    m_Registers.f.zero = false;
     return 4;
 }
 //RRA

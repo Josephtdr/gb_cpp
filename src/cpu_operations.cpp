@@ -296,19 +296,27 @@ int CPU::cpu_byteArithmetic(const byte_t& opcode)
 
 void CPU::byteAdd(const byte_t& data)
 {
-    unsigned int ctest{ static_cast<unsigned int>(m_Registers.a)+static_cast<unsigned int>(data) };
-    word_t htest{ static_cast<word_t>((m_Registers.a & 0xFu) + (data & 0xFu)) };
-    
+    int ctest{ m_Registers.a + data };
+    int htest{ (m_Registers.a&0xF) + (data&0xF) };
+
     m_Registers.a += data;
     
     m_Registers.f.zero = !m_Registers.a;
     m_Registers.f.subtract = false;
-    m_Registers.f.carry = ctest > 0xFFu;
-    m_Registers.f.half_carry = htest > 0xFu;
+    m_Registers.f.carry = ctest >= 0x100;
+    m_Registers.f.half_carry = htest >= 0x10;
 }
 void CPU::byteAddWithCarry(const byte_t& data)
 {
-    byteAdd(data + static_cast<byte_t>(m_Registers.f.carry));
+    int ctest{ m_Registers.a + data + m_Registers.f.carry };
+    int htest{ (m_Registers.a&0xF) + (data&0xF) + m_Registers.f.carry };
+    
+    m_Registers.a += (data+m_Registers.f.carry);
+    
+    m_Registers.f.zero = !m_Registers.a;
+    m_Registers.f.subtract = false;
+    m_Registers.f.carry = ctest >= 0x100;
+    m_Registers.f.half_carry = htest >= 0x10;
 }
 void CPU::byteSub(const byte_t& data)
 {
@@ -325,7 +333,15 @@ void CPU::byteSub(const byte_t& data)
 }
 void CPU::byteSubWithCarry(const byte_t& data)
 {
-    byteSub( data + static_cast<byte_t>(m_Registers.f.carry) );
+    byte_t unchanged{ m_Registers.a };
+    int htest{ (m_Registers.a&0xF) - (data&0xF) - m_Registers.f.carry };
+
+    m_Registers.a -= (data + m_Registers.f.carry);
+    
+    m_Registers.f.zero = !m_Registers.a;
+    m_Registers.f.subtract = true;
+    m_Registers.f.carry = unchanged < (data + m_Registers.f.carry) ;
+    m_Registers.f.half_carry = htest < 0;
 }
 void CPU::byteAND(const byte_t& data)
 {
