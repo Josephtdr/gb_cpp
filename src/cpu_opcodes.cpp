@@ -173,11 +173,30 @@ void CPU::setupTables()
     instructionTable[0x0F] = &CPU::OP_0x0F;
     //RRA
     instructionTable[0x1F] = &CPU::OP_0x1F;
+
+
+    // instructionTable[0xD3] = &CPU::OP_ILLEGAL;
+    // instructionTable[0xDB] = &CPU::OP_ILLEGAL;
+    // instructionTable[0xDD] = &CPU::OP_ILLEGAL;
+    // instructionTable[0xE4] = &CPU::OP_ILLEGAL;
+    // instructionTable[0xE3] = &CPU::OP_ILLEGAL;
+    // instructionTable[0xEB] = &CPU::OP_ILLEGAL;
+    // instructionTable[0xEC] = &CPU::OP_ILLEGAL;
+    // instructionTable[0xED] = &CPU::OP_ILLEGAL;
+    // instructionTable[0xF3] = &CPU::OP_ILLEGAL;
+    // instructionTable[0xFD] = &CPU::OP_ILLEGAL;
+    // instructionTable[0xFC] = &CPU::OP_ILLEGAL;
 }
 
 int CPU::OP_NOT_IMPLEMTED()
 {
     throw std::runtime_error("OPCODE NOT IMPLEMENTED in table 1!");
+}
+
+int CPU::OP_ILLEGAL()
+{
+    m_log(LOG_DEBUG) << "Illegal opcode Called, no worries!\n";
+    return 0;
 }
 
 int CPU::OP_NOT_IMPLEMTED2(const byte_t& opcode)
@@ -359,15 +378,16 @@ int CPU::OP_0xF9()
 //LDHL SP,n
 int CPU::OP_0xF8()
 {
-    byte_t usignedValue{ readNextByte() };
-    word_t sum{ signedAddition(m_SP, usignedValue) };
+    byte_t unsignedData{ readNextByte() };
+    int ctest{ (m_SP&0x00FF) + unsignedData };
+    int htest{ (m_SP&0x000F) + (unsignedData&0x0F) };
+
+    m_Registers.set_hl(signedAddition(m_SP, unsignedData));
 
     m_Registers.f.zero = false;
     m_Registers.f.subtract = false;
-    m_Registers.f.half_carry = ((m_PC & 0x0FFF) + usignedValue) > 0x0FFF;
-    m_Registers.f.carry = (m_PC + usignedValue) > 0xFFFF;
-
-    m_Registers.set_hl(sum);
+    m_Registers.f.carry = ctest >= 0x100;
+    m_Registers.f.half_carry = htest >= 0x10;
     return 12;
 }
 //LD (nn),SP
@@ -459,9 +479,16 @@ int CPU::OP_0x39()
 //ADD SP,n
 int CPU::OP_0xE8()
 {
-    m_log(LOG_ERROR) << "Opcode 0xE8 needs to be signed" << "\n";
-    std::exit(EXIT_FAILURE);
-    wordAdd(m_SP, readNextWord());
+    byte_t unsignedData{ readNextByte() };
+    int ctest{ (m_SP&0x00FF) + unsignedData };
+    int htest{ (m_SP&0x000F) + (unsignedData&0x0F) };
+
+    m_SP = signedAddition(m_SP, unsignedData);
+
+    m_Registers.f.zero = false;
+    m_Registers.f.subtract = false;
+    m_Registers.f.carry = ctest >= 0x100;
+    m_Registers.f.half_carry = htest >= 0x10;
     return 16;
 }
 //INC nn

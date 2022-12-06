@@ -118,7 +118,7 @@ int CPU::cpu_jump(const byte_t& opcode)
     int testType{ testBit(opcode,0) ? 4 : extractBits(opcode,3,2) }; // check if always true
 
     m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode 
-        << ", " << funcStr[funcIdx] << " " << getJumpTestStr(testType) 
+        << ", " << funcStr[funcIdx] << " " << getJumpTestStr(testType) << " "
         << ((!funcIdx) ? "" : "u16")  << "\n";
     switch(funcIdx)
     {
@@ -174,18 +174,21 @@ int CPU::return_(JumpTest type)
 
 word_t CPU::signedAddition(const word_t& target, const byte_t& unsignedData)
 {
-    int sign{ (unsignedData >> 7) };
-
-    if (sign)
+    if (testBit(unsignedData,7))
     {
-        int offset{ (unsignedData & 0b01111111) - 0b10000000 };
-        int intAddress{ target + offset };
+        byte_t lsb{ static_cast<byte_t>(target&0x00FF) };
+        byte_t priorLSB{ lsb };
+        byte_t msb{ static_cast<byte_t>(target>>8) };
 
-        return static_cast<word_t>(intAddress);
+        lsb += unsignedData;
+        if (lsb > priorLSB)
+            --msb;
+
+        return (msb << 8) | lsb;
     }
     else
     {
-        return target + unsignedData;   
+        return target + unsignedData;
     }
 }
 
