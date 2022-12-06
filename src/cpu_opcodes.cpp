@@ -213,7 +213,7 @@ int CPU::CBopcode_Translator(byte_t opcode)
 
     int regInt{ extractBits(opcode,0,3) }; 
     int bit{ extractBits(opcode,3,3) };
-    int funcInt{ opcode < 0x40 ? extractBits(opcode,3,3) : 8+extractBits(opcode,6,2) };
+    int funcInt{ opcode < 0x40 ? extractBits(opcode,3,3) : 7+extractBits(opcode,6,2) };
 
     m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: CB 0x" << +opcode << ", "
                     << bitFunction[funcInt].second << " "
@@ -611,5 +611,6 @@ int CPU::OP_0x0F()
 int CPU::OP_0x1F()
 {
     cpu_rightRotateWithCarry(m_Registers.a, 0);
+    m_Registers.f.zero = false;
     return 4;
 }

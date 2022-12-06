@@ -565,7 +565,7 @@ void CPU::cpu_rightRotateWithCarry(byte_t& byte, int)
     m_Registers.f.carry = oldBit0;
     byte = (carry << 7) | (byte >> 1);
 
-    m_Registers.f.zero = false;
+    m_Registers.f.zero = !byte;
     m_Registers.f.subtract = false;
     m_Registers.f.half_carry = false;
 }

@@ -39,7 +39,7 @@ private:
 public:
     MemoryBus(logger& logRef);
 
-    byte_t readByte(word_t address) const;
+    byte_t readByte(word_t address);
     void writeByte(word_t address, byte_t value);
     void loadGame(const char* file);
     void increment(word_t address);

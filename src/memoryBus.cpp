@@ -88,7 +88,7 @@ byte_t MemoryBus::getJoypadState() const
     return joyp ;
 }
 
-byte_t MemoryBus::readByte(word_t address) const
+byte_t MemoryBus::readByte(word_t address)
 {
     if (address < 0x4000u) 
     {
