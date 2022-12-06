@@ -375,8 +375,8 @@ int CPU::OP_0x08()
 {
     word_t address{ readNextWord() };
 
-    byte_t lsb{ static_cast<byte_t>(m_SP & 0xF) };
-    byte_t msb{ static_cast<byte_t>(m_SP >> 4) };
+    byte_t lsb{ static_cast<byte_t>(m_SP & 0xFF) };
+    byte_t msb{ static_cast<byte_t>(m_SP >> 8) };
     
     writeByte(address, lsb);
     writeByte(address+1, msb);
