@@ -414,7 +414,7 @@ void CPU::byteINC(byte_t& reg)
 
     m_Registers.f.zero = !reg;
     m_Registers.f.subtract = false;
-    m_Registers.f.half_carry = unchanged==0xFu;
+    m_Registers.f.half_carry = (unchanged&0xF)==0xFu;
 }
 
 void CPU::byteDEC(byte_t& reg)
