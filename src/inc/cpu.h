@@ -79,7 +79,7 @@ private:
     int return_(JumpTest type);
 
     int cpu_jumpRelative(const byte_t& opcode);
-    word_t unsignedAddition(const word_t& target, const byte_t& unsignedData);
+    word_t signedAddition(const word_t& target, const byte_t& unsignedData);
 
     int cpu_byteArithmetic(const byte_t& opcode);
     void byteAdd(const byte_t& data);

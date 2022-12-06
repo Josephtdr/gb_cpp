@@ -359,26 +359,15 @@ int CPU::OP_0xF9()
 //LDHL SP,n
 int CPU::OP_0xF8()
 {
-    m_log(LOG_ERROR) << "opcode 0xF8 needs to have correct registers!" << "\n";
-
     byte_t usignedValue{ readNextByte() };
-    word_t sum{ unsignedAddition(m_SP, usignedValue) };
-    m_Registers.set_hl(sum);
-
-    std::exit(EXIT_FAILURE);
+    word_t sum{ signedAddition(m_SP, usignedValue) };
 
     m_Registers.f.zero = false;
     m_Registers.f.subtract = false;
+    m_Registers.f.half_carry = ((m_PC & 0x0FFF) + usignedValue) > 0x0FFF;
+    m_Registers.f.carry = (m_PC + usignedValue) > 0xFFFF;
 
-    // unsigned int v{ static_cast<unsigned int>(m_SP)+static_cast<unsigned int>(d8) };
-    // bool carry{ v > 0xFFFF };
-    // m_Registers.f.carry = carry;
-
-    // bool half_carry{ ((m_SP & 0xF) + (d8 & 0xF)) > 0xF };
-    // m_Registers.f.half_carry = half_carry;
-
-    // value = m_SP+d8; 
-
+    m_Registers.set_hl(sum);
     return 12;
 }
 //LD (nn),SP
@@ -580,7 +569,7 @@ int CPU::OP_0x76()
 int CPU::OP_0x10()
 {
     m_log(LOG_ERROR) << "Stop not implemented" << "\n";
-    std::exit(EXIT_FAILURE);
+    // std::exit(EXIT_FAILURE);
     m_log(LOG_INFO) << "Executed Stop!" << "\n";
     return 4;
 }

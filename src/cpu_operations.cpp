@@ -101,7 +101,7 @@ int CPU::cpu_jumpRelative(const byte_t& opcode)
 
     if (testJumpTest(static_cast<JumpTest>(type)))
     {
-        m_PC = unsignedAddition(m_PC, unsignedData);
+        m_PC = signedAddition(m_PC, unsignedData);
         return 12;
     }
     return 8;
@@ -172,7 +172,7 @@ int CPU::return_(JumpTest type)
     return 8;
 }
 
-word_t CPU::unsignedAddition(const word_t& target, const byte_t& unsignedData)
+word_t CPU::signedAddition(const word_t& target, const byte_t& unsignedData)
 {
     int sign{ (unsignedData >> 7) };
 
