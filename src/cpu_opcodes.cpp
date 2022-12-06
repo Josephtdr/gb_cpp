@@ -283,29 +283,33 @@ int CPU::OP_0xE2()
 //LD A,(HL-)
 int CPU::OP_0x3A()
 {
-    m_Registers.a = readByte(m_Registers.get_hl());
-    m_Registers.set_hl( m_Registers.get_hl()-1u );
+    word_t HL{ m_Registers.get_hl() };
+    m_Registers.a = readByte(HL);
+    m_Registers.set_hl( --HL );
     return 8;
 }
 //LD (HL-),A
 int CPU::OP_0x32()
 {
-    writeByte(m_Registers.get_hl(), m_Registers.a);
-    m_Registers.set_hl( m_Registers.get_hl()-1u );
+    word_t HL{ m_Registers.get_hl() };
+    writeByte(HL, m_Registers.a);
+    m_Registers.set_hl( --HL );
     return 8;
 }
 //LD A,(HL+)
 int CPU::OP_0x2A()
 {
-    m_Registers.a = readByte(m_Registers.get_hl());
-    m_Registers.set_hl( m_Registers.get_hl()+1u );
+    word_t HL{ m_Registers.get_hl() };
+    m_Registers.a = readByte(HL);
+    m_Registers.set_hl( ++HL );
     return 8;
 }
 //LD (HL+),A
 int CPU::OP_0x22()
 {
-    writeByte(m_Registers.get_hl(), m_Registers.a);
-    m_Registers.set_hl( m_Registers.get_hl()+1u );
+    word_t HL{ m_Registers.get_hl() };
+    writeByte(HL, m_Registers.a);
+    m_Registers.set_hl( ++HL );
     return 8;
 }
 //LDH (n),A

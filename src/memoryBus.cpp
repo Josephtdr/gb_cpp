@@ -1,4 +1,5 @@
 #include "inc/memoryBus.h"
+#include "inc/bitfuncs.h"
 
 #include <stdexcept> // for std::runtime_error
 #include <cstring> //memset, 
@@ -6,8 +7,10 @@
 #include <iostream>
 
 MemoryBus::MemoryBus(logger& logRef)
-    : m_log{ logRef }
+    : m_log{ logRef },
+      m_Joypad{ 0xFF }
 {
+    m_Memory[0xFF00] = 0xFFu; //   ; JOYP
     m_Memory[0xFF05] = 0x00u; //   ; TIMA
     m_Memory[0xFF06] = 0x00u; //   ; TMA
     m_Memory[0xFF07] = 0x00u; //   ; TAC
@@ -41,6 +44,27 @@ MemoryBus::MemoryBus(logger& logRef)
     m_Memory[0xFFFF] = 0x00u; //   ; IE
 }
 
+byte_t MemoryBus::getJoypadState() const
+{
+    byte_t joyp{ m_Memory[r_JOYP] };
+
+    // are we interested in the standard buttons?
+    if (!testBit(joyp, 4))
+    {
+            byte_t topJoypad{ static_cast<byte_t>(m_Joypad & 0xF) };
+            topJoypad |= 0xF0; // turn the top 4 bits on
+            joyp &= topJoypad; // show what buttons are pressed
+    }
+    else if (!testBit(joyp,5))//directional buttons
+    {
+            byte_t bottomJoypad{ static_cast<byte_t>(m_Joypad >> 4) };
+            bottomJoypad |= 0xF0;
+            joyp &= bottomJoypad;
+    }
+    m_log(LOG_INFO) << "Reading joypad state as: " << +joyp << ", currently r_JOYP: " << +m_Memory[r_JOYP] <<"\n";
+    return joyp ;
+}
+
 byte_t MemoryBus::readByte(word_t address) const
 {
     if (address <= 0x4000u) 
@@ -51,6 +75,10 @@ byte_t MemoryBus::readByte(word_t address) const
             return m_Memory[address];
         }
         return m_CartridgeMemory[address];
+    }
+    else if (address == r_JOYP)
+    {
+        return getJoypadState();
     }
     //rom banking area so access cartridge memory instead
     else if ((address>=0x4000u) && (address <= 0x7FFFu))
@@ -119,11 +147,10 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     {
         m_Memory[address] = value;
     }
-    //joypad read request
+    //joypad write
     else if (address == r_JOYP)
     {
-    //     m_log(LOG_DEBUG) << "Writing value: " << +value << ", to r_JOYP!\n";
-        m_Memory[r_JOYP] = value;
+        m_Memory[r_JOYP] = (value | 0x0F);
     }
     else if (address == r_DIV)
     {
@@ -195,6 +222,7 @@ void MemoryBus::loadBootRom()
 
     m_bootRomLoaded = true;
     m_log(LOG_INFO) << "Loaded boot rom into memory!" << "\n";
+    m_log.set_log_level(LOG_INFO);
     delete[] buffer;
 }
 
@@ -204,6 +232,7 @@ void MemoryBus::unloadBootRom()
     {
         m_log(LOG_INFO) << "Unmapping boot rom!" << "\n" << "\n";
         m_bootRomLoaded = false;
+        // m_log.set_log_level(LOG_DEBUG);
     }
 }
 

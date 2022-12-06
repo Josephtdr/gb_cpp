@@ -27,6 +27,9 @@ int CPU::cycle()
 {
     byte_t instructionByte{ readNextByte() };
 
+    // if (m_PC < 0x219 )
+    //     m_lineByLine = false;
+
     bool prefixed{ instructionByte == c_PREFIXED_INSTRUCTION_BYTE };
     if (prefixed)
     { 
@@ -57,10 +60,50 @@ bool CPU::isHalted() { return m_Halted; }
 
 byte_t CPU::readByte(word_t address) const
 {
-    return m_Memory.readByte(address);
+    // //Vram Area
+    // if ((address>=0x8000u) && (address < 0xA000u))
+    // {
+    //     int mode{ extractBits(readByte(r_STAT), 0, 2) };
+    //     if (mode==3)
+    //         return 0xFF;
+    //     else
+    //         return m_Memory.readByte(address);
+    // }
+    // // OAM ram
+    // else if ((address >= 0xFE00u) && (address <= 0xFE9Fu))
+    // {
+    //     int mode{ extractBits(readByte(r_STAT), 0, 2) };
+    //     if (mode==2||mode==3)
+    //         return 0xFF;
+    //     else
+    //         return m_Memory.readByte(address);
+    // }
+    if (true)
+    {
+        return m_Memory.readByte(address);
+    }
+        
 }
 void CPU::writeByte(word_t address, byte_t value)
 {
+    // //Vram Area
+    // if ((address>=0x8000u) && (address < 0xA000u))
+    // {
+    //     int mode{ extractBits(readByte(r_STAT), 0, 2) };
+    //     if (mode==3)
+    //         return;
+    //     else
+    //         m_Memory.writeByte(address, value);
+    // }
+    // // OAM ram
+    // else if ((address >= 0xFE00u) && (address <= 0xFE9Fu))
+    // {
+    //     int mode{ extractBits(readByte(r_STAT), 0, 2) };
+    //     if (mode==2||mode==3)
+    //         return;
+    //     else
+    //         m_Memory.writeByte(address, value);
+    // }
     //reset the current scanline if the game tries to write to it
     if (address == r_LY)
     {
@@ -145,50 +188,39 @@ void CPU::updateDividerRegister(int cycles)
     }
 }
 
-void CPU::updateJoypads()
+void CPU::updateJoypad()
+{
+    auto action{ m_Platform.ProcessInput() };
+
+    switch(action.first)
+    {
+        case 0: keyDown(action.second); break;
+        case 1: keyUp(action.second); break;
+        case 2: break;
+    }
+}
+
+void CPU::keyDown(int key)
 {
     byte_t joyp{ readByte(r_JOYP) };
-    byte_t newJoyp{ static_cast<byte_t>(joyp & 0xF0) };
+    bool wasUnpressed{ testBit(m_Memory.m_Joypad, key) };
 
-    byte_t keys{ 0xFF };
-    m_Platform.ProcessInput(keys);
+    resetBit(m_Memory.m_Joypad, key); 
 
-    if (!testBit(joyp,4))
-    {
-        newJoyp |= extractBits(keys,0,4);
+    bool isButton{ key > 3 };
+    bool interupt{};
 
-        //if no change, exit
-        if (joyp==newJoyp)
-            return;
-        //test if a bit went from high to low
-        for(int bit{}; bit<4; ++bit)
-        {
-            if (testBit(joyp, bit))
-            {
-                if (!testBit(newJoyp, bit))
-                    requestInterupt(4);
-            }
-        }
-        writeByte(r_JOYP, newJoyp);
-    }
-    else if (!testBit(joyp,5))
-    {
-        newJoyp |= extractBits(keys,4,4);
-        
-        //if no change, exit
-        if (joyp==newJoyp)
-            return;
-        //test if a bit went from high to low
-        for(int bit{}; bit<4; ++bit)
-        {
-            if (testBit(joyp, bit))
-            {
-                if (!testBit(newJoyp, bit))
-                    requestInterupt(4);
-            }
-        }
-        writeByte(r_JOYP, newJoyp);
-    }
+    if (isButton && !testBit(joyp,5))
+        interupt = true;
+    else if (!isButton && !testBit(joyp,4));
+        interupt = true;
+
+    if (interupt && wasUnpressed)
+        requestInterupt(4);
+}
+void CPU::keyUp(int key)
+{
+    setBit(m_Memory.m_Joypad, key);
 }
 
 /**
@@ -247,6 +279,8 @@ void CPU::performInterupt(int interupt)
 {
     m_log(LOG_INFO) << "Starting interupt " << interupt << "!" << "\n";
     m_InteruptsEnabled = false;
+
+    // m_log.set_log_level(LOG_DEBUG);
 
     byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
     resetBit(requests, interupt);

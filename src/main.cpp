@@ -32,18 +32,20 @@ public:
     }
 };
 
-void frameUpdate(CPU& cpu, PPU& ppu, logger& log)
+void frameUpdate(CPU& cpu, PPU& ppu, logger& log, MemoryBus& memory)
 {
     int cyclesThisUpdate = 0;
 
     while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
     {
+        // cpu.m_lineByLine = !memory.m_bootRomLoaded;
+
         if (!cpu.isHalted())
         {
             int cycles{ cpu.cycle() };
             cyclesThisUpdate += cycles;
             cpu.updateTimers(cycles);
-            cpu.updateJoypads();
+            cpu.updateJoypad();
             ppu.updateGraphics(cycles);
             // if (cpu.m_lineByLine)
             //     getchar();
@@ -70,8 +72,6 @@ int main(int argc, char *argv[])
     memory.loadGame(romFilename);
     log(LOG_INFO) << "Game Loaded!" << "\n";
 
-
-
     Platform platform{ memory.getTitle().c_str(),c_VIDEO_WIDTH,c_VIDEO_HEIGHT,2 };
 
     CPU cpu{ memory,log,platform };
@@ -81,18 +81,14 @@ int main(int argc, char *argv[])
 
     
 
-    bool quit{};
     Timer timer{};
-    byte_t keypad{};
 
-    while(!quit)
+    while(!platform.getExit())
     {
-        quit = platform.ProcessInput(keypad);
-
         if(timer.nextFrameReady())
         {
             timer.reset();
-            frameUpdate(cpu, ppu, log);
+            frameUpdate(cpu, ppu, log, memory);
         }
     }
 }

@@ -32,6 +32,7 @@ private:
     void changeHiRomBank(byte_t value);
     void RAMBankChange(byte_t value);
     void changeROMRAMMode(byte_t value);
+    byte_t getJoypadState() const; 
 
 public:
     MemoryBus(logger& logRef);
@@ -40,6 +41,7 @@ public:
     void writeByte(word_t address, byte_t value);
     void loadGame(const char* file);
     void increment(word_t address);
+    byte_t m_Joypad{};
     std::string getTitle();
 };
 

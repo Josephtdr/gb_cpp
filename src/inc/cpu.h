@@ -31,7 +31,7 @@ public:
     CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef);
     int cycle();
     void updateTimers(int cycles);
-    void updateJoypads();
+    void updateJoypad();
     void interupts();
     bool isHalted();
     bool m_lineByLine{};
@@ -48,6 +48,10 @@ private:
     bool isClockEnabled() const;
     void updateClockFreq();
     byte_t getClockFreq() const;
+    
+    
+    void keyDown(int key);
+    void keyUp(int key);
     
     void requestInterupt(int interupt);
     void performInterupt(int interupt);

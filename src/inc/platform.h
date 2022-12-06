@@ -12,11 +12,13 @@ private:
 
     int m_textureWidth{};
     int m_textureHeight{};
+    int m_exit{};
 
 public:
     Platform(char const* title, int textureWidth, int textureHeight, int scale);
 	~Platform();
 	
 	void Update(void const* buffer, int pitch);
-	bool ProcessInput(byte_t& keys);
+	std::pair<int,int> ProcessInput();
+    bool getExit() const;
 };
