@@ -8,7 +8,8 @@
 
 MemoryBus::MemoryBus(logger& logRef)
     : m_log{ logRef },
-      m_Joypad{ 0xFF }
+      m_Joypad{ 0xFF },
+      m_CurrentROMBank{ 1 }
 {
     m_Memory[0xFF00] = 0xFFu; //   ; JOYP
     m_Memory[0xFF05] = 0x00u; //   ; TIMA
@@ -56,14 +57,6 @@ byte_t MemoryBus::readMemForDoctor(word_t address)
         return m_Memory[address];
         //do vram stuff
     }
-    // // ram memory bank area
-    // else if ((address >= 0xA000u) && (address <= 0xBFFFu))
-    // {
-    //     word_t newAddress{ static_cast<word_t>(address - 0xA000) };
-    //     return m_RAMBankMemory[newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)];
-    // }
-    // OAM ram
-    // restricted memory area
     else if ((0xFEA0u <= address) && (address <= 0xFEFFu))
     {
         return 0u;
@@ -112,7 +105,9 @@ byte_t MemoryBus::readByte(word_t address) const
     }
     //rom banking area so access cartridge memory instead
     else if ((address>=0x4000u) && (address <= 0x7FFFu))
-    {
+    {   
+        if (m_CurrentROMBank == 0) //KEEPS GETTING SET TO 0??????
+            m_CurrentROMBank = 1;
         word_t newAddress{ static_cast<word_t>(address - c_ROM_BANK_SIZE) };
         return m_CartridgeMemory[newAddress + (m_CurrentROMBank*c_ROM_BANK_SIZE)];
     }
@@ -217,7 +212,7 @@ void MemoryBus::loadGame(const char* filename)
 
     m_log(LOG_INFO) << "Loaded game into game rom!" << "\n";
     getRomBankingMode();
-    loadBootRom();
+    // loadBootRom();
 }
 
 #include <string>
@@ -262,7 +257,6 @@ void MemoryBus::unloadBootRom()
     {
         m_log(LOG_INFO) << "Unmapping boot rom!" << "\n" << "\n";
         m_bootRomLoaded = false;
-        // m_log.set_log_level(LOG_DEBUG);
     }
 }
 
@@ -344,14 +338,16 @@ void MemoryBus::changeLoROMBank(byte_t value)
     if (m_MBC2)
     {
         m_CurrentROMBank = value & 0xF; //set to lower nibble
-        if (m_CurrentROMBank == 0) m_CurrentROMBank++; //cant be zero
+        if (m_CurrentROMBank == 0) 
+            m_CurrentROMBank = 1; //cant be zero
         return;
     }
     
     byte_t lower5 = value & 0b00011111u ; //save lower 5
     m_CurrentROMBank &= 0b11100000u; // turn off the lower 5
     m_CurrentROMBank |= lower5 ;
-    if (m_CurrentROMBank == 0) m_CurrentROMBank++ ;
+    if (m_CurrentROMBank == 0) 
+        m_CurrentROMBank = 1;
 }
 
 void MemoryBus::changeHiRomBank(byte_t value)
@@ -362,7 +358,8 @@ void MemoryBus::changeHiRomBank(byte_t value)
     // turn off the lower 5 bits of the data
     value &= 0b11100000u ;
     m_CurrentROMBank |= value ;
-    if (m_CurrentROMBank == 0) m_CurrentROMBank++; //cant be zero
+    if (m_CurrentROMBank == 0)
+        m_CurrentROMBank = 1; //cant be zero
 }
 
 void MemoryBus::RAMBankChange(byte_t value)
@@ -374,5 +371,5 @@ void MemoryBus::changeROMRAMMode(byte_t value)
     word_t newData = value & 1u ;
     m_ROMBanking = !newData;
     if (m_ROMBanking)
-        m_CurrentRAMBank = 0 ;
+        m_CurrentRAMBank = 0;
 }

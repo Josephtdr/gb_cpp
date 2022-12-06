@@ -33,18 +33,6 @@ public:
     }
 };
 
-std::string getHexString(byte_t byte)
-{
-    
-}
-std::string getHexString(word_t word)
-{
-
-
-
-}
-
-
 #include  <iomanip>
 void doctorLog(CPU& cpu, MemoryBus& memory)
 {
@@ -93,6 +81,7 @@ void frameUpdate(CPU& cpu, PPU& ppu, logger& log, MemoryBus& memory)
 int main(int argc, char *argv[])
 {
     freopen( "logfordoc.txt", "w", stdout );
+    freopen( "trace.txt", "w", stderr );
 
     if (argc != 2)
 	{
@@ -101,9 +90,9 @@ int main(int argc, char *argv[])
 	}
     char const* romFilename = argv[1];
 
-    logger log{ std::clog, __PRETTY_FUNCTION__ };
+    logger log{ std::cerr, __PRETTY_FUNCTION__ };
     log.set_log_level(LOG_INFO);
-    log(LOG_INFO) << "Starting up!" << "\n";
+    log(LOG_INFO) << std::hex << "Starting up!" << "\n";
 
     MemoryBus memory{ log };
     memory.loadGame(romFilename);

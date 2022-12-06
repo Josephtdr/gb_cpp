@@ -23,7 +23,7 @@ private:
     bool m_MBC2{}; //rom banking mode 2
     bool m_ROMBanking{};
     bool m_EnableRAM{};
-    
+
 
     void loadBootRom();
     void unloadBootRom();

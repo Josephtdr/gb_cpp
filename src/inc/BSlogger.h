@@ -197,8 +197,7 @@ std::string prep_time(logger& l) {
   if (t->tm_mday < 10) D = "0" + D;
   if (t->tm_mon + 1 < 10) M = "0" + M;
 
-  std::string ret =
-      "[ " + Y + "-" + M + "-" + D + "T" + h + ":" + m + ":" + s + " ]";
+  std::string ret ="";
 
   return ret;
 }

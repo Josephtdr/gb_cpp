@@ -5,7 +5,7 @@
 #include <stdexcept>
 
 CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef)
- : m_PC{0},
+ : m_PC{ 0x100 },
    m_SP{ c_TOP_OF_STACK },
    m_log{ logRef },
    m_Memory{ memoryRef },
@@ -13,6 +13,7 @@ CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef)
 {
     // m_lineByLine = true;
     std::cout << std::hex;
+    std::cerr << std::hex;
 
     m_Registers.set_af(0x01B0);
     m_Registers.set_bc(0x0013);
@@ -78,10 +79,8 @@ byte_t CPU::readByte(word_t address) const
     //     else
     //         return m_Memory.readByte(address);
     // }
-    if (true)
-    {
-        return m_Memory.readByte(address);
-    }
+    return m_Memory.readByte(address);
+    
         
 }
 void CPU::writeByte(word_t address, byte_t value)
