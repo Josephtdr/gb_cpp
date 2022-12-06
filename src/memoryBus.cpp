@@ -44,6 +44,36 @@ MemoryBus::MemoryBus(logger& logRef)
     m_Memory[0xFFFF] = 0x00u; //   ; IE
 }
 
+byte_t MemoryBus::readMemForDoctor(word_t address)
+{
+    if (address < 0x8000u) 
+    {
+        return m_CartridgeMemory[address];
+    }
+    //Vram Area
+    else if ((address>=0x8000u) && (address < 0xA000u))
+    {
+        return m_Memory[address];
+        //do vram stuff
+    }
+    // // ram memory bank area
+    // else if ((address >= 0xA000u) && (address <= 0xBFFFu))
+    // {
+    //     word_t newAddress{ static_cast<word_t>(address - 0xA000) };
+    //     return m_RAMBankMemory[newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)];
+    // }
+    // OAM ram
+    // restricted memory area
+    else if ((0xFEA0u <= address) && (address <= 0xFEFFu))
+    {
+        return 0u;
+    }
+    else
+    {
+        return m_Memory[address];
+    }
+}
+
 byte_t MemoryBus::getJoypadState() const
 {
     byte_t joyp{ m_Memory[r_JOYP] };
@@ -67,7 +97,7 @@ byte_t MemoryBus::getJoypadState() const
 
 byte_t MemoryBus::readByte(word_t address) const
 {
-    if (address <= 0x4000u) 
+    if (address < 0x4000u) 
     {
         //boot rom currently loaded
         if (m_bootRomLoaded && (address < 0x100))

@@ -9,13 +9,15 @@
 
 class CPU
 {
+public:
+    Registers m_Registers{};
+    word_t m_PC{};
+    word_t m_SP{};
 private:
     logger& m_log;
     MemoryBus& m_Memory;
     Platform& m_Platform;
-    Registers m_Registers{};
-    word_t m_PC{};
-    word_t m_SP{};
+    
 
     int m_TimerCounter{}; //Tracks when to throw timer interupts
     int m_DividerCounter{}; //Tracks when to increment Divider Register

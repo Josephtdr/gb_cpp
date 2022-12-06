@@ -565,7 +565,7 @@ void CPU::cpu_rightRotateWithCarry(byte_t& byte, int)
     m_Registers.f.carry = oldBit0;
     byte = (carry << 7) | (byte >> 1);
 
-    m_Registers.f.zero = !byte;
+    m_Registers.f.zero = false;
     m_Registers.f.subtract = false;
     m_Registers.f.half_carry = false;
 }
@@ -610,27 +610,15 @@ void CPU::cpu_rightShiftArithmetic(byte_t& byte, int)
 
 void CPU::checkDAA(byte_t& byte)
 {
-    byte_t lowerNibble{ static_cast<byte_t>(byte & 0xFu) };
-    byte_t upperNibble{ static_cast<byte_t>(byte >> 4) };
-    
-    if (lowerNibble > 9u)
+    m_Registers.f.carry = false;
+    if ((byte & 0x0F) > 0x9)
+        byte += 0x6;
+    if (((byte & 0xF0) >> 4) > 0x9)
     {
-        lowerNibble += 6u;
-        lowerNibble &= 0xFu;
-        upperNibble += 1u;
-    }
-    if (upperNibble > 9u)
-    {
-        upperNibble += 6u;
-        upperNibble &= 0xFu;
+        byte += 0x60;
         m_Registers.f.carry = true;
     }
-    else
-    {
-        m_Registers.f.carry = false;
-    }
-    byte = (upperNibble << 4) | lowerNibble;
 
-    m_Registers.f.zero = !byte;
+    m_Registers.f.zero = byte==0;
     m_Registers.f.half_carry = false;
 }

@@ -7,13 +7,15 @@
 
 class MemoryBus
 {
+public:
+    byte_t readMemForDoctor(word_t address);
+    bool m_bootRomLoaded{};
 private:
     logger& m_log;
 
-    byte_t m_Memory[c_MEMORY_SIZE]{};
     byte_t m_CartridgeMemory[c_CARTRIDGE_MEMORY_SIZE]{};
     byte_t m_RAMBankMemory[c_RAM_BANKS_MEMORY_SIZE]{};
-
+    byte_t m_Memory[c_MEMORY_SIZE]{};
     byte_t m_CurrentROMBank{1}; //the current rom bank "loaded" into 0x4000-0x7FFF
     byte_t m_CurrentRAMBank{};
 
@@ -21,7 +23,7 @@ private:
     bool m_MBC2{}; //rom banking mode 2
     bool m_ROMBanking{};
     bool m_EnableRAM{};
-    bool m_bootRomLoaded{};
+    
 
     void loadBootRom();
     void unloadBootRom();

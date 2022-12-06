@@ -56,7 +56,7 @@ std::pair<int,int> Platform::ProcessInput()
                     case SDLK_RIGHT:    return {0,0}; break;
 
                     case SDLK_q:        return {0,7}; break;
-                    case SDLK_KP_ENTER: return {0,6}; break;
+                    case SDLK_e: return {0,6}; break;
                     case SDLK_d:        return {0,5}; break;
                     case SDLK_a:        return {0,4}; break;
                 }
@@ -72,7 +72,7 @@ std::pair<int,int> Platform::ProcessInput()
                     case SDLK_RIGHT:    return {1,0}; break;
 
                     case SDLK_q:        return {1,7}; break;
-                    case SDLK_KP_ENTER: return {1,6}; break;
+                    case SDLK_e: return {1,6}; break;
                     case SDLK_d:        return {1,5}; break;
                     case SDLK_a:        return {1,4}; break;
                 }
