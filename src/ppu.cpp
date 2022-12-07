@@ -23,7 +23,7 @@ void PPU::updateGraphics(int cycles)
     {
         // move onto next scanline
         m_Memory.increment(r_LY);
-        byte_t currentline{ m_Memory.readByte(r_LY) };
+        byte_t currentline{ readByte(r_LY) };
         m_ScanlineCounter = 456; //number of cycles per scanline
 
         // draw the current scanline
@@ -31,7 +31,10 @@ void PPU::updateGraphics(int cycles)
             drawScanLine();
         // we have entered vertical blank period
         else if (currentline == 144)
+        {
             requestInterupt(0);
+        }
+            
         // if gone past max scanline, 153, reset
         else if (currentline > 153)
             writeByte(r_LY, 0);

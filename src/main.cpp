@@ -6,6 +6,8 @@
 #include <iostream>
 #include <chrono> // for std::chrono functions
 #include <cstdio>
+#include <functional> // std::function
+#include <unordered_map> // std::unordered_map
 
 //https://www.learncpp.com/cpp-tutorial/timing-your-code/
 class Timer
@@ -53,15 +55,14 @@ void doctorLog(CPU& cpu, MemoryBus& memory)
                    std::setw(2) << +memory.readMemForDoctor(cpu.m_PC+3) <<"\n";
 }
 
-void frameUpdate(CPU& cpu, PPU& ppu, logger& log, MemoryBus& memory)
+void frameUpdate(CPU& cpu, PPU& ppu, logger& log, MemoryBus& memory, bool doclog = true)
 {
     int cyclesThisUpdate = 0;
 
     while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
     {
-        if (!memory.m_bootRomLoaded)
+        if (doclog)
             doctorLog(cpu, memory);
-        // cpu.m_lineByLine = !memory.m_bootRomLoaded;
 
         if (!cpu.isHalted())
         {
@@ -78,43 +79,59 @@ void frameUpdate(CPU& cpu, PPU& ppu, logger& log, MemoryBus& memory)
     ppu.renderScreen();
 }
 
+
+struct Settings {
+  bool doctorLog {false};
+  bool traceLog {false};
+};
+
+typedef std::function<void(Settings&)> NoArgHandle;
+
+const std::unordered_map<std::string, NoArgHandle> NoArgs {
+  {"--doctorLog", [](Settings& s) { s.doctorLog = true; }},
+  {"-dl", [](Settings& s) { s.doctorLog = true; }},
+
+  {"--traceLog", [](Settings& s) { s.traceLog = true; }},
+  {"-tl", [](Settings& s) { s.traceLog = true; }},
+};
+
 int main(int argc, char *argv[])
 {
     freopen( "logfordoc.txt", "w", stdout );
     freopen( "trace.txt", "w", stderr );
 
-    if (argc != 2)
+    if (argc < 2)
 	{
 		std::cerr << "Usage: " << argv[0] << " <ROM>\n";
 		std::exit(EXIT_FAILURE);
 	}
     char const* romFilename = argv[1];
 
+    Settings settings{};
+    for (int i {2}; i < argc; ++i)
+    {
+        std::string opt {argv[i]};
+        if(auto j {NoArgs.find(opt)}; j != NoArgs.end())
+            j->second(settings); // Yes, handle it!
+    }
+
     logger log{ std::cerr, __PRETTY_FUNCTION__ };
     log.set_log_level(LOG_INFO);
-    log(LOG_INFO) << std::hex << "Starting up!" << "\n";
-
     MemoryBus memory{ log };
     memory.loadGame(romFilename);
-    log(LOG_INFO) << "Game Loaded!" << "\n";
-
     Platform platform{ memory.getTitle().c_str(),c_VIDEO_WIDTH,c_VIDEO_HEIGHT,2 };
-
-    CPU cpu{ memory,log,platform };
-    log(LOG_INFO) << "CPU initialised!" << "\n";
     PPU ppu{ memory,log,platform };
-    log(LOG_INFO) << "PPU initialised!" << "\n";
-
+    CPU cpu{ memory,log,platform,ppu,!settings.traceLog };
     
+    log(LOG_INFO) << std::hex << "Starting up!" << "\n";
 
     Timer timer{};
-
     while(!platform.getExit())
     {
         if(timer.nextFrameReady())
         {
             timer.reset();
-            frameUpdate(cpu, ppu, log, memory);
+            frameUpdate(cpu, ppu, log, memory, settings.doctorLog);
         }
     }
 }

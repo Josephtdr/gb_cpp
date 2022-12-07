@@ -4,12 +4,15 @@
 #include <iostream> 
 #include <stdexcept>
 
-CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef)
+CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, bool dontlog)
  : m_PC{ 0x100 },
    m_SP{ c_TOP_OF_STACK },
    m_log{ logRef },
    m_Memory{ memoryRef },
-   m_Platform{ platformRef }
+   m_Platform{ platformRef },
+   m_InteruptsEnabled{ false },
+   m_dontLog{ dontlog },
+   m_PPU{ ppuRef }
 {
     // m_lineByLine = true;
     std::cout << std::hex;
@@ -23,6 +26,36 @@ CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef)
     setupTables();
 }
 
+void CPU::logOpcode(word_t PC, byte_t opcode, byte_t arg1, byte_t arg2, std::string_view func, std::string_view peram1, std::string_view peram2) const
+{
+    if (m_dontLog)
+        return;
+
+    std::string comma = ((peram1!="" && peram2!="")? ", " : "  ");
+
+    int len = 15 - (func.length() + peram1.length() + peram2.length() + comma.length());
+
+    m_log(LOG_INFO) << std::hex << std::uppercase << std::setfill('0') <<
+        std::setw(4) << +PC << ":  " <<
+        "0x" << std::setw(2) << +opcode << " " << 
+        std::setw(2) << +arg1 << " " <<
+        std::setw(2) << +arg2 << "  " << std::setfill(' ') <<
+        func << " " << peram1 << comma << peram2 <<
+        std::setw(len) << "" << std::setfill('0') << 
+        "A:" << std::setw(2) << +m_Registers.a << " " << 
+        "F:" << std::setw(2) << +m_Registers.f << " " <<
+        "B:" << std::setw(2) << +m_Registers.b << " " <<
+        "C:" << std::setw(2) << +m_Registers.c << " " <<
+        "D:" << std::setw(2) << +m_Registers.d << " " <<
+        "E:" << std::setw(2) << +m_Registers.e << " " <<
+        "H:" << std::setw(2) << +m_Registers.h << " " <<
+        "L:" << std::setw(2) << +m_Registers.l << "  " <<
+        "SP:" << std::setw(4) << +m_SP << "  " <<
+        "PCMEM:"<< std::setw(2) << +m_Memory.readMemForDoctor(PC) << "," <<
+                   std::setw(2) << +m_Memory.readMemForDoctor(PC+1) << "," <<
+                   std::setw(2) << +m_Memory.readMemForDoctor(PC+2) << "," <<
+                   std::setw(2) << +m_Memory.readMemForDoctor(PC+3) <<"\n";
+}
 
 int CPU::cycle()
 {
@@ -79,7 +112,24 @@ byte_t CPU::readByte(word_t address) const
     //     else
     //         return m_Memory.readByte(address);
     // }
-    return m_Memory.readByte(address);
+    // if (address==r_LY)
+    // {
+    //     return 0x90;
+    // }
+    // //working ram
+    // else if ((address >= 0xC000u) && (address < 0xE000u))
+    // {   
+    //     auto value{ m_Memory.readByte(address) };
+    //     if (address == 0xdd00)
+    //         m_log(LOG_ERROR) << "PC: " << +m_PC <<  " Reading From WRAM " <<
+    //             "value: " << +value << " address: "<<+address <<"\n";
+    //     return value;
+    // }  
+    // else
+    // {
+        return m_Memory.readByte(address);
+    // }
+    
     
         
 }
@@ -103,13 +153,24 @@ void CPU::writeByte(word_t address, byte_t value)
     //     else
     //         m_Memory.writeByte(address, value);
     // }
+    // if ((address >= 0xE000u) && (address < 0xFE00u))
+    // {
+    //     m_log(LOG_ERROR) << "PC: " << +m_PC <<  " WRITING INTO ECHO RAM " <<
+    //             "value: " << +value << " address: "<<+address <<"\n";
+    //     m_Memory.writeByte(address, value);
+    // }
+    //  if ((address >= 0xC000u) && (address < 0xE000u))
+    // {   
+    //     if (address == 0xdd00)
+    //         m_log(LOG_ERROR) << "PC: " << +m_PC <<  " writing into WRAM " <<
+    //           "value: " << +value << " address: "<<+address <<"\n";
+    //     m_Memory.writeByte(address, value);
+    // }  
     //reset the current scanline if the game tries to write to it
     if (address == r_LY)
     {
-        m_log(LOG_ERROR) << "Game Attemping to write to r_LY from CPU" << "\n";
-        std::exit(EXIT_FAILURE);
-        // m_Memory.writeByte(r_LY, 0);
-        // m_ScanlineCounter = 456; //number of cycles per scanline
+        m_Memory.writeByte(r_LY, 0);
+        m_PPU.m_ScanlineCounter = 456; //number of cycles per scanline
     }
     else if (address == r_DMAT)
     {
@@ -117,8 +178,6 @@ void CPU::writeByte(word_t address, byte_t value)
     }
     else if (address == r_TMC)
     {
-        m_log(LOG_DEBUG) << "Writing new TMC value:" << +value << "\n";
-
         byte_t currentfreq = getClockFreq();
         m_Memory.writeByte(r_TMC, value);
         if (currentfreq != getClockFreq())
@@ -139,7 +198,7 @@ void CPU::updateTimers(int cycles)
         // enough cpu clock cycles have happened to update the timer
         if (m_TimerCounter <= 0)
         {
-            m_log(LOG_INFO) << "Timer reset!" << "\n";
+            m_log(LOG_DEBUG) << "Timer reset!" << "\n";
             // reset m_TimerTracer to the correct value
             updateClockFreq();
 
@@ -211,7 +270,7 @@ void CPU::keyDown(int key)
 
     if (isButton && !testBit(joyp,5))
         interupt = true;
-    else if (!isButton && !testBit(joyp,4));
+    else if (!isButton && !testBit(joyp,4))
         interupt = true;
 
     if (interupt && wasUnpressed)
@@ -242,6 +301,7 @@ void CPU::interupts()
                     {
                         m_Halted = false;
                         performInterupt(i);
+                        return;
                     }
                 }
             }
@@ -276,7 +336,7 @@ void CPU::requestInterupt(int interupt) //0,1,2,4
  */
 void CPU::performInterupt(int interupt)
 {
-    m_log(LOG_INFO) << "Starting interupt " << interupt << "!" << "\n";
+    m_log(LOG_ERROR) << "Starting interupt " << interupt << "!" << "\n";
     m_InteruptsEnabled = false;
 
     // m_log.set_log_level(LOG_DEBUG);
@@ -291,7 +351,9 @@ void CPU::performInterupt(int interupt)
         case 0: m_PC = c_VBLANK_INTERUPT; break;
         case 1: m_PC = c_LCD_INTERUPT; break;
         case 2: m_PC = c_TIMER_INTERUPT; break;
-        case 3: m_PC = c_JOYPAD_INTERUPT; break;
+        case 4: m_PC = c_JOYPAD_INTERUPT; break;
+        default: 
+            throw std::logic_error("Invalid interupt code!");
     }
 }
 

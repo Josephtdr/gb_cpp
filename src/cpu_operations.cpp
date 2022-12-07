@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <stdexcept> // for std::runtime_error
-
+#include <cassert> // for assert
 /**
  * @brief Reads the next word from memory according to the pc, 
  * lsb first, also increments the pc twice.
@@ -39,8 +39,6 @@ void CPU::push(word_t value)
 {
     byte_t lsb{ static_cast<byte_t>(value & 0xFFu) };
     byte_t msb{ static_cast<byte_t>(value >> 8) };
-    // m_log(LOG_DEBUG) << "SP: " << +m_SP << ", will push " << +msb 
-    //                  << ", " << +lsb << " to stack!" << "\n"; 
 
     --m_SP;
     writeByte(m_SP, msb);
@@ -61,7 +59,6 @@ word_t CPU::pop()
     ++m_SP;
     word_t out{ static_cast<word_t>((msb << 8) | lsb) };
 
-    // m_log(LOG_DEBUG) << "SP: " << +(m_SP-2) << ", Popped " << +out << " from stack!" << "\n"; 
     return out;
 }
 
@@ -96,12 +93,12 @@ int CPU::cpu_jumpRelative(const byte_t& opcode)
     int type{ ((opcode/8)-4) };
     if (type < 0) type = 4;
 
-    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", JR " 
-                    << getJumpTestStr(type) << " i8\n"; 
+    word_t newAddress = signedAddition(m_PC, unsignedData);
+    logOpcode((m_PC-2), opcode, unsignedData, 0x0, "JR", getJumpTestStr(type), "$"+wordStr(newAddress));
 
     if (testJumpTest(static_cast<JumpTest>(type)))
     {
-        m_PC = signedAddition(m_PC, unsignedData);
+        m_PC = newAddress;
         return 12;
     }
     return 8;
@@ -109,22 +106,15 @@ int CPU::cpu_jumpRelative(const byte_t& opcode)
 
 int CPU::cpu_jump(const byte_t& opcode)
 {
-    static const std::vector<std::string> funcStr
-    {
-        "RET", "JP", "CALL"
-    };
-    
     int funcIdx{ extractBits(opcode,1,2) };
+    assert((funcIdx>=0&&funcIdx<=3) && "Incorrect funcidx in cpu_jump!");
     int testType{ testBit(opcode,0) ? 4 : extractBits(opcode,3,2) }; // check if always true
-
-    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode 
-        << ", " << funcStr[funcIdx] << " " << getJumpTestStr(testType) << " "
-        << ((!funcIdx) ? "" : "u16")  << "\n";
+    
     switch(funcIdx)
     {
-        case 0: return return_(static_cast<JumpTest>(testType)); break;
-        case 1: return jump(static_cast<JumpTest>(testType)); break;
-        case 2: return call(static_cast<JumpTest>(testType)); break;
+        case 0: return return_(testType, opcode); break;
+        case 1: return jump(testType, opcode); break;
+        case 2: return call(testType, opcode); break;
         default:
             throw std::runtime_error("INVALID FUNCIDX IN CPU_JUMP");
     }
@@ -136,25 +126,28 @@ std::string_view CPU::getJumpTestStr(int type)
     {
         "NZ", "Z", "NC", "C", ""
     };
-
+    assert((type>=0&&type<=4) && "Incorrect type in getJumpTestStr!");
     return jumpTypes[type];
 }
 
-
-int CPU::jump(JumpTest type)
+int CPU::jump(int type, byte_t opcode)
 {   
     word_t address{ readNextWord() };
-    if (testJumpTest(type))
+    logOpcode((m_PC-3), opcode, 0x0, 0x0, "JP", getJumpTestStr(type), "$"+wordStr(address));
+
+    if (testJumpTest(static_cast<JumpTest>(type)))
     {
         m_PC = address;
         return 16;
     }
     return 12;
 }
-int CPU::call(JumpTest type)
+int CPU::call(int type, byte_t opcode)
 {
     word_t address{ readNextWord() };
-    if (testJumpTest(type))
+    logOpcode((m_PC-3), opcode, (address>>8), (address&0xFF), "CALL", getJumpTestStr(type), "$"+wordStr(address));
+
+    if (testJumpTest(static_cast<JumpTest>(type)))
     {
         push(m_PC);
         m_PC = address;
@@ -162,12 +155,14 @@ int CPU::call(JumpTest type)
     }
     return 12;
 }
-int CPU::return_(JumpTest type)
+int CPU::return_(int type, byte_t opcode)
 {
-    if (testJumpTest(type))
+    logOpcode((m_PC-1), opcode, 0x0, 0x0, "RET", getJumpTestStr(type), "");
+
+    if (testJumpTest(static_cast<JumpTest>(type)))
     { 
         m_PC = pop();
-        return (type!=JumpTest::Always) ? 20 : 16;
+        return (static_cast<JumpTest>(type)!=JumpTest::Always) ? 20 : 16;
     }
     return 8;
 }
@@ -187,9 +182,8 @@ byte_t& CPU::getRegister(int index)
         m_Registers.b, m_Registers.c, m_Registers.d, m_Registers.e, m_Registers.h,
         m_Registers.l, m_Registers.a, m_Registers.a 
     }; //index 6 is filler! should not be used
-
-    if (index==6)
-        throw std::runtime_error("Invalid index 6 used in CPU::getRegister");
+    assert((index >= 0 && index <= 7) && "incorrect index in getRegister!");
+    assert((index!=6) && "Invalid index 6 used in CPU::getRegister");
 
     return standardDataReg[index].get(); 
 }
@@ -199,8 +193,23 @@ std::string_view CPU::getRegisterStr(int index)
     {
         "B", "C", "D", "E", "H", "L", "(HL)", "A"
     };
+    assert((index >= 0 && index <= 7) && "incorrect index in getRegisterStr!");
+
     return regString[index]; 
 }
+std::string CPU::byteStr(byte_t byte)
+{
+    std::stringstream stream;
+    stream << std::hex << std::setfill('0') << std::setw(2) << +byte;
+    return stream.str();
+}
+std::string CPU::wordStr(word_t word)
+{
+    std::stringstream stream;
+    stream << std::hex << std::setfill('0') << std::setw(4) << +word;
+    return stream.str();
+}
+
 
 int CPU::cpu_restart(const byte_t& opcode)
 {
@@ -209,9 +218,9 @@ int CPU::cpu_restart(const byte_t& opcode)
         0x0u, 0x8u, 0x10u, 0x18u, 0x20u, 0x28u, 0x30u, 0x38u
     };
     int index{ extractBits(opcode,3,3) };
+    assert((index >= 0 && index <= 7) && "incorrect index in cpu_restart!");
 
-    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", RST " 
-                    << +offsetVector[index] << "\n"; 
+    logOpcode((m_PC-1), opcode, 0x0, 0x0, "RST", byteStr(offsetVector[index]), "");
 
     push(m_PC);
     m_PC = offsetVector[index];
@@ -225,9 +234,7 @@ int CPU::cpu_byteLoad(const byte_t& opcode)
     int ticks{4};
     byte_t data{};
 
-    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", LD " 
-                    << getRegisterStr(targetIndex) << " " 
-                    << ((opcode < 0x40) ? "u8" : getRegisterStr(dataIndex)) << "\n"; 
+    logOpcode((m_PC-1), opcode, 0x0, 0x0, "LD", getRegisterStr(targetIndex), ((opcode < 0x40) ? "u8" : getRegisterStr(dataIndex)));
 
     if (dataIndex == 6)
     {
@@ -265,10 +272,9 @@ int CPU::cpu_byteArithmetic(const byte_t& opcode)
     int ticks{4};
     int dataIndex{ extractBits(opcode,0,3) };
     int functionIndex{ extractBits(opcode,3,3) };
+    assert((functionIndex >= 0 && functionIndex <= 7) && "incorrect index in cpu_byteArithmetic!");
 
-    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", "
-                    << arithmeticFunction[functionIndex].second << " " 
-                    << ((opcode > 0xC0) ? "u8" : getRegisterStr(dataIndex)) << "\n";
+    logOpcode((m_PC-1), opcode, 0x0, 0x0, arithmeticFunction[functionIndex].second, "A", ((opcode > 0xC0) ? "u8" : getRegisterStr(dataIndex)));
 
     if (dataIndex == 6)
     {
@@ -375,10 +381,8 @@ void CPU::byteCP(const byte_t& data)
 int CPU::cpu_byteInc(const byte_t& opcode)
 {
     int regIndex{ extractBits(opcode,3,3) };
-
-    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", INC " 
-                    << getRegisterStr(regIndex) << "\n"; 
-
+    logOpcode((m_PC-1), opcode, 0x0, 0x0, "INC",getRegisterStr(regIndex), "");
+    
     if (regIndex==6)
     {
         byte_t HLI{ readByte(m_Registers.get_hl()) };
@@ -396,9 +400,7 @@ int CPU::cpu_byteInc(const byte_t& opcode)
 int CPU::cpu_byteDec(const byte_t& opcode)
 {
     int regIndex{ extractBits(opcode,3,3) };
-
-    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: 0x" << +opcode << ", DEC " 
-                    << getRegisterStr(regIndex) << "\n"; 
+    logOpcode((m_PC-1), opcode, 0x0, 0x0, "DEC",getRegisterStr(regIndex), "");
 
     if (regIndex==6)
     {

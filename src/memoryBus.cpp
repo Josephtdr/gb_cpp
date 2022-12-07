@@ -5,6 +5,7 @@
 #include <cstring> //memset, 
 #include <fstream> //streams
 #include <iostream>
+#include <algorithm>
 
 MemoryBus::MemoryBus(logger& logRef)
     : m_log{ logRef },
@@ -47,6 +48,10 @@ MemoryBus::MemoryBus(logger& logRef)
 
 byte_t MemoryBus::readMemForDoctor(word_t address)
 {
+    // if (address < 0x100)
+    // {
+    //     return m_Memory[address];
+    // }
     if (address < 0x8000u) 
     {
         return m_CartridgeMemory[address];
@@ -84,7 +89,7 @@ byte_t MemoryBus::getJoypadState() const
             bottomJoypad |= 0xF0;
             joyp &= bottomJoypad;
     }
-    m_log(LOG_INFO) << "Reading joypad state as: " << +joyp << ", currently r_JOYP: " << +m_Memory[r_JOYP] <<"\n";
+    m_log(LOG_DEBUG) << "Reading joypad state as: " << +joyp << ", currently r_JOYP: " << +m_Memory[r_JOYP] <<"\n";
     return joyp ;
 }
 
@@ -105,7 +110,8 @@ byte_t MemoryBus::readByte(word_t address)
         if (m_CurrentROMBank == 0) //KEEPS GETTING SET TO 0??????
             m_CurrentROMBank = 1;
         word_t newAddress{ static_cast<word_t>(address - c_ROM_BANK_SIZE) };
-        return m_CartridgeMemory[newAddress + (m_CurrentROMBank*c_ROM_BANK_SIZE)];
+        newAddress += (m_CurrentROMBank*c_ROM_BANK_SIZE);
+        return m_CartridgeMemory[newAddress];
     }
     //Vram Area
     else if ((address>=0x8000u) && (address < 0xA000u))
@@ -117,7 +123,8 @@ byte_t MemoryBus::readByte(word_t address)
     else if ((address >= 0xA000u) && (address < 0xC000u))
     {
         word_t newAddress{ static_cast<word_t>(address - 0xA000) };
-        return m_RAMBankMemory[newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)];
+        newAddress += (m_CurrentRAMBank*c_RAM_BANK_SIZE);
+        return m_RAMBankMemory[newAddress];
     }
     //read from echo ram
     else if ((address >= 0xE000u) && (address < 0xFE00u))
@@ -130,9 +137,11 @@ byte_t MemoryBus::readByte(word_t address)
         return m_Memory[address];
     }
     // restricted memory area
-    else if ((address >= 0xFEA0u) && (address <= 0xFEFFu))
+    else if (((address >= 0xFEA0u) && (address <= 0xFEFFu) )|| 
+        std::find(r_UNMAPPED.begin(),r_UNMAPPED.end(),address) != r_UNMAPPED.end()
+    )
     {
-        return 0u;
+        return 0xFF;
     }
     else if (address == r_JOYP)
     {
@@ -147,6 +156,7 @@ byte_t MemoryBus::readByte(word_t address)
 //TODO: magic numbers
 void MemoryBus::writeByte(word_t address, byte_t value)
 {
+    // m_log(LOG_DEBUG) << "MEMORYBUS Im BOUT TO write\n";
     //read only memory for storing rom data
     if (address < 0x8000u)
     { 
@@ -162,7 +172,8 @@ void MemoryBus::writeByte(word_t address, byte_t value)
         if (m_EnableRAM)
         {
             word_t newAddress{ static_cast<word_t>(address-0xA000) };
-            m_RAMBankMemory[newAddress + (m_CurrentRAMBank*c_RAM_BANK_SIZE)] = value ;
+            newAddress += (m_CurrentRAMBank*c_RAM_BANK_SIZE);
+            m_RAMBankMemory[newAddress] = value ;
         }
     }
     //echo from echo ram
@@ -176,7 +187,9 @@ void MemoryBus::writeByte(word_t address, byte_t value)
         m_Memory[address] = value;
     }
     //restricted memory area
-    else if ((address >= 0xFEA0u) && (address <= 0xFEFFu))
+    else if (((address >= 0xFEA0u) && (address <= 0xFEFFu) )|| 
+        std::find(r_UNMAPPED.begin(),r_UNMAPPED.end(),address) != r_UNMAPPED.end()
+    )
     {
         return;
     }
@@ -213,7 +226,7 @@ void MemoryBus::loadGame(const char* filename)
     fread(m_CartridgeMemory, 1, c_CARTRIDGE_MEMORY_SIZE, in);
     fclose(in); 
 
-    m_log(LOG_INFO) << "Loaded game into game rom!" << "\n";
+    m_log(LOG_DEBUG) << "Loaded game into game rom!" << "\n";
     getRomBankingMode();
     // loadBootRom();
 }
@@ -249,7 +262,7 @@ void MemoryBus::loadBootRom()
     }
 
     m_bootRomLoaded = true;
-    m_log(LOG_INFO) << "Loaded boot rom into memory!" << "\n";
+    m_log(LOG_DEBUG) << "Loaded boot rom into memory!" << "\n";
     m_log.set_log_level(LOG_INFO);
     delete[] buffer;
 }
@@ -258,7 +271,7 @@ void MemoryBus::unloadBootRom()
 {
     if (m_bootRomLoaded)
     {
-        m_log(LOG_INFO) << "Unmapping boot rom!" << "\n" << "\n";
+        m_log(LOG_DEBUG) << "Unmapping boot rom!" << "\n" << "\n";
         m_bootRomLoaded = false;
     }
 }
@@ -351,6 +364,7 @@ void MemoryBus::changeLoROMBank(byte_t value)
     m_CurrentROMBank |= lower5 ;
     if (m_CurrentROMBank == 0) 
         m_CurrentROMBank = 1;
+    m_log(LOG_DEBUG) << "m_CurrentROMBank is now" << std::dec << m_CurrentROMBank << std::hex << "\n";
 }
 
 void MemoryBus::changeHiRomBank(byte_t value)
@@ -363,11 +377,13 @@ void MemoryBus::changeHiRomBank(byte_t value)
     m_CurrentROMBank |= value ;
     if (m_CurrentROMBank == 0)
         m_CurrentROMBank = 1; //cant be zero
+    m_log(LOG_DEBUG) << "m_CurrentROMBank is now" << std::dec << m_CurrentROMBank << std::hex << "\n";
 }
 
 void MemoryBus::RAMBankChange(byte_t value)
 {
     m_CurrentRAMBank = value & 0x3u;
+    m_log(LOG_DEBUG) << "m_CurrentRAMBank is now" << std::dec << m_CurrentRAMBank << std::hex << "\n";
 }
 void MemoryBus::changeROMRAMMode(byte_t value)
 {
@@ -375,4 +391,7 @@ void MemoryBus::changeROMRAMMode(byte_t value)
     m_ROMBanking = !newData;
     if (m_ROMBanking)
         m_CurrentRAMBank = 0;
+
+    m_log(LOG_DEBUG) << "m_CurrentRAMBank is now" << std::dec << m_CurrentRAMBank << std::hex << "\n";
+    
 }

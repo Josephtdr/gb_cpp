@@ -151,7 +151,7 @@ logger::logger(std::ostream& f, unsigned ll, std::string n)
 logger& logger::operator()(unsigned ll) {
   _message_level = ll;
   if (_message_level <= _loglevel()) {
-    _fac << prep_level(*this) << prep_time(*this) << prep_name(*this) << ": ";
+    _fac << "";
   }
   return *this;
 }

@@ -9,7 +9,7 @@ class MemoryBus
 {
 public:
     byte_t readMemForDoctor(word_t address);
-    bool m_bootRomLoaded{};
+    
 private:
     logger& m_log;
 
@@ -23,7 +23,7 @@ private:
     bool m_MBC2{}; //rom banking mode 2
     bool m_ROMBanking{};
     bool m_EnableRAM{};
-
+    bool m_bootRomLoaded{};
 
     void loadBootRom();
     void unloadBootRom();
