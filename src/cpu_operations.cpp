@@ -174,22 +174,10 @@ int CPU::return_(JumpTest type)
 
 word_t CPU::signedAddition(const word_t& target, const byte_t& unsignedData)
 {
-    if (testBit(unsignedData,7))
-    {
-        byte_t lsb{ static_cast<byte_t>(target&0x00FF) };
-        byte_t priorLSB{ lsb };
-        byte_t msb{ static_cast<byte_t>(target>>8) };
-
-        lsb += unsignedData;
-        if (lsb > priorLSB)
-            --msb;
-
-        return (msb << 8) | lsb;
-    }
-    else
-    {
-        return target + unsignedData;
-    }
+    word_t out{ target };
+    out += static_cast<signed_byte_t>(unsignedData);
+    
+    return out;
 }
 
 byte_t& CPU::getRegister(int index)
