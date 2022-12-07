@@ -83,6 +83,7 @@ void frameUpdate(CPU& cpu, PPU& ppu, logger& log, MemoryBus& memory, bool doclog
 struct Settings {
   bool doctorLog {false};
   bool traceLog {false};
+  bool bootRom {false};
 };
 
 typedef std::function<void(Settings&)> NoArgHandle;
@@ -90,9 +91,10 @@ typedef std::function<void(Settings&)> NoArgHandle;
 const std::unordered_map<std::string, NoArgHandle> NoArgs {
   {"--doctorLog", [](Settings& s) { s.doctorLog = true; }},
   {"-dl", [](Settings& s) { s.doctorLog = true; }},
-
   {"--traceLog", [](Settings& s) { s.traceLog = true; }},
   {"-tl", [](Settings& s) { s.traceLog = true; }},
+  {"--bootRom", [](Settings& s) { s.bootRom = true; }},
+  {"-br", [](Settings& s) { s.bootRom = true; }},
 };
 
 int main(int argc, char *argv[])
@@ -112,16 +114,16 @@ int main(int argc, char *argv[])
     {
         std::string opt {argv[i]};
         if(auto j {NoArgs.find(opt)}; j != NoArgs.end())
-            j->second(settings); // Yes, handle it!
+            j->second(settings);
     }
 
     logger log{ std::cerr, __PRETTY_FUNCTION__ };
     log.set_log_level(LOG_INFO);
     MemoryBus memory{ log };
-    memory.loadGame(romFilename);
+    memory.loadGame(romFilename, settings.bootRom);
     Platform platform{ memory.getTitle().c_str(),c_VIDEO_WIDTH,c_VIDEO_HEIGHT,2 };
     PPU ppu{ memory,log,platform };
-    CPU cpu{ memory,log,platform,ppu,!settings.traceLog };
+    CPU cpu{ memory,log,platform,ppu,settings.traceLog };
     
     log(LOG_INFO) << std::hex << "Starting up!" << "\n";
 

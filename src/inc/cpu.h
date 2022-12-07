@@ -25,7 +25,7 @@ private:
     int m_DividerCounter{}; //Tracks when to increment Divider Register
     bool m_InteruptsEnabled{};
     bool m_Halted{};
-    bool m_dontLog{};
+    bool m_traceLog{};
     
     using opcodeFnPtr = int(CPU::*)();
     using opcodeFnPtr2 = int(CPU::*)(const byte_t&);

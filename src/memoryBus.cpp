@@ -72,6 +72,11 @@ byte_t MemoryBus::readMemForDoctor(word_t address)
     }
 }
 
+bool MemoryBus::bootRomLoaded() const
+{
+    return m_bootRomLoaded;
+}
+
 byte_t MemoryBus::getJoypadState() const
 {
     byte_t joyp{ m_Memory[r_JOYP] };
@@ -217,7 +222,7 @@ void MemoryBus::increment(word_t address)
     ++m_Memory[address];
 }
 
-void MemoryBus::loadGame(const char* filename)
+void MemoryBus::loadGame(const char* filename, bool bootRom)
 {
     memset(m_CartridgeMemory,0,sizeof(m_CartridgeMemory)) ;
 
@@ -228,7 +233,8 @@ void MemoryBus::loadGame(const char* filename)
 
     m_log(LOG_DEBUG) << "Loaded game into game rom!" << "\n";
     getRomBankingMode();
-    // loadBootRom();
+    if (bootRom)
+        loadBootRom();
 }
 
 #include <string>

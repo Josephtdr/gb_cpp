@@ -54,11 +54,13 @@ void PPU::renderScreen()
                 case Colour::Light_Gray: rgb = 0xAAAAAAFF; break;
                 case Colour::Dark_Gray: rgb = 0x555555FF; break;
                 case Colour::Black: rgb = 0x000000FF; break;
+                // default:
+                //     throw std::logic_error("Invalid pixel colour!");
             }
-            m_textureBuffer[line * c_VIDEO_WIDTH + pixel] = rgb;
+            m_textureBuffer[line*c_VIDEO_WIDTH + pixel] = rgb;
         }
     }
-    m_Platform.Update(m_textureBuffer, c_VIDEO_WIDTH * sizeof (uint32_t));
+    m_Platform.Update(m_textureBuffer, c_VIDEO_WIDTH * sizeof(uint32_t));
 }
 
 void PPU::drawScanLine()
@@ -69,7 +71,6 @@ void PPU::drawScanLine()
     else
         renderWhite();
     if (testBit(lcdControl,1)) //sprites enabled flag
-        return;
         renderSprites();
 }
 
@@ -207,13 +208,13 @@ void PPU::renderSprites()
             }
         }
 
-        for (int pixel{7}; pixel >= 0; --pixel)
+        for (int pixel {0}; pixel < 8; ++pixel)
         {
-            byte_t tileX{ static_cast<byte_t>(pixel) }; //bit 7 is pixel 0 etc...
+            byte_t tileX {static_cast<byte_t>(-1*((pixel % 8) - 7))}; //bit 7 is pixel 0 etc...
             if (testBit(sprite.flags, 5)) //x flip flag
                 tileX = -1*((tileX % 8) - 7);
 
-            int colourInt = getColourInt(tileLocation, tileY, tileX);
+            int colourInt {getColourInt(tileLocation, tileY, tileX)};
 
             Colour colour{ getColour(colourInt, pallet, true) };
 
@@ -247,14 +248,14 @@ void PPU::getSprites(std::vector<Sprite>& sprites, byte_t LY, int height)
 
     for (byte_t i{0}; i < 40; ++i)
     {
-        byte_t yPos{ readByte(OAMTable + i) };
-        byte_t xPos{ readByte(OAMTable + i + 1u) };
+        byte_t yPos{ readByte(OAMTable + i*4) };
+        byte_t xPos{ readByte(OAMTable + i*4 + 1u) };
         
-        if (numSprites <= 10 && (LY >= (yPos-16) && LY < (yPos-16+height)))
+        if (numSprites < 10 && (LY >= (yPos-16) && LY < (yPos-16+height)))
         {
             ++numSprites;
-            byte_t tileIndex{ readByte(OAMTable + i + 2u) };
-            byte_t flags{ readByte(OAMTable + i + 3u) };
+            byte_t tileIndex{ readByte(OAMTable + i*4 + 2u) };
+            byte_t flags{ readByte(OAMTable + i*4 + 3u) };
             
             sprites[numSprites-1] = Sprite{ yPos, xPos, tileIndex, flags };
         }
@@ -263,11 +264,11 @@ void PPU::getSprites(std::vector<Sprite>& sprites, byte_t LY, int height)
 
 int PPU::getColourInt(word_t tileLocation, int tileY, int tileX)
 {
-    byte_t dataLow = readByte(tileLocation + (tileY * 2));
-    byte_t dataHigh = readByte(tileLocation + (tileY * 2) + 1);    
+    byte_t dataLow {readByte(tileLocation + (tileY * 2))};
+    byte_t dataHigh {readByte(tileLocation + (tileY * 2) + 1)};    
 
-    int bit1{  testBit(dataHigh, tileX) };
-    int bit0{  testBit(dataLow, tileX) };
+    int bit1 {testBit(dataHigh, tileX)};
+    int bit0 {testBit(dataLow, tileX)};
 
     return (bit1 << 1) | bit0;
 }
@@ -280,10 +281,10 @@ PPU::Colour PPU::getColour(int colourInt, word_t palletAddress, bool obj)
 
     switch(transformedColour)
     {
-        case 0: return obj ? Colour::Transparent : Colour::White;
-        case 1: return Colour::Light_Gray;
-        case 2: return Colour::Dark_Gray;
-        case 3: return Colour::Black;
+        case 0: return (obj ? Colour::Transparent : Colour::White); break;
+        case 1: return Colour::Light_Gray; break;
+        case 2: return Colour::Dark_Gray; break;
+        case 3: return Colour::Black; break;
         default:
             throw std::runtime_error("Invalid Colour Type!");
     }

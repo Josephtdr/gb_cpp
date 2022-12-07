@@ -20,7 +20,7 @@ const unsigned int c_RAM_BANKS_MEMORY_SIZE  = 0x8000;
 const unsigned int c_ROM_BANK_SIZE          = 0x4000;
 const unsigned int c_RAM_BANK_SIZE          = 0x2000;
 
-const unsigned int c_INSTRUCTION_TABLE_SIZE    = 0xFF;
+const unsigned int c_INSTRUCTION_TABLE_SIZE    = 0x100;
 const unsigned int c_PREFIXED_INSTRUCTION_BYTE = 0xCB;
 
 const int c_MAX_CYCLES_PER_UPDATE = 69905;
@@ -68,7 +68,7 @@ const word_t r_WX     = 0xFF4B; //Window (top left) X position plus 7
 
 const std::vector<word_t> r_UNMAPPED
 {
-    0xFF08, 0xFF4D, 0xFF56, 0xFF4F,0xFF50,0xFF51,0xFF52,0xFF53,0xFF54,0xFF55,  
+    0xFF08, 0xFF4D, 0xFF56, 0xFF4F,0xFF51,0xFF52,0xFF53,0xFF54,0xFF55,  
     0xFF68,0xFF69,0xFF6A,0xFF6B,0xFF6C,0xFF70,0xFF72,0xFF73,0xFF74,0xFF75,0xFF76,0xFF77
 };
 

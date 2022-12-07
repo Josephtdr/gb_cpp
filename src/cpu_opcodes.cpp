@@ -7,17 +7,17 @@
 
 void CPU::setupTables()
 {
-    for(byte_t i = 0; i < c_INSTRUCTION_TABLE_SIZE; ++i)
+    for(word_t i {0}; i < c_INSTRUCTION_TABLE_SIZE; ++i)
     {
         instructionTable[i] = &CPU::OP_NOT_IMPLEMTED;
         instructionTable2[i] = &CPU::OP_NOT_IMPLEMTED2;
     }
 
-    for (byte_t i{ 0x40 }; i < 0x80; ++i)
+    for (byte_t i {0x40}; i < 0x80; ++i)
     {
         instructionTable2[i] = &CPU::cpu_byteLoad;
     }
-    for (byte_t i{ 0x06 }; i <= 0x3E; i+=0x8)
+    for (byte_t i {0x06}; i <= 0x3E; i+=0x8)
     {
         instructionTable2[i] = &CPU::cpu_byteLoad;
     }
@@ -188,20 +188,9 @@ void CPU::setupTables()
     instructionTable[0xFC] = &CPU::OP_ILLEGAL;
 }
 
-int CPU::OP_NOT_IMPLEMTED()
-{
-    throw std::runtime_error("OPCODE NOT IMPLEMENTED in table 1!");
-}
-
-int CPU::OP_ILLEGAL()
-{
-    return 4;
-}
-
-int CPU::OP_NOT_IMPLEMTED2(const byte_t& opcode)
-{
-    return -1;
-}
+int CPU::OP_NOT_IMPLEMTED() { throw std::runtime_error("OPCODE NOT IMPLEMENTED in table 1!"); }
+int CPU::OP_NOT_IMPLEMTED2(const byte_t& opcode) { return -1; }
+int CPU::OP_ILLEGAL() { return 4; }
 
 int CPU::opcode_Translator(byte_t opcode)
 {
@@ -210,9 +199,8 @@ int CPU::opcode_Translator(byte_t opcode)
     if (cycles >= 0)
         return cycles;
     else
-    {
         return ((*this).*(instructionTable[opcode]))();
-    }    
+     
 }
 
 int CPU::CBopcode_Translator(byte_t opcode)

@@ -9,7 +9,6 @@ class MemoryBus
 {
 public:
     byte_t readMemForDoctor(word_t address);
-    
 private:
     logger& m_log;
 
@@ -38,13 +37,14 @@ private:
 
 public:
     MemoryBus(logger& logRef);
-
+    byte_t m_Joypad{};
+    
     byte_t readByte(word_t address);
     void writeByte(word_t address, byte_t value);
-    void loadGame(const char* file);
+    void loadGame(const char* file, bool bootRom);
     void increment(word_t address);
-    byte_t m_Joypad{};
     std::string getTitle();
+    bool bootRomLoaded() const;
 };
 
 

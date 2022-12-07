@@ -4,17 +4,17 @@
 #include <iostream> 
 #include <stdexcept>
 
-CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, bool dontlog)
- : m_PC{ 0x100 },
+CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, bool traceLog)
+ : m_PC{ 0 },
    m_SP{ c_TOP_OF_STACK },
    m_log{ logRef },
    m_Memory{ memoryRef },
    m_Platform{ platformRef },
+   m_PPU{ ppuRef },
    m_InteruptsEnabled{ false },
-   m_dontLog{ dontlog },
-   m_PPU{ ppuRef }
+   m_traceLog{ traceLog }
+   
 {
-    // m_lineByLine = true;
     std::cout << std::hex;
     std::cerr << std::hex;
 
@@ -28,7 +28,7 @@ CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRe
 
 void CPU::logOpcode(word_t PC, byte_t opcode, byte_t arg1, byte_t arg2, std::string_view func, std::string_view peram1, std::string_view peram2) const
 {
-    if (m_dontLog)
+    if (!m_traceLog || m_Memory.bootRomLoaded())
         return;
 
     std::string comma = ((peram1!="" && peram2!="")? ", " : "  ");
@@ -60,10 +60,6 @@ void CPU::logOpcode(word_t PC, byte_t opcode, byte_t arg1, byte_t arg2, std::str
 int CPU::cycle()
 {
     byte_t instructionByte{ readNextByte() };
-
-    // if (m_PC < 0x219 )
-    //     m_lineByLine = false;
-
     bool prefixed{ instructionByte == c_PREFIXED_INSTRUCTION_BYTE };
     if (prefixed)
     { 
@@ -112,10 +108,10 @@ byte_t CPU::readByte(word_t address) const
     //     else
     //         return m_Memory.readByte(address);
     // }
-    // if (address==r_LY)
-    // {
-    //     return 0x90;
-    // }
+    if (false)//address==r_LY)
+    {
+        return 0x90;
+    }
     // //working ram
     // else if ((address >= 0xC000u) && (address < 0xE000u))
     // {   
@@ -125,10 +121,10 @@ byte_t CPU::readByte(word_t address) const
     //             "value: " << +value << " address: "<<+address <<"\n";
     //     return value;
     // }  
-    // else
-    // {
+    else
+    {
         return m_Memory.readByte(address);
-    // }
+    }
     
     
         
