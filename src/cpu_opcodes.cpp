@@ -3,25 +3,25 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <cassert>
 
 void CPU::setupTables()
 {
-    for(byte_t i = 0; i < c_INSTRUCTION_TABLE_SIZE; ++i)
+    for(word_t i {0}; i < c_INSTRUCTION_TABLE_SIZE; ++i)
     {
         instructionTable[i] = &CPU::OP_NOT_IMPLEMTED;
         instructionTable2[i] = &CPU::OP_NOT_IMPLEMTED2;
     }
 
-
-    for (byte_t i{ 0x40 }; i < 0x80; ++i)
+    for (byte_t i {0x40}; i < 0x80; ++i)
     {
         instructionTable2[i] = &CPU::cpu_byteLoad;
     }
-    for (byte_t i{ 0x06 }; i <= 0x3E; i+=0x8)
+    for (byte_t i {0x06}; i <= 0x3E; i+=0x8)
     {
         instructionTable2[i] = &CPU::cpu_byteLoad;
     }
-    
+    instructionTable2[0x76] = &CPU::OP_NOT_IMPLEMTED2; //halt instruction!
     //LD A,n
     instructionTable[0x0A] = &CPU::OP_0x0A;
     instructionTable[0x1A] = &CPU::OP_0x1A;
@@ -173,17 +173,24 @@ void CPU::setupTables()
     instructionTable[0x0F] = &CPU::OP_0x0F;
     //RRA
     instructionTable[0x1F] = &CPU::OP_0x1F;
+
+
+    instructionTable[0xD3] = &CPU::OP_ILLEGAL;
+    instructionTable[0xDB] = &CPU::OP_ILLEGAL;
+    instructionTable[0xDD] = &CPU::OP_ILLEGAL;
+    instructionTable[0xE4] = &CPU::OP_ILLEGAL;
+    instructionTable[0xE3] = &CPU::OP_ILLEGAL;
+    instructionTable[0xEB] = &CPU::OP_ILLEGAL;
+    instructionTable[0xEC] = &CPU::OP_ILLEGAL;
+    instructionTable[0xED] = &CPU::OP_ILLEGAL;
+    instructionTable[0xF3] = &CPU::OP_ILLEGAL;
+    instructionTable[0xFD] = &CPU::OP_ILLEGAL;
+    instructionTable[0xFC] = &CPU::OP_ILLEGAL;
 }
 
-int CPU::OP_NOT_IMPLEMTED()
-{
-    throw std::runtime_error("OPCODE NOT IMPLEMENTED in table 1!");
-}
-
-int CPU::OP_NOT_IMPLEMTED2(const byte_t& opcode)
-{
-    return -1;
-}
+int CPU::OP_NOT_IMPLEMTED() { throw std::runtime_error("OPCODE NOT IMPLEMENTED in table 1!"); }
+int CPU::OP_NOT_IMPLEMTED2(const byte_t& opcode) { return -1; }
+int CPU::OP_ILLEGAL() { return 4; }
 
 int CPU::opcode_Translator(byte_t opcode)
 {
@@ -192,11 +199,8 @@ int CPU::opcode_Translator(byte_t opcode)
     if (cycles >= 0)
         return cycles;
     else
-    {
-        m_log(LOG_DEBUG) << "PC: " << +(m_PC) << ", Opcode: 0x" 
-                        << +opcode  << " \n";
         return ((*this).*(instructionTable[opcode]))();
-    }    
+     
 }
 
 int CPU::CBopcode_Translator(byte_t opcode)
@@ -213,12 +217,10 @@ int CPU::CBopcode_Translator(byte_t opcode)
 
     int regInt{ extractBits(opcode,0,3) }; 
     int bit{ extractBits(opcode,3,3) };
-    int funcInt{ opcode < 0x40 ? extractBits(opcode,3,3) : 8+extractBits(opcode,6,2) };
+    int funcInt{ opcode < 0x40 ? extractBits(opcode,3,3) : 7+extractBits(opcode,6,2) };
+    assert((funcInt>=0&&funcInt<=10) && "incorrect index in CBopcode_Translator!");
 
-    m_log(LOG_DEBUG) << "PC: " << +m_PC << ", Opcode: CB 0x" << +opcode << ", "
-                    << bitFunction[funcInt].second << " "
-                    << ((opcode >= 0x40) ? std::to_string(bit) : "") << " "  
-                    << getRegisterStr(regInt) << "\n";
+    logOpcode((m_PC-2), 0xCB, opcode, 0x0, bitFunction[funcInt].second, getRegisterStr(regInt), ((opcode >= 0x40) ? std::to_string(bit) : ""));
 
     if (regInt != 6)
     {
@@ -239,85 +241,118 @@ int CPU::CBopcode_Translator(byte_t opcode)
 //LD A,n
 int CPU::OP_0x0A()
 {
+    logOpcode((m_PC-1), 0x0A, 0x0, 0x0, "LD", "A", "[BC]");
+
     m_Registers.a = readByte(m_Registers.get_bc());
     return 8;
 }
 int CPU::OP_0x1A()
 {
+    logOpcode((m_PC-1), 0x1A, 0x0, 0x0, "LD", "A", "[DE]");
+
     m_Registers.a = readByte(m_Registers.get_de());
     return 8;
 }
 int CPU::OP_0xFA()
 {
-    m_Registers.a = readByte(readNextWord());
+    word_t address{ readNextWord() };
+    logOpcode((m_PC-3), 0xFA, 0x0, 0x0, "LD", "A", "$"+wordStr(address));
+
+    m_Registers.a = readByte(address);
     return 16;
 }
 //LD n,A
 int CPU::OP_0x02()
 {
+    logOpcode((m_PC-1), 0x02, 0x0, 0x0, "LD", "[BC]", "A");
+
     writeByte(m_Registers.get_bc(), m_Registers.a);
     return  8;
 }
 int CPU::OP_0x12()
 {
+    logOpcode((m_PC-1), 0x12, 0x0, 0x0, "LD", "[DE]", "A");
+
     writeByte(m_Registers.get_de(), m_Registers.a);
     return  8;
 }
 int CPU::OP_0xEA()
 {
-    writeByte(readNextWord(), m_Registers.a);
+    word_t address{ readNextWord() };
+    logOpcode((m_PC-3), 0xEA, 0x0, 0x0, "LD", "$"+wordStr(address), "A");
+
+    writeByte(address, m_Registers.a);
     return  16;
 }
 //LD A,(C)
 int CPU::OP_0xF2()
 {
+    logOpcode((m_PC-1), 0xF2, 0x0, 0x0, "LD", "A", "$"+wordStr(0xFF00u + m_Registers.c));
     m_Registers.a = readByte(0xFF00u + m_Registers.c);
     return 8;
 }
 //LD (C),A
 int CPU::OP_0xE2()
 {
+    logOpcode((m_PC-1), 0xE2, 0x0, 0x0, "LD", "$"+wordStr(0xFF00u + m_Registers.c), "A");
     writeByte(0xFF00u + m_Registers.c, m_Registers.a);
     return 8;
 }
 //LD A,(HL-)
 int CPU::OP_0x3A()
 {
-    m_Registers.a = readByte(m_Registers.get_hl());
-    m_Registers.set_hl( m_Registers.get_hl()-1u );
+    logOpcode((m_PC-1), 0x3A, 0x0, 0x0, "LD", "A", "[HL-]");
+
+    word_t HL{ m_Registers.get_hl() };
+    m_Registers.a = readByte(HL);
+    m_Registers.set_hl( --HL );
     return 8;
 }
 //LD (HL-),A
 int CPU::OP_0x32()
 {
-    writeByte(m_Registers.get_hl(), m_Registers.a);
-    m_Registers.set_hl( m_Registers.get_hl()-1u );
+    logOpcode((m_PC-1), 0x32, 0x0, 0x0, "LD","[HL-]","A");
+
+    word_t HL{ m_Registers.get_hl() };
+    writeByte(HL, m_Registers.a);
+    m_Registers.set_hl( --HL );
     return 8;
 }
 //LD A,(HL+)
 int CPU::OP_0x2A()
 {
-    m_Registers.a = readByte(m_Registers.get_hl());
-    m_Registers.set_hl( m_Registers.get_hl()+1u );
+    logOpcode((m_PC-1), 0x2A, 0x0, 0x0, "LD", "A", "[HL+]");
+
+    word_t HL{ m_Registers.get_hl() };
+    m_Registers.a = readByte(HL);
+    m_Registers.set_hl( ++HL );
     return 8;
 }
 //LD (HL+),A
 int CPU::OP_0x22()
 {
-    writeByte(m_Registers.get_hl(), m_Registers.a);
-    m_Registers.set_hl( m_Registers.get_hl()+1u );
+    logOpcode((m_PC-1), 0x22, 0x0, 0x0, "LD", "[HL+]", "A");
+
+    word_t HL{ m_Registers.get_hl() };
+    writeByte(HL, m_Registers.a);
+    m_Registers.set_hl( ++HL );
     return 8;
 }
 //LDH (n),A
 int CPU::OP_0xE0()
 {
-    writeByte(0xFF00u + readNextByte(), m_Registers.a);
+    byte_t addr { readNextByte() };
+    logOpcode((m_PC-2), 0xE0, 0x0, 0x0, "LD", "$"+wordStr(0xFF00u + addr), "A");
+    writeByte(0xFF00u + addr, m_Registers.a);
     return 12;
 }
 //LDH A,(n)
 int CPU::OP_0xF0()
 {
-    m_Registers.a = readByte(0xFF00u + readNextByte());
+    byte_t addr { readNextByte() };
+    logOpcode((m_PC-2), 0xF0, 0x0, 0x0, "LD", "A", "$"+wordStr(0xFF00u + addr));
+
+    m_Registers.a = readByte(0xFF00u + addr);
     return 12;
 }
 
@@ -327,27 +362,41 @@ int CPU::OP_0xF0()
 //LD n,nn
 int CPU::OP_0x01()
 {
-    m_Registers.set_bc(readNextWord());
+    word_t value{ readNextWord() };
+    logOpcode((m_PC-3), 0x01, 0x0, 0x0, "LD", "BC", wordStr(value));
+
+    m_Registers.set_bc(value);
     return 12;
 }
 int CPU::OP_0x11()
 {
-    m_Registers.set_de(readNextWord());
+    word_t value{ readNextWord() };
+    logOpcode((m_PC-3), 0x11, 0x0, 0x0, "LD", "DE", wordStr(value));
+
+    m_Registers.set_de(value);
     return 12;
 }
 int CPU::OP_0x21()
 {
-    m_Registers.set_hl(readNextWord());
+    word_t value{ readNextWord() };
+    logOpcode((m_PC-3), 0x21, 0x0, 0x0, "LD", "HL", wordStr(value));
+
+    m_Registers.set_hl(value);
     return 12;
 }
 int CPU::OP_0x31()
 {
-    m_SP = readNextWord();
+    word_t value{ readNextWord() };
+    logOpcode((m_PC-3), 0x31, 0x0, 0x0, "LD", "SP", wordStr(value));
+
+    m_SP = value;
     return 12;
 }
 //LD SP,HL
 int CPU::OP_0xF9()
 {
+    logOpcode((m_PC-1), 0xF9, 0x0, 0x0, "LD", "SP", "HL");
+
     m_SP = m_Registers.get_hl();
     return 8;
 }
@@ -355,26 +404,18 @@ int CPU::OP_0xF9()
 //LDHL SP,n
 int CPU::OP_0xF8()
 {
-    m_log(LOG_ERROR) << "opcode 0xF8 needs to have correct registers!" << "\n";
+    byte_t unsignedData{ readNextByte() };
+    int ctest{ (m_SP&0x00FF) + unsignedData };
+    int htest{ (m_SP&0x000F) + (unsignedData&0x0F) };
 
-    byte_t usignedValue{ readNextByte() };
-    word_t sum{ unsignedAddition(m_SP, usignedValue) };
-    m_Registers.set_hl(sum);
+    logOpcode((m_PC-2), 0xF8, unsignedData, 0x0, "LD", "HL", "SP+i8");
 
-    std::exit(EXIT_FAILURE);
+    m_Registers.set_hl(signedAddition(m_SP, unsignedData));
 
     m_Registers.f.zero = false;
     m_Registers.f.subtract = false;
-
-    // unsigned int v{ static_cast<unsigned int>(m_SP)+static_cast<unsigned int>(d8) };
-    // bool carry{ v > 0xFFFF };
-    // m_Registers.f.carry = carry;
-
-    // bool half_carry{ ((m_SP & 0xF) + (d8 & 0xF)) > 0xF };
-    // m_Registers.f.half_carry = half_carry;
-
-    // value = m_SP+d8; 
-
+    m_Registers.f.carry = ctest >= 0x100;
+    m_Registers.f.half_carry = htest >= 0x10;
     return 12;
 }
 //LD (nn),SP
@@ -382,8 +423,10 @@ int CPU::OP_0x08()
 {
     word_t address{ readNextWord() };
 
-    byte_t lsb{ static_cast<byte_t>(m_SP & 0xF) };
-    byte_t msb{ static_cast<byte_t>(m_SP >> 4) };
+    logOpcode((m_PC-3), 0x08, 0x0, 0x0, "LD", "$"+wordStr(address), "SP");
+
+    byte_t lsb{ static_cast<byte_t>(m_SP & 0xFF) };
+    byte_t msb{ static_cast<byte_t>(m_SP >> 8) };
     
     writeByte(address, lsb);
     writeByte(address+1, msb);
@@ -393,42 +436,51 @@ int CPU::OP_0x08()
 //PUSH nn
 int CPU::OP_0xF5()
 {
+    logOpcode((m_PC-1), 0xF5, 0x0, 0x0, "PUSH", "AF", "");
     push(m_Registers.get_af());
     return 16;
 }
 int CPU::OP_0xC5()
 {
+    logOpcode((m_PC-1), 0xC5, 0x0, 0x0, "PUSH", "BC", "");
     push(m_Registers.get_bc());
     return 16;
 }
 int CPU::OP_0xD5()
 {
+    logOpcode((m_PC-1), 0xD5, 0x0, 0x0, "PUSH", "DE", "");
     push(m_Registers.get_de());
     return 16;
 }
+
 int CPU::OP_0xE5()
 {
+    logOpcode((m_PC-1), 0xE5, 0x0, 0x0, "PUSH", "HL", "");
     push(m_Registers.get_hl());
     return 16;
 }
 //POP nn
 int CPU::OP_0xF1()
 {
+    logOpcode((m_PC-1), 0xF1, 0x0, 0x0, "POP", "AF", "");
     m_Registers.set_af(pop());
     return 12;
 }
 int CPU::OP_0xC1()
 {
+    logOpcode((m_PC-1), 0xC1, 0x0, 0x0, "POP", "BC", "");
     m_Registers.set_bc(pop());
     return 12;
 }
 int CPU::OP_0xD1()
 {
+    logOpcode((m_PC-1), 0xD1, 0x0, 0x0, "POP", "DE", "");
     m_Registers.set_de(pop());
     return 12;
 }
 int CPU::OP_0xE1()
 {
+    logOpcode((m_PC-1), 0xE1, 0x0, 0x0, "POP", "HL", "");
     m_Registers.set_hl(pop());
     return 12;
 }
@@ -437,6 +489,7 @@ int CPU::OP_0xE1()
 //ADD HL,n
 int CPU::OP_0x09()
 {
+    logOpcode((m_PC-1), 0x09, 0x0, 0x0, "ADD", "HL", "BC");
     word_t HL{ m_Registers.get_hl() };
     wordAdd(HL, m_Registers.get_bc());
     m_Registers.set_hl(HL);
@@ -444,6 +497,7 @@ int CPU::OP_0x09()
 }
 int CPU::OP_0x19()
 {
+    logOpcode((m_PC-1), 0x19, 0x0, 0x0, "ADD", "HL", "DE");
     word_t HL{ m_Registers.get_hl() };
     wordAdd(HL, m_Registers.get_de());
     m_Registers.set_hl(HL);
@@ -451,6 +505,7 @@ int CPU::OP_0x19()
 }
 int CPU::OP_0x29()
 {
+    logOpcode((m_PC-1), 0x29, 0x0, 0x0, "ADD", "HL", "HL");
     word_t HL{ m_Registers.get_hl() };
     wordAdd(HL, m_Registers.get_hl());
     m_Registers.set_hl(HL);
@@ -458,6 +513,7 @@ int CPU::OP_0x29()
 }
 int CPU::OP_0x39()
 {
+    logOpcode((m_PC-1), 0x39, 0x0, 0x0, "ADD", "HL", "SP");
     word_t HL{ m_Registers.get_hl() };
     wordAdd(HL, m_SP);
     m_Registers.set_hl(HL);
@@ -466,63 +522,81 @@ int CPU::OP_0x39()
 //ADD SP,n
 int CPU::OP_0xE8()
 {
-    m_log(LOG_ERROR) << "Opcode 0xE8 needs to be signed" << "\n";
-    std::exit(EXIT_FAILURE);
-    wordAdd(m_SP, readNextWord());
+    byte_t unsignedData{ readNextByte() };
+    int ctest{ (m_SP&0x00FF) + unsignedData };
+    int htest{ (m_SP&0x000F) + (unsignedData&0x0F) };
+
+    logOpcode((m_PC-2), 0xE8, unsignedData, 0x0, "ADD", "SP", "i8");
+    m_SP = signedAddition(m_SP, unsignedData);
+
+    m_Registers.f.zero = false;
+    m_Registers.f.subtract = false;
+    m_Registers.f.carry = ctest >= 0x100;
+    m_Registers.f.half_carry = htest >= 0x10;
     return 16;
 }
 //INC nn
 int CPU::OP_0x03()
 {
+    logOpcode((m_PC-1), 0x03, 0x0, 0x0, "INC", "BC", "");
     m_Registers.set_bc(m_Registers.get_bc() + 1u);
     return 8;
 }
 int CPU::OP_0x13()
 {
+    logOpcode((m_PC-1), 0x13, 0x0, 0x0, "INC", "DE", "");
     m_Registers.set_de(m_Registers.get_de() + 1u);
     return 8;
 }
 int CPU::OP_0x23()
 {
+    logOpcode((m_PC-1), 0x23, 0x0, 0x0, "INC", "HL", "");
     m_Registers.set_hl(m_Registers.get_hl() + 1u);
     return 8;
 }
 int CPU::OP_0x33()
 {
+    logOpcode((m_PC-1), 0x33, 0x0, 0x0, "INC", "SP", "");
     ++m_SP;
     return 8;
 }
 //DEC nn
 int CPU::OP_0x0B()
 {
+    logOpcode((m_PC-1), 0x0B, 0x0, 0x0, "DEC", "BC", "");
     m_Registers.set_bc(m_Registers.get_bc() - 1u);
     return 8;
 }
 int CPU::OP_0x1B()
 {
+    logOpcode((m_PC-1), 0x1B, 0x0, 0x0, "DEC", "DE", "");
     m_Registers.set_de(m_Registers.get_de() - 1u);
     return 8;
 }
 int CPU::OP_0x2B()
 {
+    logOpcode((m_PC-1), 0x2B, 0x0, 0x0, "DEC", "HL", "");
     m_Registers.set_hl(m_Registers.get_hl() - 1u);
     return 8;
 }
 int CPU::OP_0x3B()
 {
+    logOpcode((m_PC-1), 0x3B, 0x0, 0x0, "DEC", "SP", "");
     --m_SP;
     return 8;
 }
 
-//JP (HL)
+//JP HL
 int CPU::OP_0xE9()
 {
+    logOpcode((m_PC-1), 0xE9, 0x0, 0x0, "JP", "HL", "");
     m_PC = m_Registers.get_hl();
     return 4;
 }
 //RETI
 int CPU::OP_0xD9()
 {
+    logOpcode((m_PC-1), 0xD9, 0x0, 0x0, "RETI", "", "");
     m_PC = pop();
     m_InteruptsEnabled = true;
     return 8;
@@ -531,12 +605,14 @@ int CPU::OP_0xD9()
 //DAA
 int CPU::OP_0x27()
 {
+    logOpcode((m_PC-1), 0x27, 0x0, 0x0, "DAA", "A", "");
     checkDAA(m_Registers.a);
     return 4;
 }
 //CPL
 int CPU::OP_0x2F()
 {
+    logOpcode((m_PC-1), 0x2F, 0x0, 0x0, "CPL", "A", "");
     m_Registers.a = ~m_Registers.a;
     m_Registers.f.subtract = true;
     m_Registers.f.half_carry = true;
@@ -545,6 +621,7 @@ int CPU::OP_0x2F()
 //CCF
 int CPU::OP_0x3F()
 {
+    logOpcode((m_PC-1), 0x3F, 0x0, 0x0, "CCF", "", "");
     m_Registers.f.carry = !m_Registers.f.carry;
     m_Registers.f.subtract = false;
     m_Registers.f.half_carry = false;
@@ -553,6 +630,7 @@ int CPU::OP_0x3F()
 //SCF
 int CPU::OP_0x37()
 {
+    logOpcode((m_PC-1), 0x37, 0x0, 0x0, "SCF", "", "");
     m_Registers.f.carry = true;
     m_Registers.f.subtract = false;
     m_Registers.f.half_carry = false;
@@ -561,62 +639,69 @@ int CPU::OP_0x37()
 //NOP
 int CPU::OP_0x00()
 {
-    m_log(LOG_DEBUG) << "NOP" << "\n";
+    logOpcode((m_PC-1), 0x0, 0x0, 0x0, "NOP", "", "");
     return 4;
 }
 /*********************vvvvvv************************/
 //HALT
 int CPU::OP_0x76()
 {
-    m_log(LOG_INFO) << "Executed Halt!" << "\n";
+    logOpcode((m_PC-1), 0x76, 0x0, 0x0, "HALT", "", "");
     m_Halted = true;
     return 4;
 }
 //STOP
 int CPU::OP_0x10()
 {
-    m_log(LOG_ERROR) << "Stop not implemented" << "\n";
-    std::exit(EXIT_FAILURE);
-    m_log(LOG_INFO) << "Executed Stop!" << "\n";
+    logOpcode((m_PC-1), 0x10, 0x0, 0x0, "STOP", "", "");
+    m_Stopped = true;
     return 4;
 }
 /***********************^^^^^^^************************/
 //DI disable interupts
 int CPU::OP_0xF3()
 {
+    logOpcode((m_PC-1), 0xF3, 0x0, 0x0, "DI", "", "");
     m_InteruptsEnabled = false;
-    m_log(LOG_INFO) << "Interupts Disabled!" << "\n";
     return 4;
 }
 //EI enable interupts
 int CPU::OP_0xFB()
 {
+    logOpcode((m_PC-1), 0xFB, 0x0, 0x0, "EI", "", "");
     m_InteruptsEnabled = true;
-    m_log(LOG_INFO) << "Interupts Enabled!" << "\n";
     return 4;
 }
 //Rotates and shifts
 //RLCA
 int CPU::OP_0x07()
 {
+    logOpcode((m_PC-1), 0x07, 0x0, 0x0, "RLCA", "", "");
     cpu_leftRotate(m_Registers.a, 0);
+    m_Registers.f.zero = false;
     return 4;
 }
 //RLA
 int CPU::OP_0x17()
 {
+    logOpcode((m_PC-1), 0x17, 0x0, 0x0, "RLA", "", "");
     cpu_leftRotateWithCarry(m_Registers.a, 0);
+    m_Registers.f.zero = false;
     return 4;
 }
 //RRCA
 int CPU::OP_0x0F()
 {
+    logOpcode((m_PC-1), 0x0F, 0x0, 0x0, "RRCA", "", "");
     cpu_rightRotate(m_Registers.a, 0);
+    m_Registers.f.zero = false;
     return 4;
 }
 //RRA
 int CPU::OP_0x1F()
 {
+    logOpcode((m_PC-1), 0x1F, 0x0, 0x0, "RRA", "", "");
     cpu_rightRotateWithCarry(m_Registers.a, 0);
+    m_Registers.f.zero = false;
     return 4;
 }

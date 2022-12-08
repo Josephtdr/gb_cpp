@@ -21,6 +21,8 @@ add_executable(${PROJECT_NAME}
     platform.cpp
 )
 
+add_compile_options ("-Odebug --debug -g")
+
 # target_link_libraries(${PROJECT_NAME} bslogger)
 
 target_link_libraries(${PROJECT_NAME} 

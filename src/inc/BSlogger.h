@@ -151,7 +151,7 @@ logger::logger(std::ostream& f, unsigned ll, std::string n)
 logger& logger::operator()(unsigned ll) {
   _message_level = ll;
   if (_message_level <= _loglevel()) {
-    _fac << prep_level(*this) << prep_time(*this) << prep_name(*this) << ": ";
+    _fac << "";
   }
   return *this;
 }
@@ -197,8 +197,7 @@ std::string prep_time(logger& l) {
   if (t->tm_mday < 10) D = "0" + D;
   if (t->tm_mon + 1 < 10) M = "0" + M;
 
-  std::string ret =
-      "[ " + Y + "-" + M + "-" + D + "T" + h + ":" + m + ":" + s + " ]";
+  std::string ret ="";
 
   return ret;
 }

@@ -9,12 +9,13 @@
 
 class PPU
 {
+public:
+    int m_ScanlineCounter{}; //Tracks when to increment current scanline
 private:
     MemoryBus& m_Memory;
     logger& m_log;
     Platform& m_Platform;
-    int m_ScanlineCounter{}; //Tracks when to increment current scanline
-
+    
     enum class Colour
     {
         Transparent, White, Light_Gray, Dark_Gray, Black

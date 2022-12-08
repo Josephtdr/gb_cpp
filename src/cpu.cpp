@@ -3,16 +3,22 @@
 
 #include <iostream> 
 #include <stdexcept>
+#include <cassert>
 
-CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef)
- : m_PC{0},
-   m_SP{ c_TOP_OF_STACK },
+CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, Settings& settingsRef)
+ : m_SP{ c_TOP_OF_STACK },
    m_log{ logRef },
    m_Memory{ memoryRef },
-   m_Platform{ platformRef }
+   m_Platform{ platformRef },
+   m_PPU{ ppuRef },
+   m_InteruptsEnabled{ false },
+   m_Settings{ settingsRef }
+   
 {
-    // m_lineByLine = true;
     std::cout << std::hex;
+    std::cerr << std::hex;
+
+    m_PC = (settingsRef.bootRom ? 0 : 0x100);
 
     m_Registers.set_af(0x01B0);
     m_Registers.set_bc(0x0013);
@@ -22,52 +28,134 @@ CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef)
     setupTables();
 }
 
+void CPU::logOpcode(word_t PC, byte_t opcode, byte_t arg1, byte_t arg2, std::string_view func, std::string_view peram1, std::string_view peram2) const
+{
+    if (!m_Settings.traceLog || m_Memory.bootRomLoaded())
+        return;
+
+    std::string comma = ((peram1!="" && peram2!="")? ", " : "  ");
+
+    int len = 15 - (func.length() + peram1.length() + peram2.length() + comma.length());
+
+    m_log(LOG_INFO) << std::hex << std::uppercase << std::setfill('0') <<
+        std::setw(4) << +PC << ":  " <<
+        "0x" << std::setw(2) << +opcode << " " << 
+        std::setw(2) << +arg1 << " " <<
+        std::setw(2) << +arg2 << "  " << std::setfill(' ') <<
+        func << " " << peram1 << comma << peram2 <<
+        std::setw(len) << "" << std::setfill('0') << 
+        "A:" << std::setw(2) << +m_Registers.a << " " << 
+        "F:" << std::setw(2) << +m_Registers.f << " " <<
+        "B:" << std::setw(2) << +m_Registers.b << " " <<
+        "C:" << std::setw(2) << +m_Registers.c << " " <<
+        "D:" << std::setw(2) << +m_Registers.d << " " <<
+        "E:" << std::setw(2) << +m_Registers.e << " " <<
+        "H:" << std::setw(2) << +m_Registers.h << " " <<
+        "L:" << std::setw(2) << +m_Registers.l << "  " <<
+        "SP:" << std::setw(4) << +m_SP << "  " <<
+        "PCMEM:"<< std::setw(2) << +m_Memory.readByteRaw(PC) << "," <<
+                   std::setw(2) << +m_Memory.readByteRaw(PC+1) << "," <<
+                   std::setw(2) << +m_Memory.readByteRaw(PC+2) << "," <<
+                   std::setw(2) << +m_Memory.readByteRaw(PC+3) <<"\n";
+}
 
 int CPU::cycle()
 {
     byte_t instructionByte{ readNextByte() };
-
+    
     bool prefixed{ instructionByte == c_PREFIXED_INSTRUCTION_BYTE };
     if (prefixed)
-    { 
         instructionByte = readNextByte(); 
-    }
-    int nCycles{ execute(instructionByte, prefixed) };
-
-    return nCycles;
+    
+    return execute(instructionByte, prefixed);
 }
 
 int CPU::execute(byte_t instructionByte, bool prefixed)
 {
-    try 
-    {
-        if (!prefixed)
-            { return opcode_Translator(instructionByte); }
-        else
-            { return CBopcode_Translator(instructionByte); }
-    }
-    catch (std::runtime_error e)
-    {
-        m_log(LOG_ERROR) << e.what() << "\n";
-        std::exit(EXIT_FAILURE);
-    }
+    if (!prefixed)
+        return opcode_Translator(instructionByte);
+    else
+        return CBopcode_Translator(instructionByte);
 }
 
 bool CPU::isHalted() { return m_Halted; }
+bool CPU::isStopped() { return m_Stopped; }
 
 byte_t CPU::readByte(word_t address) const
 {
-    return m_Memory.readByte(address);
+    // //Vram Area
+    // if ((address>=0x8000u) && (address < 0xA000u))
+    // {
+    //     int mode{ extractBits(readByte(r_STAT), 0, 2) };
+    //     if (mode==3)
+    //         return 0xFF;
+    //     else
+    //         return m_Memory.readByte(address);
+    // }
+    // // OAM ram
+    // else if ((address >= 0xFE00u) && (address <= 0xFE9Fu))
+    // {
+    //     int mode{ extractBits(readByte(r_STAT), 0, 2) };
+    //     if (mode==2||mode==3)
+    //         return 0xFF;
+    //     else
+    //         return m_Memory.readByte(address);
+    // }
+    // //working ram
+    // else if ((address >= 0xC000u) && (address < 0xE000u))
+    // {   
+    //     auto value{ m_Memory.readByte(address) };
+    //     if (address == 0xdd00)
+    //         m_log(LOG_ERROR) << "PC: " << +m_PC <<  " Reading From WRAM " <<
+    //             "value: " << +value << " address: "<<+address <<"\n";
+    //     return value;
+    // }  
+    // else
+    // {
+        return m_Memory.readByte(address);
+    // }
+    
+    
+        
 }
 void CPU::writeByte(word_t address, byte_t value)
 {
+    // //Vram Area
+    // if ((address>=0x8000u) && (address < 0xA000u))
+    // {
+    //     int mode{ extractBits(readByte(r_STAT), 0, 2) };
+    //     if (mode==3)
+    //         return;
+    //     else
+    //         m_Memory.writeByte(address, value);
+    // }
+    // // OAM ram
+    // else if ((address >= 0xFE00u) && (address <= 0xFE9Fu))
+    // {
+    //     int mode{ extractBits(readByte(r_STAT), 0, 2) };
+    //     if (mode==2||mode==3)
+    //         return;
+    //     else
+    //         m_Memory.writeByte(address, value);
+    // }
+    // if ((address >= 0xE000u) && (address < 0xFE00u))
+    // {
+    //     m_log(LOG_ERROR) << "PC: " << +m_PC <<  " WRITING INTO ECHO RAM " <<
+    //             "value: " << +value << " address: "<<+address <<"\n";
+    //     m_Memory.writeByte(address, value);
+    // }
+    //  if ((address >= 0xC000u) && (address < 0xE000u))
+    // {   
+    //     if (address == 0xdd00)
+    //         m_log(LOG_ERROR) << "PC: " << +m_PC <<  " writing into WRAM " <<
+    //           "value: " << +value << " address: "<<+address <<"\n";
+    //     m_Memory.writeByte(address, value);
+    // }  
     //reset the current scanline if the game tries to write to it
     if (address == r_LY)
     {
-        m_log(LOG_ERROR) << "Game Attemping to write to r_LY from CPU" << "\n";
-        std::exit(EXIT_FAILURE);
-        // m_Memory.writeByte(r_LY, 0);
-        // m_ScanlineCounter = 456; //number of cycles per scanline
+        m_Memory.writeByte(r_LY, 0);
+        m_PPU.m_ScanlineCounter = 456; //number of cycles per scanline
     }
     else if (address == r_DMAT)
     {
@@ -75,8 +163,6 @@ void CPU::writeByte(word_t address, byte_t value)
     }
     else if (address == r_TMC)
     {
-        m_log(LOG_DEBUG) << "Writing new TMC value:" << +value << "\n";
-
         byte_t currentfreq = getClockFreq();
         m_Memory.writeByte(r_TMC, value);
         if (currentfreq != getClockFreq())
@@ -97,7 +183,7 @@ void CPU::updateTimers(int cycles)
         // enough cpu clock cycles have happened to update the timer
         if (m_TimerCounter <= 0)
         {
-            m_log(LOG_INFO) << "Timer reset!" << "\n";
+            m_log(LOG_DEBUG) << "Timer reset!" << "\n";
             // reset m_TimerTracer to the correct value
             updateClockFreq();
 
@@ -145,85 +231,76 @@ void CPU::updateDividerRegister(int cycles)
     }
 }
 
-void CPU::updateJoypads()
+void CPU::updateJoypad()
+{
+    auto action{ m_Platform.ProcessInput() };
+
+    switch(action.first)
+    {
+        case 0: keyDown(action.second); break;
+        case 1: keyUp(action.second); break;
+        case 2: break;
+    }
+}
+
+void CPU::keyDown(int key)
 {
     byte_t joyp{ readByte(r_JOYP) };
-    byte_t newJoyp{ static_cast<byte_t>(joyp & 0xF0) };
+    bool wasUnpressed{ testBit(m_Memory.m_Joypad, key) };
 
-    byte_t keys{ 0xFF };
-    m_Platform.ProcessInput(keys);
+    resetBit(m_Memory.m_Joypad, key); 
 
-    if (!testBit(joyp,4))
-    {
-        newJoyp |= extractBits(keys,0,4);
+    bool isButton{ key > 3 };
+    bool interupt{};
 
-        //if no change, exit
-        if (joyp==newJoyp)
-            return;
-        //test if a bit went from high to low
-        for(int bit{}; bit<4; ++bit)
-        {
-            if (testBit(joyp, bit))
-            {
-                if (!testBit(newJoyp, bit))
-                    requestInterupt(4);
-            }
-        }
-        writeByte(r_JOYP, newJoyp);
-    }
-    else if (!testBit(joyp,5))
-    {
-        newJoyp |= extractBits(keys,4,4);
-        
-        //if no change, exit
-        if (joyp==newJoyp)
-            return;
-        //test if a bit went from high to low
-        for(int bit{}; bit<4; ++bit)
-        {
-            if (testBit(joyp, bit))
-            {
-                if (!testBit(newJoyp, bit))
-                    requestInterupt(4);
-            }
-        }
-        writeByte(r_JOYP, newJoyp);
-    }
+    if (isButton && !testBit(joyp,5))
+        interupt = true;
+    else if (!isButton && !testBit(joyp,4))
+        interupt = true;
+
+    if (interupt && wasUnpressed)
+        requestInterupt(4);
+}
+void CPU::keyUp(int key)
+{
+    setBit(m_Memory.m_Joypad, key);
 }
 
 /**
  * @brief checks and executes any valid requested interupts in the priority 
- * 0 (V-BLANK), 1 (LCD), 2 (TIMER), 3 (JOYPAD).
+ * 0 (V-BLANK), 1 (LCD), 2 (TIMER), 3 (SERIAL), 4 (JOYPAD).
+ * @return 20 cycles if an interupt is executed, else 0;  
  */
-void CPU::interupts()
+int CPU::interupts()
 {
-    if (m_InteruptsEnabled)
+    byte_t requests = readByte(r_IF)&0x1F;
+    byte_t enabled = readByte(r_IE)&0x1F;
+
+    if (!m_InteruptsEnabled) //master switch disabled
     {
-        byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
-        byte_t enabled = readByte(c_INTERUPTS_ENABLED_ADDRESS);
-        if (requests)
+        if (m_Halted)
         {
-            for (byte_t i=0; i<5; ++i) //for each interupt bit 0/1/2/4
-            {
-                if (testBit(requests,i)) //There is a request (i)
-                {
-                    if (testBit(enabled,i)) //and interupt (i) is enabled 
-                    {
-                        m_Halted = false;
-                        performInterupt(i);
-                    }
-                }
-            }
+            bool requestPending {(requests&enabled)>0};
+            if (requestPending)
+                m_Halted = false;
+        }
+        return 0;
+    }
+    if (!requests) //no requests pending
+        return 0;
+
+    //for each interupt bit 0-4
+    for (byte_t i=0; i<5; ++i) 
+    {
+        //There is a request (i) and it is enabled 
+        if (testBit(requests,i) && testBit(enabled,i)) 
+        {
+            performInterupt(i);
+            return 20;
         }
     }
-    else if (m_Halted)
-    {
-        byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
-        byte_t enabled = readByte(c_INTERUPTS_ENABLED_ADDRESS);
 
-        if (requests & enabled)
-            m_Halted = false;
-    }
+    return 0;
 }
 
 
@@ -232,10 +309,11 @@ void CPU::interupts()
  */
 void CPU::requestInterupt(int interupt) //0,1,2,4
 {
-    byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
-    //set relevent bit
+    assert((interupt>=0&&interupt<5) && "Invalid interupt requested!");
+    byte_t requests = readByte(r_IF);
+    
     setBit(requests, interupt);
-    writeByte(c_INTERUPTS_REQ_ADDRESS, requests);
+    writeByte(r_IF, requests);
 }
 
 /**
@@ -245,12 +323,15 @@ void CPU::requestInterupt(int interupt) //0,1,2,4
  */
 void CPU::performInterupt(int interupt)
 {
-    m_log(LOG_INFO) << "Starting interupt " << interupt << "!" << "\n";
-    m_InteruptsEnabled = false;
+    m_log(LOG_DEBUG) << "Starting interupt " << interupt << "!" << "\n";
+    m_InteruptsEnabled = false;    
+    m_Halted = false;
+    if (interupt==4) //joypad interupt
+        m_Stopped = false;
 
-    byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
+    byte_t requests = readByte(r_IF);
     resetBit(requests, interupt);
-    writeByte(c_INTERUPTS_REQ_ADDRESS, requests);
+    writeByte(r_IF, requests);
 
     push(m_PC);
     switch(interupt)
@@ -258,7 +339,10 @@ void CPU::performInterupt(int interupt)
         case 0: m_PC = c_VBLANK_INTERUPT; break;
         case 1: m_PC = c_LCD_INTERUPT; break;
         case 2: m_PC = c_TIMER_INTERUPT; break;
-        case 3: m_PC = c_JOYPAD_INTERUPT; break;
+        case 3: m_PC = c_SERIAL_INTERUPT; break;
+        case 4: m_PC = c_JOYPAD_INTERUPT; break;
+        default: 
+            throw std::logic_error("Invalid interupt code!");
     }
 }
 

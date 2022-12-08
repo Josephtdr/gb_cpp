@@ -6,21 +6,27 @@
 #include "memoryBus.h"
 #include "platform.h"
 #include "BSlogger.h"
+#include "ppu.h"
 
 class CPU
 {
+public:
+    Registers m_Registers{};
+    word_t m_PC{};
+    word_t m_SP{};
 private:
     logger& m_log;
     MemoryBus& m_Memory;
     Platform& m_Platform;
-    Registers m_Registers{};
-    word_t m_PC{};
-    word_t m_SP{};
+    PPU& m_PPU;
+    Settings& m_Settings;
+    
 
     int m_TimerCounter{}; //Tracks when to throw timer interupts
     int m_DividerCounter{}; //Tracks when to increment Divider Register
     bool m_InteruptsEnabled{};
     bool m_Halted{};
+    bool m_Stopped{};
     
     using opcodeFnPtr = int(CPU::*)();
     using opcodeFnPtr2 = int(CPU::*)(const byte_t&);
@@ -28,12 +34,13 @@ private:
     opcodeFnPtr2 instructionTable2[c_INSTRUCTION_TABLE_SIZE]{};
 
 public:
-    CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef);
+    CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, Settings& settingsRef);
     int cycle();
     void updateTimers(int cycles);
-    void updateJoypads();
-    void interupts();
+    void updateJoypad();
+    int interupts();
     bool isHalted();
+    bool isStopped();
     bool m_lineByLine{};
 
 private:
@@ -48,6 +55,10 @@ private:
     bool isClockEnabled() const;
     void updateClockFreq();
     byte_t getClockFreq() const;
+    void logOpcode(word_t PC, byte_t opcode, byte_t arg1, byte_t arg2, std::string_view func, std::string_view peram1, std::string_view peram2) const;
+    
+    void keyDown(int key);
+    void keyUp(int key);
     
     void requestInterupt(int interupt);
     void performInterupt(int interupt);
@@ -59,6 +70,8 @@ private:
 
     byte_t& getRegister(int index);
     std::string_view getRegisterStr(int index);
+    std::string byteStr(byte_t byte);
+    std::string wordStr(word_t word);
     int opcode_Translator(byte_t opcode);
     int cpu_restart(const byte_t& opcode);
     int cpu_byteLoad(const byte_t& opcode);
@@ -70,12 +83,12 @@ private:
     };
     std::string_view getJumpTestStr(int type);
     bool testJumpTest(JumpTest type);
-    int jump(JumpTest type);
-    int call(JumpTest type);
-    int return_(JumpTest type);
+    int jump(int type, byte_t opcode);
+    int call(int type, byte_t opcode);
+    int return_(int type, byte_t opcode);
 
     int cpu_jumpRelative(const byte_t& opcode);
-    word_t unsignedAddition(const word_t& target, const byte_t& unsignedData);
+    word_t signedAddition(const word_t& target, const byte_t& unsignedData);
 
     int cpu_byteArithmetic(const byte_t& opcode);
     void byteAdd(const byte_t& data);
@@ -111,6 +124,7 @@ private:
     void cpu_rightShiftArithmetic(byte_t& byte, int);
 
     int OP_NOT_IMPLEMTED();
+    int OP_ILLEGAL();
     int OP_NOT_IMPLEMTED2(const byte_t&);
     //Unique Opcodes
     //byte Loads

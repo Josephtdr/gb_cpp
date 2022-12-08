@@ -1,10 +1,13 @@
-#include <iostream>
-#include <chrono> // for std::chrono functions
-
 #include "inc/cpu.h"
 #include "inc/ppu.h"
 #include "inc/platform.h"
 #include "inc/BSlogger.h"
+
+#include <iostream>
+#include <chrono> // for std::chrono functions
+#include <cstdio>
+#include <functional> // std::function
+#include <unordered_map> // std::unordered_map
 
 //https://www.learncpp.com/cpp-tutorial/timing-your-code/
 class Timer
@@ -32,67 +35,77 @@ public:
     }
 };
 
-void frameUpdate(CPU& cpu, PPU& ppu, logger& log)
+void frameUpdate(CPU& cpu, PPU& ppu, logger& log, MemoryBus& memory)
 {
     int cyclesThisUpdate = 0;
 
     while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
     {
-        if (!cpu.isHalted())
+        int cycles {cpu.interupts()};
+        if (cpu.isHalted())
+            cycles += 4;
+        else if (cpu.isStopped())
         {
-            int cycles{ cpu.cycle() };
-            cyclesThisUpdate += cycles;
-            cpu.updateTimers(cycles);
-            cpu.updateJoypads();
-            ppu.updateGraphics(cycles);
-            // if (cpu.m_lineByLine)
-            //     getchar();
+            cpu.updateJoypad(); continue;
         }
-        cpu.interupts();
+        else
+            cycles += cpu.cycle();
+        
+        cyclesThisUpdate += cycles;
+        cpu.updateTimers(cycles);
+        cpu.updateJoypad();
+        ppu.updateGraphics(cycles);
     }
     ppu.renderScreen();
 }
 
+
+typedef std::function<void(Settings&)> NoArgHandle;
+
+const std::unordered_map<std::string, NoArgHandle> NoArgs {
+  {"--traceLog", [](Settings& s) { s.traceLog = true; }},
+  {"-tl", [](Settings& s) { s.traceLog = true; }},
+  {"--bootRom", [](Settings& s) { s.bootRom = true; }},
+  {"-br", [](Settings& s) { s.bootRom = true; }},
+};
+
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
+    freopen( "logfordoc.txt", "w", stdout );
+    freopen( "trace.txt", "w", stderr );
+
+    if (argc < 2)
 	{
 		std::cerr << "Usage: " << argv[0] << " <ROM>\n";
 		std::exit(EXIT_FAILURE);
 	}
     char const* romFilename = argv[1];
 
-    logger log{ std::cout, __PRETTY_FUNCTION__ };
-    log.set_log_level(LOG_INFO);
-    log(LOG_INFO) << "Starting up!" << "\n";
-
-    MemoryBus memory{ log };
-    memory.loadGame(romFilename);
-    log(LOG_INFO) << "Game Loaded!" << "\n";
-
-
-
-    Platform platform{ memory.getTitle().c_str(),c_VIDEO_WIDTH,c_VIDEO_HEIGHT,2 };
-
-    CPU cpu{ memory,log,platform };
-    log(LOG_INFO) << "CPU initialised!" << "\n";
-    PPU ppu{ memory,log,platform };
-    log(LOG_INFO) << "PPU initialised!" << "\n";
-
-    
-
-    bool quit{};
-    Timer timer{};
-    byte_t keypad{};
-
-    while(!quit)
+    Settings settings{};
+    for (int i {2}; i < argc; ++i)
     {
-        quit = platform.ProcessInput(keypad);
+        std::string opt {argv[i]};
+        if(auto j {NoArgs.find(opt)}; j != NoArgs.end())
+            j->second(settings);
+    }
 
+    logger log{ std::cerr, __PRETTY_FUNCTION__ };
+    log.set_log_level(LOG_INFO);
+    MemoryBus memory{ log };
+    memory.loadGame(romFilename, settings.bootRom);
+    Platform platform{ memory.getTitle().c_str(),c_VIDEO_WIDTH,c_VIDEO_HEIGHT,2 };
+    PPU ppu{ memory,log,platform };
+    CPU cpu{ memory,log,platform,ppu,settings };
+    
+    log(LOG_INFO) << std::hex << "Starting up!" << "\n";
+
+    Timer timer{};
+    while(!platform.getExit())
+    {
         if(timer.nextFrameReady())
         {
             timer.reset();
-            frameUpdate(cpu, ppu, log);
+            frameUpdate(cpu, ppu, log, memory);
         }
     }
 }

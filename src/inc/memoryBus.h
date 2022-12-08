@@ -10,10 +10,9 @@ class MemoryBus
 private:
     logger& m_log;
 
-    byte_t m_Memory[c_MEMORY_SIZE]{};
     byte_t m_CartridgeMemory[c_CARTRIDGE_MEMORY_SIZE]{};
     byte_t m_RAMBankMemory[c_RAM_BANKS_MEMORY_SIZE]{};
-
+    byte_t m_Memory[c_MEMORY_SIZE]{};
     byte_t m_CurrentROMBank{1}; //the current rom bank "loaded" into 0x4000-0x7FFF
     byte_t m_CurrentRAMBank{};
 
@@ -32,15 +31,19 @@ private:
     void changeHiRomBank(byte_t value);
     void RAMBankChange(byte_t value);
     void changeROMRAMMode(byte_t value);
+    byte_t getJoypadState() const; 
 
 public:
     MemoryBus(logger& logRef);
-
-    byte_t readByte(word_t address) const;
+    byte_t m_Joypad{};
+    
+    byte_t readByte(word_t address);
+    byte_t readByteRaw(word_t address);
     void writeByte(word_t address, byte_t value);
-    void loadGame(const char* file);
+    void loadGame(const char* file, bool bootRom);
     void increment(word_t address);
     std::string getTitle();
+    bool bootRomLoaded() const;
 };
 
 

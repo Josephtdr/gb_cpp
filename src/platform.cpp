@@ -26,9 +26,13 @@ void Platform::Update(void const* buffer, int pitch)
     SDL_RenderPresent(renderer);
 }
 
-bool Platform::ProcessInput(byte_t& keys)
+bool Platform::getExit() const
 {
-    bool quit = false;
+    return m_exit;
+}
+
+std::pair<int,int> Platform::ProcessInput()
+{
     SDL_Event event;
 
     while (SDL_PollEvent(&event))
@@ -37,24 +41,24 @@ bool Platform::ProcessInput(byte_t& keys)
         {
             case SDL_QUIT:
             {
-                quit = true;
+                m_exit = true;
             } break;
 
             case SDL_KEYDOWN:
             {
                 switch (event.key.keysym.sym)
                 {
-                    case SDLK_ESCAPE: quit = true; break;
+                    case SDLK_ESCAPE: m_exit = true; break;
 
-                    case SDLK_DOWN:     resetBit(keys,3); break;
-                    case SDLK_UP:       resetBit(keys,2); break;
-                    case SDLK_LEFT:     resetBit(keys,1); break;
-                    case SDLK_RIGHT:    resetBit(keys,0); break;
+                    case SDLK_DOWN:     return {0,3}; break;
+                    case SDLK_UP:       return {0,2}; break;
+                    case SDLK_LEFT:     return {0,1}; break;
+                    case SDLK_RIGHT:    return {0,0}; break;
 
-                    case SDLK_q:        resetBit(keys,7); break;
-                    case SDLK_KP_ENTER: resetBit(keys,6); break;
-                    case SDLK_d:        resetBit(keys,5); break;
-                    case SDLK_a:        resetBit(keys,4); break;
+                    case SDLK_q:        return {0,7}; break;
+                    case SDLK_e: return {0,6}; break;
+                    case SDLK_d:        return {0,5}; break;
+                    case SDLK_a:        return {0,4}; break;
                 }
             } break;
 
@@ -62,18 +66,18 @@ bool Platform::ProcessInput(byte_t& keys)
             {
                 switch (event.key.keysym.sym)
                 {
-                    case SDLK_DOWN:     setBit(keys,3); break;
-                    case SDLK_UP:       setBit(keys,2); break;
-                    case SDLK_LEFT:     setBit(keys,1); break;
-                    case SDLK_RIGHT:    setBit(keys,0); break;
+                    case SDLK_DOWN:     return {1,3}; break;
+                    case SDLK_UP:       return {1,2}; break;
+                    case SDLK_LEFT:     return {1,1}; break;
+                    case SDLK_RIGHT:    return {1,0}; break;
 
-                    case SDLK_q:        setBit(keys,7); break;
-                    case SDLK_KP_ENTER: setBit(keys,6); break;
-                    case SDLK_d:        setBit(keys,5); break;
-                    case SDLK_a:        setBit(keys,4); break;
+                    case SDLK_q:        return {1,7}; break;
+                    case SDLK_e: return {1,6}; break;
+                    case SDLK_d:        return {1,5}; break;
+                    case SDLK_a:        return {1,4}; break;
                 }
             } break;
         }
     }
-    return quit;
+    return {2,0};
 }
