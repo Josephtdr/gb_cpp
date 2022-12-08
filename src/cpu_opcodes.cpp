@@ -21,7 +21,7 @@ void CPU::setupTables()
     {
         instructionTable2[i] = &CPU::cpu_byteLoad;
     }
-    
+    instructionTable2[0x76] = &CPU::OP_NOT_IMPLEMTED2; //halt instruction!
     //LD A,n
     instructionTable[0x0A] = &CPU::OP_0x0A;
     instructionTable[0x1A] = &CPU::OP_0x1A;
@@ -654,7 +654,7 @@ int CPU::OP_0x76()
 int CPU::OP_0x10()
 {
     logOpcode((m_PC-1), 0x10, 0x0, 0x0, "STOP", "", "");
-    // std::exit(EXIT_FAILURE);
+    m_Stopped = true;
     return 4;
 }
 /***********************^^^^^^^************************/

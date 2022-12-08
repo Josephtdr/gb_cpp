@@ -82,8 +82,6 @@ bool CPU::testJumpTest(JumpTest type)
             return !m_Registers.f.carry; break;
         case JumpTest::Always:
             return true; break;
-        default:
-            throw std::runtime_error("Invalid jump type!");
     }
 }
 
@@ -107,7 +105,7 @@ int CPU::cpu_jumpRelative(const byte_t& opcode)
 int CPU::cpu_jump(const byte_t& opcode)
 {
     int funcIdx{ extractBits(opcode,1,2) };
-    assert((funcIdx>=0&&funcIdx<=3) && "Incorrect funcidx in cpu_jump!");
+    assert((funcIdx>=0&&funcIdx<3) && "Incorrect funcidx in cpu_jump!");
     int testType{ testBit(opcode,0) ? 4 : extractBits(opcode,3,2) }; // check if always true
     
     switch(funcIdx)
@@ -115,8 +113,6 @@ int CPU::cpu_jump(const byte_t& opcode)
         case 0: return return_(testType, opcode); break;
         case 1: return jump(testType, opcode); break;
         case 2: return call(testType, opcode); break;
-        default:
-            throw std::runtime_error("INVALID FUNCIDX IN CPU_JUMP");
     }
 }
 

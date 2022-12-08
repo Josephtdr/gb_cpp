@@ -7,8 +7,6 @@
 
 class MemoryBus
 {
-public:
-    byte_t readMemForDoctor(word_t address);
 private:
     logger& m_log;
 
@@ -40,6 +38,7 @@ public:
     byte_t m_Joypad{};
     
     byte_t readByte(word_t address);
+    byte_t readByteRaw(word_t address);
     void writeByte(word_t address, byte_t value);
     void loadGame(const char* file, bool bootRom);
     void increment(word_t address);

@@ -19,13 +19,14 @@ private:
     MemoryBus& m_Memory;
     Platform& m_Platform;
     PPU& m_PPU;
+    Settings& m_Settings;
     
 
     int m_TimerCounter{}; //Tracks when to throw timer interupts
     int m_DividerCounter{}; //Tracks when to increment Divider Register
     bool m_InteruptsEnabled{};
     bool m_Halted{};
-    bool m_traceLog{};
+    bool m_Stopped{};
     
     using opcodeFnPtr = int(CPU::*)();
     using opcodeFnPtr2 = int(CPU::*)(const byte_t&);
@@ -33,12 +34,13 @@ private:
     opcodeFnPtr2 instructionTable2[c_INSTRUCTION_TABLE_SIZE]{};
 
 public:
-    CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, bool dontlog);
+    CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, Settings& settingsRef);
     int cycle();
     void updateTimers(int cycles);
     void updateJoypad();
-    void interupts();
+    int interupts();
     bool isHalted();
+    bool isStopped();
     bool m_lineByLine{};
 
 private:

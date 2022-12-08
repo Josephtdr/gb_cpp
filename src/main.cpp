@@ -35,62 +35,34 @@ public:
     }
 };
 
-#include  <iomanip>
-void doctorLog(CPU& cpu, MemoryBus& memory)
-{
-    std::cout << std::hex << std::uppercase << std::setfill('0') <<
-        "A:" << std::setw(2) << +cpu.m_Registers.a << " " << 
-        "F:" << std::setw(2) << +cpu.m_Registers.f << " " <<
-        "B:" << std::setw(2) << +cpu.m_Registers.b << " " <<
-        "C:" << std::setw(2) << +cpu.m_Registers.c << " " <<
-        "D:" << std::setw(2) << +cpu.m_Registers.d << " " <<
-        "E:" << std::setw(2) << +cpu.m_Registers.e << " " <<
-        "H:" << std::setw(2) << +cpu.m_Registers.h << " " <<
-        "L:" << std::setw(2) << +cpu.m_Registers.l << " " <<
-        "SP:" << std::setw(4) << +cpu.m_SP << " " <<
-        "PC:" << std::setw(4) << +cpu.m_PC << " " <<
-        "PCMEM:"<< std::setw(2) << +memory.readMemForDoctor(cpu.m_PC) << "," <<
-                   std::setw(2) << +memory.readMemForDoctor(cpu.m_PC+1) << "," <<
-                   std::setw(2) << +memory.readMemForDoctor(cpu.m_PC+2) << "," <<
-                   std::setw(2) << +memory.readMemForDoctor(cpu.m_PC+3) <<"\n";
-}
-
-void frameUpdate(CPU& cpu, PPU& ppu, logger& log, MemoryBus& memory, bool doclog = true)
+void frameUpdate(CPU& cpu, PPU& ppu, logger& log, MemoryBus& memory)
 {
     int cyclesThisUpdate = 0;
 
     while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
     {
-        if (doclog)
-            doctorLog(cpu, memory);
-
-        if (!cpu.isHalted())
+        int cycles {cpu.interupts()};
+        if (cpu.isHalted())
+            cycles += 4;
+        else if (cpu.isStopped())
         {
-            int cycles{ cpu.cycle() };
-            cyclesThisUpdate += cycles;
-            cpu.updateTimers(cycles);
-            cpu.updateJoypad();
-            ppu.updateGraphics(cycles);
-            // if (cpu.m_lineByLine)
-            //     getchar();
+            cpu.updateJoypad(); continue;
         }
-        cpu.interupts();
+        else
+            cycles += cpu.cycle();
+        
+        cyclesThisUpdate += cycles;
+        cpu.updateTimers(cycles);
+        cpu.updateJoypad();
+        ppu.updateGraphics(cycles);
     }
     ppu.renderScreen();
 }
 
 
-struct Settings {
-  bool doctorLog {false};
-  bool traceLog {false};
-  bool bootRom {false};
-};
-
 typedef std::function<void(Settings&)> NoArgHandle;
 
 const std::unordered_map<std::string, NoArgHandle> NoArgs {
-  {"--doctorLog", [](Settings& s) { s.doctorLog = true; }},
-  {"-dl", [](Settings& s) { s.doctorLog = true; }},
   {"--traceLog", [](Settings& s) { s.traceLog = true; }},
   {"-tl", [](Settings& s) { s.traceLog = true; }},
   {"--bootRom", [](Settings& s) { s.bootRom = true; }},
@@ -123,7 +95,7 @@ int main(int argc, char *argv[])
     memory.loadGame(romFilename, settings.bootRom);
     Platform platform{ memory.getTitle().c_str(),c_VIDEO_WIDTH,c_VIDEO_HEIGHT,2 };
     PPU ppu{ memory,log,platform };
-    CPU cpu{ memory,log,platform,ppu,settings.traceLog };
+    CPU cpu{ memory,log,platform,ppu,settings };
     
     log(LOG_INFO) << std::hex << "Starting up!" << "\n";
 
@@ -133,7 +105,7 @@ int main(int argc, char *argv[])
         if(timer.nextFrameReady())
         {
             timer.reset();
-            frameUpdate(cpu, ppu, log, memory, settings.doctorLog);
+            frameUpdate(cpu, ppu, log, memory);
         }
     }
 }

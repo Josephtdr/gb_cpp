@@ -7,7 +7,7 @@ PPU::PPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef)
       m_log{ logRef },
       m_Platform{ platformRef }
 {
-    m_Platform.Update(m_textureBuffer, c_VIDEO_WIDTH * sizeof (uint32_t));
+    m_Platform.Update(m_textureBuffer, c_VIDEO_WIDTH * sizeof(uint32_t));
 }
 
 void PPU::updateGraphics(int cycles)
@@ -371,10 +371,10 @@ bool PPU::isLCDEnabled()
  */
 void PPU::requestInterupt(int interupt) //0,1,2,4
 {
-    byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
+    byte_t requests = readByte(r_IF);
     //set relevent bit
     setBit(requests, interupt);
-    writeByte(c_INTERUPTS_REQ_ADDRESS, requests);
+    writeByte(r_IF, requests);
 }
 
 byte_t PPU::readByte(word_t address) const

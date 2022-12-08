@@ -43,8 +43,8 @@ const word_t r_CARTRIDGE_TYPE  = 0x0147;
 const word_t r_CARTRIDGE_TITLE = 0x0134; //16 bytes long
 
 //Registers
-const word_t c_INTERUPTS_REQ_ADDRESS     = 0xFF0F;
-const word_t c_INTERUPTS_ENABLED_ADDRESS = 0xFFFF;
+const word_t r_IF     = 0xFF0F; // interrupt flags (request register)
+const word_t r_IE     = 0xFFFF; // interupt enabled register
 
 const word_t r_JOYP   = 0xFF00; // Joypad Register
 
@@ -70,6 +70,11 @@ const std::vector<word_t> r_UNMAPPED
 {
     0xFF08, 0xFF4D, 0xFF56, 0xFF4F,0xFF51,0xFF52,0xFF53,0xFF54,0xFF55,  
     0xFF68,0xFF69,0xFF6A,0xFF6B,0xFF6C,0xFF70,0xFF72,0xFF73,0xFF74,0xFF75,0xFF76,0xFF77
+};
+
+struct Settings {
+  bool traceLog {false};
+  bool bootRom {false};
 };
 
 #endif

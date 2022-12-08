@@ -3,20 +3,22 @@
 
 #include <iostream> 
 #include <stdexcept>
+#include <cassert>
 
-CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, bool traceLog)
- : m_PC{ 0 },
-   m_SP{ c_TOP_OF_STACK },
+CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, Settings& settingsRef)
+ : m_SP{ c_TOP_OF_STACK },
    m_log{ logRef },
    m_Memory{ memoryRef },
    m_Platform{ platformRef },
    m_PPU{ ppuRef },
    m_InteruptsEnabled{ false },
-   m_traceLog{ traceLog }
+   m_Settings{ settingsRef }
    
 {
     std::cout << std::hex;
     std::cerr << std::hex;
+
+    m_PC = (settingsRef.bootRom ? 0 : 0x100);
 
     m_Registers.set_af(0x01B0);
     m_Registers.set_bc(0x0013);
@@ -28,7 +30,7 @@ CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRe
 
 void CPU::logOpcode(word_t PC, byte_t opcode, byte_t arg1, byte_t arg2, std::string_view func, std::string_view peram1, std::string_view peram2) const
 {
-    if (!m_traceLog || m_Memory.bootRomLoaded())
+    if (!m_Settings.traceLog || m_Memory.bootRomLoaded())
         return;
 
     std::string comma = ((peram1!="" && peram2!="")? ", " : "  ");
@@ -51,42 +53,33 @@ void CPU::logOpcode(word_t PC, byte_t opcode, byte_t arg1, byte_t arg2, std::str
         "H:" << std::setw(2) << +m_Registers.h << " " <<
         "L:" << std::setw(2) << +m_Registers.l << "  " <<
         "SP:" << std::setw(4) << +m_SP << "  " <<
-        "PCMEM:"<< std::setw(2) << +m_Memory.readMemForDoctor(PC) << "," <<
-                   std::setw(2) << +m_Memory.readMemForDoctor(PC+1) << "," <<
-                   std::setw(2) << +m_Memory.readMemForDoctor(PC+2) << "," <<
-                   std::setw(2) << +m_Memory.readMemForDoctor(PC+3) <<"\n";
+        "PCMEM:"<< std::setw(2) << +m_Memory.readByteRaw(PC) << "," <<
+                   std::setw(2) << +m_Memory.readByteRaw(PC+1) << "," <<
+                   std::setw(2) << +m_Memory.readByteRaw(PC+2) << "," <<
+                   std::setw(2) << +m_Memory.readByteRaw(PC+3) <<"\n";
 }
 
 int CPU::cycle()
 {
     byte_t instructionByte{ readNextByte() };
+    
     bool prefixed{ instructionByte == c_PREFIXED_INSTRUCTION_BYTE };
     if (prefixed)
-    { 
         instructionByte = readNextByte(); 
-    }
-    int nCycles{ execute(instructionByte, prefixed) };
-
-    return nCycles;
+    
+    return execute(instructionByte, prefixed);
 }
 
 int CPU::execute(byte_t instructionByte, bool prefixed)
 {
-    try 
-    {
-        if (!prefixed)
-            { return opcode_Translator(instructionByte); }
-        else
-            { return CBopcode_Translator(instructionByte); }
-    }
-    catch (std::runtime_error e)
-    {
-        m_log(LOG_ERROR) << e.what() << "\n";
-        std::exit(EXIT_FAILURE);
-    }
+    if (!prefixed)
+        return opcode_Translator(instructionByte);
+    else
+        return CBopcode_Translator(instructionByte);
 }
 
 bool CPU::isHalted() { return m_Halted; }
+bool CPU::isStopped() { return m_Stopped; }
 
 byte_t CPU::readByte(word_t address) const
 {
@@ -108,10 +101,6 @@ byte_t CPU::readByte(word_t address) const
     //     else
     //         return m_Memory.readByte(address);
     // }
-    if (false)//address==r_LY)
-    {
-        return 0x90;
-    }
     // //working ram
     // else if ((address >= 0xC000u) && (address < 0xE000u))
     // {   
@@ -121,10 +110,10 @@ byte_t CPU::readByte(word_t address) const
     //             "value: " << +value << " address: "<<+address <<"\n";
     //     return value;
     // }  
-    else
-    {
+    // else
+    // {
         return m_Memory.readByte(address);
-    }
+    // }
     
     
         
@@ -279,38 +268,39 @@ void CPU::keyUp(int key)
 
 /**
  * @brief checks and executes any valid requested interupts in the priority 
- * 0 (V-BLANK), 1 (LCD), 2 (TIMER), 3 (JOYPAD).
+ * 0 (V-BLANK), 1 (LCD), 2 (TIMER), 3 (SERIAL), 4 (JOYPAD).
+ * @return 20 cycles if an interupt is executed, else 0;  
  */
-void CPU::interupts()
+int CPU::interupts()
 {
-    if (m_InteruptsEnabled)
+    byte_t requests = readByte(r_IF)&0x1F;
+    byte_t enabled = readByte(r_IE)&0x1F;
+
+    if (!m_InteruptsEnabled) //master switch disabled
     {
-        byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
-        byte_t enabled = readByte(c_INTERUPTS_ENABLED_ADDRESS);
-        if (requests)
+        if (m_Halted)
         {
-            for (byte_t i=0; i<5; ++i) //for each interupt bit 0/1/2/4
-            {
-                if (testBit(requests,i)) //There is a request (i)
-                {
-                    if (testBit(enabled,i)) //and interupt (i) is enabled 
-                    {
-                        m_Halted = false;
-                        performInterupt(i);
-                        return;
-                    }
-                }
-            }
+            bool requestPending {(requests&enabled)>0};
+            if (requestPending)
+                m_Halted = false;
+        }
+        return 0;
+    }
+    if (!requests) //no requests pending
+        return 0;
+
+    //for each interupt bit 0-4
+    for (byte_t i=0; i<5; ++i) 
+    {
+        //There is a request (i) and it is enabled 
+        if (testBit(requests,i) && testBit(enabled,i)) 
+        {
+            performInterupt(i);
+            return 20;
         }
     }
-    else if (m_Halted)
-    {
-        byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
-        byte_t enabled = readByte(c_INTERUPTS_ENABLED_ADDRESS);
 
-        if (requests & enabled)
-            m_Halted = false;
-    }
+    return 0;
 }
 
 
@@ -319,10 +309,11 @@ void CPU::interupts()
  */
 void CPU::requestInterupt(int interupt) //0,1,2,4
 {
-    byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
-    //set relevent bit
+    assert((interupt>=0&&interupt<5) && "Invalid interupt requested!");
+    byte_t requests = readByte(r_IF);
+    
     setBit(requests, interupt);
-    writeByte(c_INTERUPTS_REQ_ADDRESS, requests);
+    writeByte(r_IF, requests);
 }
 
 /**
@@ -332,14 +323,15 @@ void CPU::requestInterupt(int interupt) //0,1,2,4
  */
 void CPU::performInterupt(int interupt)
 {
-    m_log(LOG_ERROR) << "Starting interupt " << interupt << "!" << "\n";
-    m_InteruptsEnabled = false;
+    m_log(LOG_DEBUG) << "Starting interupt " << interupt << "!" << "\n";
+    m_InteruptsEnabled = false;    
+    m_Halted = false;
+    if (interupt==4) //joypad interupt
+        m_Stopped = false;
 
-    // m_log.set_log_level(LOG_DEBUG);
-
-    byte_t requests = readByte(c_INTERUPTS_REQ_ADDRESS);
+    byte_t requests = readByte(r_IF);
     resetBit(requests, interupt);
-    writeByte(c_INTERUPTS_REQ_ADDRESS, requests);
+    writeByte(r_IF, requests);
 
     push(m_PC);
     switch(interupt)
@@ -347,6 +339,7 @@ void CPU::performInterupt(int interupt)
         case 0: m_PC = c_VBLANK_INTERUPT; break;
         case 1: m_PC = c_LCD_INTERUPT; break;
         case 2: m_PC = c_TIMER_INTERUPT; break;
+        case 3: m_PC = c_SERIAL_INTERUPT; break;
         case 4: m_PC = c_JOYPAD_INTERUPT; break;
         default: 
             throw std::logic_error("Invalid interupt code!");
