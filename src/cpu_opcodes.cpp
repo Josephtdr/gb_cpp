@@ -599,7 +599,7 @@ int CPU::OP_0xD9()
     logOpcode((m_PC-1), 0xD9, 0x0, 0x0, "RETI", "", "");
     m_PC = pop();
     m_InteruptsEnabled = true;
-    return 8;
+    return 16;
 }
 //Miscellaneous
 //DAA
