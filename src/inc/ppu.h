@@ -47,12 +47,12 @@ private:
     void updateLCDStatus();
     bool isLCDEnabled();
 
-    void drawScanLine();
-    void renderTiles();
-    void renderWhite();
+    void drawScanLine(int currentLine);
+    void renderTiles(int currentLine);
+    void renderWhite(int currentLine);
     word_t getTileLocation(word_t tileDataBase, bool signed_, word_t tileAddress);
     
-    void renderSprites();
+    void renderSprites(int currentLine);
     void getSprites(std::vector<Sprite>& sprites, byte_t LY, int height);
 
     int getColourInt(word_t tileLocation, int yPos, int xPos);

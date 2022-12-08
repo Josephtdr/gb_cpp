@@ -1,6 +1,7 @@
 #include "inc/ppu.h"
-
 #include "inc/bitfuncs.h"
+
+const int c_CYCLES_PER_SCANLINE {456};
 
 PPU::PPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef)
     : m_Memory{ memoryRef },
@@ -14,27 +15,22 @@ void PPU::updateGraphics(int cycles)
 {
     updateLCDStatus();
 
-    if (isLCDEnabled())
-        m_ScanlineCounter -= cycles;
-    else
+    if (!isLCDEnabled())
         return;
-   
+    
+    m_ScanlineCounter -= cycles;
+
     if (m_ScanlineCounter <= 0)
     {
-        // move onto next scanline
-        m_Memory.increment(r_LY);
+        m_ScanlineCounter = c_CYCLES_PER_SCANLINE;
         byte_t currentline{ readByte(r_LY) };
-        m_ScanlineCounter = 456; //number of cycles per scanline
-
+        m_Memory.increment(r_LY);
         // draw the current scanline
-        if (currentline < 144)
-            drawScanLine();
-        // we have entered vertical blank period
-        else if (currentline == 144)
-        {
+        if (currentline < c_VIDEO_HEIGHT)
+            drawScanLine(currentline);
+        // Perform interupt when entering VBlank
+        else if (currentline == c_VIDEO_HEIGHT)
             requestInterupt(0);
-        }
-            
         // if gone past max scanline, 153, reset
         else if (currentline > 153)
             writeByte(r_LY, 0);
@@ -63,31 +59,28 @@ void PPU::renderScreen()
     m_Platform.Update(m_textureBuffer, c_VIDEO_WIDTH * sizeof(uint32_t));
 }
 
-void PPU::drawScanLine()
+void PPU::drawScanLine(int line)
 {
     byte_t lcdControl{ readByte(r_LCDC) };
     if (testBit(lcdControl,0)) //background enabled flag
-        renderTiles();
+        renderTiles(line);
     else
-        renderWhite();
+        renderWhite(line);
     if (testBit(lcdControl,1)) //sprites enabled flag
-        renderSprites();
+        renderSprites(line);
 }
 
-void PPU::renderWhite()
+void PPU::renderWhite(int currentLine)
 {
-    byte_t currentLine{ readByte(r_LY) };
-
     for (byte_t pixel{0}; pixel<c_VIDEO_WIDTH; ++pixel)
     {
         m_ScreenData[pixel][currentLine] = Pixel{ Colour::White, false, true};
     }
 }
 
-void PPU::renderTiles()
+void PPU::renderTiles(int currentLine)
 {
     byte_t lcdControl{ readByte(r_LCDC) };
-    byte_t currentLine{ readByte(r_LY) };
     byte_t scrollY{ readByte(r_SCY) };
     byte_t scrollX{ readByte(r_SCX) };
     byte_t windowY{ readByte(r_WY) };
@@ -100,7 +93,7 @@ void PPU::renderTiles()
     word_t windowTilemap{0x9800};
 
     //Window enabled flag, and window visible on screen
-    if (testBit(lcdControl, 5) && windowX <= 166 &&  windowY <= 143)
+    if (testBit(lcdControl, 5) && windowX < c_VIDEO_WIDTH+7 &&  windowY < c_VIDEO_HEIGHT)
     {   
         if (windowY <= currentLine) //visible somewhere on current line
             drawingWindow = true;
@@ -122,7 +115,7 @@ void PPU::renderTiles()
 
     byte_t yPos{ static_cast<byte_t>(currentLine + scrollY) };
 
-    for (int pixel{0}; pixel < 160; ++pixel)
+    for (int pixel{0}; pixel < c_VIDEO_WIDTH; ++pixel)
     {
         bool inWindow{};
         word_t tilemap{ backgroundTilemap };
@@ -176,10 +169,9 @@ word_t PPU::getTileLocation(word_t tileDataAddress, bool signed_, word_t tileAdd
     return tileLocation;
 }
 
-void PPU::renderSprites()
+void PPU::renderSprites(int currentLine)
 {
     byte_t lcdControl{ readByte(r_LCDC) };
-    byte_t currentLine{ readByte(r_LY) };
     word_t tileDataAddress{0x8000};
 
     int height{8};

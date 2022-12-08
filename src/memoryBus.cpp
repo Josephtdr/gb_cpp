@@ -212,7 +212,7 @@ void MemoryBus::writeByte(word_t address, byte_t value)
     }
     else if (address == r_DIV)
     {
-        m_Memory[address] = 0;
+        m_Memory[r_DIV] = 0;
     }
     else if ((address == 0xFF50) && value) //unmap  bootrom
     {
