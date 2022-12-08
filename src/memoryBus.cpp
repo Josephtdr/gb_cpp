@@ -84,7 +84,7 @@ byte_t MemoryBus::readByteRaw(word_t address)
     {   
         if (m_CurrentROMBank == 0) //KEEPS GETTING SET TO 0??????
             m_CurrentROMBank = 1;
-        word_t newAddress{ static_cast<word_t>(address - c_ROM_BANK_SIZE) };
+        unsigned int newAddress{ static_cast<word_t>(address - c_ROM_BANK_SIZE) };
         newAddress += (m_CurrentROMBank*c_ROM_BANK_SIZE);
         return m_CartridgeMemory[newAddress];
     }
@@ -123,7 +123,7 @@ byte_t MemoryBus::readByte(word_t address)
     {   
         if (m_CurrentROMBank == 0) //KEEPS GETTING SET TO 0??????
             m_CurrentROMBank = 1;
-        word_t newAddress{ static_cast<word_t>(address - c_ROM_BANK_SIZE) };
+        unsigned int newAddress{ static_cast<word_t>(address - c_ROM_BANK_SIZE) };
         newAddress += (m_CurrentROMBank*c_ROM_BANK_SIZE);
         return m_CartridgeMemory[newAddress];
     }
@@ -169,7 +169,6 @@ byte_t MemoryBus::readByte(word_t address)
 //TODO: magic numbers
 void MemoryBus::writeByte(word_t address, byte_t value)
 {
-    // m_log(LOG_DEBUG) << "MEMORYBUS Im BOUT TO write\n";
     //read only memory for storing rom data
     if (address < 0x8000u)
     { 

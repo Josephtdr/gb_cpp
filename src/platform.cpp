@@ -31,6 +31,11 @@ bool Platform::getExit() const
     return m_exit;
 }
 
+/**
+ * @brief Processes keypresses, esc quits application.  
+ * 
+ * @return std::pair<int,int> first int [0-1] indicates arrowkey or button, second int [0-7] indicates specific key
+ */
 std::pair<int,int> Platform::ProcessInput()
 {
     SDL_Event event;
