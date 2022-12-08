@@ -2,6 +2,7 @@
 #include "inc/bitfuncs.h"
 
 const int c_CYCLES_PER_SCANLINE {456};
+const int c_MAX_SCANLINE {153};
 
 PPU::PPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef)
     : m_Memory{ memoryRef },
@@ -32,7 +33,7 @@ void PPU::updateGraphics(int cycles)
         else if (currentline == c_VIDEO_HEIGHT)
             requestInterupt(0);
         // if gone past max scanline, 153, reset
-        else if (currentline > 153)
+        else if (currentline > c_MAX_SCANLINE)
             writeByte(r_LY, 0);
     }
 }
@@ -131,23 +132,19 @@ void PPU::renderTiles(int currentLine)
         }
 
         //which of the 8 verticle pixels within the tile
-        word_t tileRow = (((byte_t)(yPos/8))*32);
+        word_t tileMapRow = (((byte_t)(yPos/8))*32);
         //which of the 8 horizontal pixels within the tile
-        word_t tileCol = (xPos/8);
-        word_t tileAddress = tilemap + tileRow + tileCol;
+        word_t tileMapCol = (xPos/8);
+        word_t tileAddress = tilemap + tileMapRow + tileMapCol;
 
         word_t tileLocation{ getTileLocation(tileDataAddress, signedTileLookup, tileAddress) };
         
         byte_t tileY{ static_cast<byte_t>(yPos % 8) };
         byte_t tileX{ static_cast<byte_t>(-1*((xPos % 8) - 7)) }; //bit 7 is pixel 0 etc...
+        
         int colourInt{ getColourInt(tileLocation, tileY, tileX) };
-
         Colour pixelColour{ getColour(colourInt, r_BG_PALLET) };
 
-        if ((currentLine<0)||(currentLine>143)||(pixel<0)||(pixel>159))
-        {
-            throw std::runtime_error("Incorrect Drawing thingy!");
-        }
         m_ScreenData[pixel][currentLine] = Pixel{ pixelColour, false, colourInt==0 };
     }
 }
@@ -173,10 +170,7 @@ void PPU::renderSprites(int currentLine)
 {
     byte_t lcdControl{ readByte(r_LCDC) };
     word_t tileDataAddress{0x8000};
-
-    int height{8};
-    if (testBit(lcdControl, 2)) //sprite height flag
-        height = 16;
+    int height {testBit(lcdControl, 2) ? 16 : 8};
 
     std::vector<Sprite> sprites{10};
     getSprites(sprites, currentLine, height);
@@ -185,6 +179,7 @@ void PPU::renderSprites(int currentLine)
     {
         word_t pallet{ testBit(sprite.flags, 4) ? r_SPRITE_PALLET2 : r_SPRITE_PALLET1 };
         word_t tileLocation = tileDataAddress + (sprite.tileIndex * c_TILE_SIZE);
+
         byte_t tileY{ static_cast<byte_t>(currentLine - (sprite.yPos-16)) };
         if (testBit(sprite.flags, 6)) //y flip flag
             tileY = -1*((tileY % height) - (height-1));
@@ -206,29 +201,29 @@ void PPU::renderSprites(int currentLine)
             if (testBit(sprite.flags, 5)) //x flip flag
                 tileX = -1*((tileX % 8) - 7);
 
+            int pixelX {sprite.xPos - 8 + pixel};
+            //pixel not on screen
+            if (pixelX<0 || pixelX>c_VIDEO_WIDTH)
+                continue;
+
             int colourInt {getColourInt(tileLocation, tileY, tileX)};
-
             Colour colour{ getColour(colourInt, pallet, true) };
+            Pixel& screenPixel{ m_ScreenData[pixelX][currentLine] };
 
-            if (sprite.xPos - 8 + pixel >= 0 && sprite.xPos - 8 + pixel < 160)
+            //dont draw over previous sprites
+            if (screenPixel.sprite)
+                continue;
+            //dont draw if both priorities set to bg 
+            if (testBit(lcdControl, 0) && testBit(sprite.flags, 7))
             {
-                Pixel& screenPixel{ m_ScreenData[sprite.xPos-8+pixel][currentLine] };
-
-                //dont draw over previous sprites
-                if (screenPixel.sprite)
+                if (!screenPixel.transparent) // and bg not transparent
                     continue;
-                //dont draw if both priorities set to bg 
-                else if (testBit(lcdControl, 0) && testBit(sprite.flags, 7))
-                {
-                    if (!screenPixel.transparent) // and bg not transparent
-                        continue;
-                }
-                if (colour==Colour::Transparent) //dont draw if transparent
-                    continue;
-
-                //finally can draw
-                screenPixel = Pixel{ colour, true, false };
             }
+            if (colour==Colour::Transparent) //dont draw if transparent
+                continue;
+
+            //finally can draw
+            screenPixel = Pixel{ colour, true, false };
         }
     }
 }
@@ -238,19 +233,21 @@ void PPU::getSprites(std::vector<Sprite>& sprites, byte_t LY, int height)
     word_t OAMTable{0xFE00};
     int numSprites{};
 
-    for (byte_t i{0}; i < 40; ++i)
+    for (byte_t i {0}; i < 40; ++i)
     {
-        byte_t yPos{ readByte(OAMTable + i*4) };
-        byte_t xPos{ readByte(OAMTable + i*4 + 1u) };
+        if (numSprites>=10)
+            continue;
         
-        if (numSprites < 10 && (LY >= (yPos-16) && LY < (yPos-16+height)))
-        {
-            ++numSprites;
-            byte_t tileIndex{ readByte(OAMTable + i*4 + 2u) };
-            byte_t flags{ readByte(OAMTable + i*4 + 3u) };
-            
-            sprites[numSprites-1] = Sprite{ yPos, xPos, tileIndex, flags };
-        }
+        byte_t yPos{ readByte(OAMTable + i*4) };
+        if (LY < (yPos-16) || LY >= (yPos-16+height))
+            continue;
+
+        byte_t xPos{ readByte(OAMTable + i*4 + 1u) };
+        byte_t tileIndex{ readByte(OAMTable + i*4 + 2u) };
+        byte_t flags{ readByte(OAMTable + i*4 + 3u) };
+        
+        sprites[numSprites] = Sprite{ yPos, xPos, tileIndex, flags };
+        ++numSprites;
     }
 }
 
@@ -289,7 +286,7 @@ void PPU::updateLCDStatus()
 
     if(!isLCDEnabled())
     {
-        m_ScanlineCounter = 456;
+        m_ScanlineCounter = c_CYCLES_PER_SCANLINE;
         writeByte(r_LY, 0); 
         status &= 0xFC;
         setBit(status, 0);
@@ -302,16 +299,16 @@ void PPU::updateLCDStatus()
     byte_t newMode{};
     bool possibleInterupt{};
 
-    if(currentLine < 144)
+    if(currentLine < c_VIDEO_HEIGHT)
     {
-        int mode2bounds = 456-80;
+        int mode2bounds = c_CYCLES_PER_SCANLINE-80;
         int mode3bounds = mode2bounds - 172;
         
         if (m_ScanlineCounter >= mode2bounds) //Searching OAM
         {
             newMode = 2;
-            setBit(status,1);
             resetBit(status,0);
+            setBit(status,1);
             possibleInterupt = testBit(status, 5); //mode 2 interupt enabled flag
         }
         else if(m_ScanlineCounter >= mode3bounds) //Transferring Data to LCD Controller
@@ -336,10 +333,9 @@ void PPU::updateLCDStatus()
         possibleInterupt = testBit(status, 4); //mode 1 interupt enabled flag
     }
 
+    //lcd interupt
     if (possibleInterupt && (currentMode!=newMode))
-    {
         requestInterupt(1);
-    }
 
     if (currentLine==readByte(r_LYC))
     {
@@ -379,7 +375,7 @@ void PPU::writeByte(word_t address, byte_t value)
     if (address == r_LY)
     {
         m_Memory.writeByte(r_LY, 0);
-        m_ScanlineCounter = 456; //number of cycles per scanline
+        m_ScanlineCounter = c_CYCLES_PER_SCANLINE; //number of cycles per scanline
     }
     m_Memory.writeByte(address, value);
 }
