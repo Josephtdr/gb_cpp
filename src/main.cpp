@@ -52,8 +52,7 @@ void frameUpdate(CPU& cpu, PPU& ppu, logger& log, MemoryBus& memory)
             cycles += cpu.cycle();
         
         cyclesThisUpdate += cycles;
-        cpu.updateTimers(cycles);
-        cpu.updateJoypad();
+        cpu.update(cycles);
         ppu.updateGraphics(cycles);
     }
     ppu.renderScreen();

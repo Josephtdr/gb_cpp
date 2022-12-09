@@ -24,7 +24,8 @@ private:
 
     int m_TimerCounter{}; //Tracks when to throw timer interupts
     int m_DividerCounter{}; //Tracks when to increment Divider Register
-    bool m_InteruptsEnabled{};
+    bool m_InteruptsEnabled{}; // IME
+    int m_IMEScheduled{}; // 0 none, 1 scheldued for next cycle, 2 enable interupts
     bool m_Halted{};
     bool m_Stopped{};
     
@@ -36,12 +37,11 @@ private:
 public:
     CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, Settings& settingsRef);
     int cycle();
-    void updateTimers(int cycles);
+    void update(int cycles);
     void updateJoypad();
     int interupts();
     bool isHalted();
     bool isStopped();
-    bool m_lineByLine{};
 
 private:
     int execute(byte_t instructionByte, bool prefixed);
@@ -51,6 +51,7 @@ private:
     byte_t readByte(word_t address) const;
     void writeByte(word_t address, byte_t value);
     
+    void updateTimers(int cycles);
     void updateDividerRegister(int cycles);
     bool isClockEnabled() const;
     void updateClockFreq();

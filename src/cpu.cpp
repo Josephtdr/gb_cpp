@@ -81,6 +81,20 @@ int CPU::execute(byte_t instructionByte, bool prefixed)
 bool CPU::isHalted() { return m_Halted; }
 bool CPU::isStopped() { return m_Stopped; }
 
+void CPU::update(int cycles)
+{
+    updateTimers(cycles);
+    updateJoypad();
+
+    if (m_IMEScheduled==1)
+        ++m_IMEScheduled;
+    else if (m_IMEScheduled>1)
+    {
+        m_IMEScheduled = 0;
+        m_InteruptsEnabled = true;
+    }
+}
+
 byte_t CPU::readByte(word_t address) const
 {
     // //Vram Area

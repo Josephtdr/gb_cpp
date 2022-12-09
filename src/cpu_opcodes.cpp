@@ -663,13 +663,14 @@ int CPU::OP_0xF3()
 {
     logOpcode((m_PC-1), 0xF3, 0x0, 0x0, "DI", "", "");
     m_InteruptsEnabled = false;
+    m_IMEScheduled = 0;
     return 4;
 }
 //EI enable interupts
 int CPU::OP_0xFB()
 {
     logOpcode((m_PC-1), 0xFB, 0x0, 0x0, "EI", "", "");
-    m_InteruptsEnabled = true;
+    m_IMEScheduled = 1;
     return 4;
 }
 //Rotates and shifts
