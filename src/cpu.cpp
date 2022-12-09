@@ -231,12 +231,12 @@ void CPU::updateDividerRegister(int cycles)
 
 void CPU::updateJoypad()
 {
-    auto action{ m_Platform.ProcessInput() };
+    const auto [type, key] {m_Platform.ProcessInput()};
 
-    switch(action.first)
+    switch(type)
     {
-        case 0: keyDown(action.second); break;
-        case 1: keyUp(action.second); break;
+        case 0: keyDown(key); break;
+        case 1: keyUp(key); break;
         case 2: break;
     }
 }

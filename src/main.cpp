@@ -71,9 +71,6 @@ const std::unordered_map<std::string, NoArgHandle> NoArgs {
 
 int main(int argc, char *argv[])
 {
-    freopen( "logfordoc.txt", "w", stdout );
-    freopen( "trace.txt", "w", stderr );
-
     if (argc < 2)
 	{
 		std::cerr << "Usage: " << argv[0] << " <ROM>\n";
@@ -88,8 +85,10 @@ int main(int argc, char *argv[])
         if(auto j {NoArgs.find(opt)}; j != NoArgs.end())
             j->second(settings);
     }
+    if (settings.traceLog)
+        freopen( "trace.txt", "w", stdout );
 
-    logger log{ std::cerr, __PRETTY_FUNCTION__ };
+    logger log{ std::cout, __PRETTY_FUNCTION__ };
     log.set_log_level(LOG_INFO);
     MemoryBus memory{ log };
     memory.loadGame(romFilename, settings.bootRom);

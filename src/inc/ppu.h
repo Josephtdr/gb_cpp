@@ -34,8 +34,8 @@ private:
         byte_t flags{};
     };
 
-    Pixel m_ScreenData[c_VIDEO_WIDTH][c_VIDEO_HEIGHT]{};
-    uint32_t m_textureBuffer[c_VIDEO_WIDTH * c_VIDEO_HEIGHT]{};
+    std::array<std::array<Pixel, c_VIDEO_HEIGHT>, c_VIDEO_WIDTH> m_ScreenData{};
+    std::array<uint32_t, c_VIDEO_WIDTH*c_VIDEO_HEIGHT> m_textureBuffer{};
     
 public:
     PPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef);

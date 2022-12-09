@@ -9,7 +9,7 @@ PPU::PPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef)
       m_log{ logRef },
       m_Platform{ platformRef }
 {
-    m_Platform.Update(m_textureBuffer, c_VIDEO_WIDTH * sizeof(uint32_t));
+    m_Platform.Update(m_textureBuffer.data(), c_VIDEO_WIDTH * sizeof(uint32_t));
 }
 
 void PPU::updateGraphics(int cycles)
@@ -57,7 +57,7 @@ void PPU::renderScreen()
             m_textureBuffer[line*c_VIDEO_WIDTH + pixel] = rgb;
         }
     }
-    m_Platform.Update(m_textureBuffer, c_VIDEO_WIDTH * sizeof(uint32_t));
+    m_Platform.Update(m_textureBuffer.data(), c_VIDEO_WIDTH * sizeof(uint32_t));
 }
 
 void PPU::drawScanLine(int line)

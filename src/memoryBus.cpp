@@ -51,8 +51,7 @@ byte_t MemoryBus::getJoypadState() const
 {
     byte_t joyp{ m_Memory[r_JOYP] };
 
-    // are we interested in the standard buttons?
-    if (!testBit(joyp, 4))
+    if (!testBit(joyp, 4)) //regular buttons
     {
             byte_t topJoypad{ static_cast<byte_t>(m_Joypad & 0xF) };
             topJoypad |= 0xF0; // turn the top 4 bits on
@@ -74,19 +73,14 @@ byte_t MemoryBus::readByteRaw(word_t address)
     {
         //boot rom currently loaded
         if (m_bootRomLoaded && (address < 0x100))
-        {
             return m_Memory[address];
-        }
+        
         return m_CartridgeMemory[address];
     }
     //rom banking area so access cartridge memory instead
-    else if ((address>=0x4000u) && (address <= 0x7FFFu))
+    else if ((address>=0x4000u) && (address < 0x8000u))
     {   
-        if (m_CurrentROMBank == 0) //KEEPS GETTING SET TO 0??????
-            m_CurrentROMBank = 1;
-        unsigned int newAddress{ static_cast<word_t>(address - c_ROM_BANK_SIZE) };
-        newAddress += (m_CurrentROMBank*c_ROM_BANK_SIZE);
-        return m_CartridgeMemory[newAddress];
+        return readRomBank(address);
     }
     // ram memory bank area
     else if ((address >= 0xA000u) && (address < 0xC000u))
@@ -121,17 +115,12 @@ byte_t MemoryBus::readByte(word_t address)
     //rom banking area so access cartridge memory instead
     else if ((address>=0x4000u) && (address <= 0x7FFFu))
     {   
-        if (m_CurrentROMBank == 0) //KEEPS GETTING SET TO 0??????
-            m_CurrentROMBank = 1;
-        unsigned int newAddress{ static_cast<word_t>(address - c_ROM_BANK_SIZE) };
-        newAddress += (m_CurrentROMBank*c_ROM_BANK_SIZE);
-        return m_CartridgeMemory[newAddress];
+        return readRomBank(address);
     }
     //Vram Area
     else if ((address>=0x8000u) && (address < 0xA000u))
     {
         return m_Memory[address];
-        //do vram stuff
     }
     // ram memory bank area
     else if ((address >= 0xA000u) && (address < 0xC000u))
@@ -230,12 +219,11 @@ void MemoryBus::increment(word_t address)
 
 void MemoryBus::loadGame(const char* filename, bool bootRom)
 {
-    memset(m_CartridgeMemory,0,sizeof(m_CartridgeMemory)) ;
+    std::ifstream gameRom(filename, std::ifstream::binary | std::ios::ate);
+    int fileLen = gameRom.tellg();
+    gameRom.seekg (0, std::ios::beg);
+    gameRom.read(reinterpret_cast<char*>(m_CartridgeMemory.data()), fileLen);
 
-    FILE *in;
-    in = fopen( filename, "rb" );
-    fread(m_CartridgeMemory, 1, c_CARTRIDGE_MEMORY_SIZE, in);
-    fclose(in); 
 
     m_log(LOG_DEBUG) << "Loaded game into game rom!" << "\n";
     getRomBankingMode();
@@ -246,7 +234,6 @@ void MemoryBus::loadGame(const char* filename, bool bootRom)
 std::string MemoryBus::getTitle()
 {
     std::vector<byte_t> buffer{};
-
 
     for (byte_t i{}; i<16; ++i)
     {
@@ -260,11 +247,9 @@ std::string MemoryBus::getTitle()
 
 void MemoryBus::loadBootRom()
 {
-    char* buffer = new char[c_BOOT_ROM_SIZE];
-    FILE *in;
-    in = fopen( c_BOOT_ROM_LOCATION.c_str(), "rb" );
-    fread(buffer, 1, c_BOOT_ROM_SIZE, in);
-    fclose(in); 
+    char buffer[c_BOOT_ROM_SIZE]{};
+    std::ifstream bootRom(c_BOOT_ROM_LOCATION.c_str(), std::ifstream::binary);
+    bootRom.read(buffer, c_BOOT_ROM_SIZE);
 
     for (int i = 0; i < c_BOOT_ROM_SIZE; ++i)
     {
@@ -274,7 +259,6 @@ void MemoryBus::loadBootRom()
     m_bootRomLoaded = true;
     m_log(LOG_DEBUG) << "Loaded boot rom into memory!" << "\n";
     m_log.set_log_level(LOG_INFO);
-    delete[] buffer;
 }
 
 void MemoryBus::unloadBootRom()
@@ -289,6 +273,19 @@ void MemoryBus::unloadBootRom()
 bool MemoryBus::bootRomLoaded() const
 {
     return m_bootRomLoaded;
+}
+
+byte_t MemoryBus::readRomBank(word_t address)
+{
+    if (!m_MBC1 && !m_MBC2)
+        return m_CartridgeMemory[address];
+
+    if (m_CurrentROMBank == 0) //KEEPS GETTING SET TO 0??????
+        m_CurrentROMBank = 1;
+        
+    unsigned int newAddress{ static_cast<word_t>(address - c_ROM_BANK_SIZE) };
+    newAddress += (m_CurrentROMBank*c_ROM_BANK_SIZE);
+    return m_CartridgeMemory[newAddress];
 }
 
 void MemoryBus::getRomBankingMode()
