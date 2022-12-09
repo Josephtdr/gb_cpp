@@ -63,6 +63,12 @@ int CPU::cycle()
 {
     byte_t instructionByte{ readNextByte() };
     
+    if (m_haltBug)
+    {
+        m_haltBug = false;
+        --m_PC;
+    }
+
     bool prefixed{ instructionByte == c_PREFIXED_INSTRUCTION_BYTE };
     if (prefixed)
         instructionByte = readNextByte(); 
@@ -292,8 +298,7 @@ int CPU::interupts()
     {
         if (m_Halted)
         {
-            bool requestPending {(requests&enabled)>0};
-            if (requestPending)
+            if (requests&enabled)
                 m_Halted = false;
         }
         return 0;

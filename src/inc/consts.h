@@ -32,7 +32,7 @@ const word_t c_INITIAL_PC_VALUE = 0x100u;
 const word_t c_VBLANK_INTERUPT  = 0x40;
 const word_t c_LCD_INTERUPT     = 0x48;
 const word_t c_TIMER_INTERUPT   = 0x50;
-const word_t c_SERIAL_INTERUPT   = 0x58;
+const word_t c_SERIAL_INTERUPT  = 0x58;
 const word_t c_JOYPAD_INTERUPT  = 0x60;
 
 const std::string c_BOOT_ROM_LOCATION = "/home/randa/Documents/emulation/gb_cpp/roms/DMG_ROM.bin";

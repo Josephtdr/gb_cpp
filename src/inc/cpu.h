@@ -27,6 +27,7 @@ private:
     bool m_InteruptsEnabled{}; // IME
     int m_IMEScheduled{}; // 0 none, 1 scheldued for next cycle, 2 enable interupts
     bool m_Halted{};
+    bool m_haltBug{};
     bool m_Stopped{};
     
     using opcodeFnPtr = int(CPU::*)();
@@ -56,13 +57,14 @@ private:
     bool isClockEnabled() const;
     void updateClockFreq();
     byte_t getClockFreq() const;
-    void logOpcode(word_t PC, byte_t opcode, byte_t arg1, byte_t arg2, std::string_view func, std::string_view peram1, std::string_view peram2) const;
     
     void keyDown(int key);
     void keyUp(int key);
     
     void requestInterupt(int interupt);
     void performInterupt(int interupt);
+
+    void logOpcode(word_t PC, byte_t opcode, byte_t arg1, byte_t arg2, std::string_view func, std::string_view peram1, std::string_view peram2) const;
     void initiateDMATransfer(byte_t value);
 
     //Opcode Commands

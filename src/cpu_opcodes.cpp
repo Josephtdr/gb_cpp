@@ -647,6 +647,20 @@ int CPU::OP_0x00()
 int CPU::OP_0x76()
 {
     logOpcode((m_PC-1), 0x76, 0x0, 0x0, "HALT", "", "");
+
+    //HALT BUG
+    if (!m_InteruptsEnabled)
+    {
+        byte_t requests = readByte(r_IF);
+        byte_t enabled = readByte(r_IE);
+
+        if (requests&enabled)
+        {
+            m_haltBug = true;
+            return 4;
+        }    
+    }
+
     m_Halted = true;
     return 4;
 }
