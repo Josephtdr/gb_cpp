@@ -7,6 +7,7 @@
 #include "platform.h"
 #include "BSlogger.h"
 #include "ppu.h"
+#include "apu.h"
 
 class CPU
 {
@@ -19,6 +20,7 @@ private:
     MemoryBus& m_Memory;
     Platform& m_Platform;
     PPU& m_PPU;
+    APU& m_APU;
     Settings& m_Settings;
     
 
@@ -36,7 +38,7 @@ private:
     opcodeFnPtr2 instructionTable2[c_INSTRUCTION_TABLE_SIZE]{};
 
 public:
-    CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, Settings& settingsRef);
+    CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, APU& apuRef, Settings& settingsRef);
     int cycle();
     void update(int cycles);
     void updateJoypad();

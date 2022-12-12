@@ -5,13 +5,15 @@
 #include <stdexcept>
 #include <cassert>
 
-CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, Settings& settingsRef)
+CPU::CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, 
+        PPU& ppuRef, APU& apuRef, Settings& settingsRef)
  : m_SP{ c_TOP_OF_STACK },
    m_log{ logRef },
    m_Memory{ memoryRef },
    m_Platform{ platformRef },
    m_PPU{ ppuRef },
    m_InteruptsEnabled{ false },
+   m_APU{ apuRef },
    m_Settings{ settingsRef }
    
 {
@@ -172,7 +174,13 @@ void CPU::writeByte(word_t address, byte_t value)
     //     m_Memory.writeByte(address, value);
     // }  
     //reset the current scanline if the game tries to write to it
-    if (address == r_LY)
+     if (address == r_DIV)
+    {
+        if (testBit(readByte(r_DIV),4))
+            m_APU.incrementDivAPU();
+        m_Memory.writeByte(r_DIV, 0);
+    }
+    else if (address == r_LY)
     {
         m_Memory.writeByte(r_LY, 0);
         m_PPU.m_ScanlineCounter = 456; //number of cycles per scanline
@@ -239,13 +247,23 @@ void CPU::updateClockFreq()
     }
 }
 
+/**
+ * @brief APU div counter incremented every time bit 4 goes from 1-0
+ * 
+ * @param cycles 
+ */
 void CPU::updateDividerRegister(int cycles)
 {
     m_DividerCounter+=cycles;
     while (m_DividerCounter >= c_DIVIDER_CYCLE_FREQ)
     {
+        bool bit4Set {testBit(readByte(r_DIV),4)};
+
         m_DividerCounter -= c_DIVIDER_CYCLE_FREQ;
         m_Memory.increment(r_DIV);
+
+        if (bit4Set && !testBit(readByte(r_DIV),4))
+            m_APU.incrementDivAPU();
     }
 }
 
@@ -296,11 +314,10 @@ int CPU::interupts()
 
     if (!m_InteruptsEnabled) //master switch disabled
     {
-        if (m_Halted)
-        {
-            if (requests&enabled)
-                m_Halted = false;
-        }
+        //cpu halted and there is a pending, enabled, interupt
+        if (m_Halted && (requests&enabled))
+            m_Halted = false;
+
         return 0;
     }
     if (!requests) //no requests pending
