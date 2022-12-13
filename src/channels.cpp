@@ -68,42 +68,71 @@ void Envelope::trigger()
 }
 
 //******************************************************************************
-Frequency::Frequency(int scale)
+Timer::Timer(int scale)
     : m_scale {scale}
 {}
-word_t Frequency::getFrequency()
+word_t Timer::getFrequency()
 {
     byte_t lsb {m_Memory.readByte(m_NRx3)};
     byte_t msb = m_Memory.readByte(m_NRx4) & 0x7;
     return (msb << 8) | lsb;
 }
-int Frequency::updatePeriod()
+void Timer::setPeriod()
 {
     int wavelength = getFrequency();
 
     m_period = (2048 - wavelength) * m_scale;
+    m_periodClock = m_period;
+}
+bool Timer::updateTimer(int clocks)
+{
+    m_periodClock -= clocks;
+
+    if (m_periodClock>0)
+        return false;
+
+    m_periodClock += m_period;
+    return true;    
 }
 
 
 //******************************************************************************
 PulseChannel::PulseChannel(MemoryBus& memoryRef, word_t r1, word_t r2, word_t r3, word_t r4)
-    : Channel{memoryRef,r1,r2,r3,r4}, Frequency{4}, Envelope{}
+    : Channel{memoryRef,r1,r2,r3,r4}, Timer{4}, Envelope{}
 {}
 
 void PulseChannel::trigger()
 {
     Envelope::trigger();
-    m_DutyCounter = 0;
+    
+    byte_t nrx1 {m_Memory.readByte(m_NRx1)};
+    m_DutyCycle = extractBits(nrx1,6,2);
+    m_DutyPointer = 0;
+
+    setPeriod();
 }
 
 int PulseChannel::generator()
 {
-    
+    static const std::vector<byte_t> waveforms {
+        0b00000001, 0b10000001, 0b10000111, 0b01111110
+    };
+
+    bool raised {testBit(waveforms[m_DutyCycle], m_DutyPointer)}; 
+    if (!raised)
+        return 0;
+    else
+        return m_EnvelopeVolume;
 }
 
 void PulseChannel::update(int clocks)
 {
-    
+    if (!updateTimer(clocks))
+        return;
+
+    ++m_DutyPointer;
+    if (m_DutyPointer >= 8)
+        m_DutyPointer = 0;
 }
 
 
@@ -111,11 +140,6 @@ void PulseChannel::update(int clocks)
 SweepChannel::SweepChannel(MemoryBus& memoryRef, word_t r0, word_t r1, word_t r2, word_t r3, word_t r4)
     : Channel{memoryRef,r1,r2,r3,r4}, PulseChannel{memoryRef,r1,r2,r3,r4}, m_NRx0{r0}
 {
-}
-
-void SweepChannel::update(int clocks)
-{
-    
 }
 
 void SweepChannel::trigger()
@@ -126,7 +150,7 @@ void SweepChannel::trigger()
     m_SweepPace = extractBits(nrx0, 4, 3);
 }
 
-void SweepChannel::setWaveLen(word_t waveLen)
+void SweepChannel::setFrequency(word_t waveLen)
 {
     byte_t lsb = waveLen & 0xFF;
     byte_t msb = (waveLen >> 8) & 0x7;
@@ -135,7 +159,7 @@ void SweepChannel::setWaveLen(word_t waveLen)
     m_Memory.writeByte(m_NRx3, lsb);
     m_Memory.writeByte(m_NRx4, nrx4 | msb);
 
-    updatePeriod();
+    setPeriod();
 }
 
 void SweepChannel::sweepIteration()
@@ -152,6 +176,8 @@ void SweepChannel::sweepIteration()
     if (addition)
     {
         wavelen += (wavelen/divisor);
+
+        //overflow turns off channel
         if (wavelen > c_MAX_CH1_WAVELEN)
             m_ChannelEnabled = false;
     }
@@ -159,13 +185,13 @@ void SweepChannel::sweepIteration()
         wavelen -= (wavelen/divisor);    
     
     if (slopeControl!=0)
-        setWaveLen(wavelen);
+        setFrequency(wavelen);
 }
 
 //******************************************************************************
 WaveChannel::WaveChannel(MemoryBus& memoryRef, 
         word_t r0, word_t r1, word_t r2, word_t r3, word_t r4)
-    : Channel{memoryRef,r1,r2,r3,r4,256,8}, Frequency{2}, m_NRx0{r0}
+    : Channel{memoryRef,r1,r2,r3,r4,256,8}, Timer{2}, m_NRx0{r0}
 {}
 
 int WaveChannel::generator()
@@ -186,11 +212,14 @@ int WaveChannel::generator()
 
 void WaveChannel::update(int clocks)
 {
-
+    if (!updateTimer(clocks))
+        return;
+    else
+        readNextWaveForm();
 }
 void WaveChannel::trigger()
 {
-    updatePeriod(); //do this in all triggers maybe? then make it frequency::trigger
+    setPeriod();
 
     m_sampleIndex = 0;
     m_DacEnabled = true;
@@ -223,11 +252,11 @@ NoiseChannel::NoiseChannel(MemoryBus& memoryRef, word_t r1, word_t r2, word_t r3
 
 int NoiseChannel::generator()
 {
-
+    return 0;
 }
 void NoiseChannel::update(int clocks)
 {
-
+    
 }
 void NoiseChannel::trigger()
 {

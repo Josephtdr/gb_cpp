@@ -47,24 +47,26 @@ public:
     void trigger() override;
 };
 
-class Frequency  : virtual public Channel
+class Timer  : virtual public Channel
 {
 protected:
     int m_scale{};
     int m_period{};
+    int m_periodClock{};
 
-    Frequency(int scale);
+    Timer(int scale);
 
     word_t getFrequency();
-    int updatePeriod();
+    void setPeriod();
+    bool updateTimer(int clocks);
 };
 
 
-class PulseChannel : public Envelope, public Frequency
+class PulseChannel : public Envelope, public Timer
 {
 protected:
     int m_DutyCycle{};
-    int m_DutyCounter{};
+    int m_DutyPointer{}; // indicates where we are along the duty cycle 
 
 public:
     PulseChannel(MemoryBus& memoryRef, word_t r1, word_t r2, word_t r3, word_t r4);
@@ -81,16 +83,15 @@ private:
     word_t m_NRx0{}; //
     int m_SweepPace{}; // updates on reset or retrigger
 
-    void setWaveLen(word_t waveLen);
+    void setFrequency(word_t waveLen);
 public:
     SweepChannel(MemoryBus& memoryRef, word_t r0, word_t r1, word_t r2, word_t r3, word_t r4);
 
     void trigger() override;
-    void update(int clocks) override;
     void sweepIteration();
 };
 
-class WaveChannel : public Frequency
+class WaveChannel : public Timer
 {
 private:
     word_t m_NRx0{}; //some optional channel specific feature
