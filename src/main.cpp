@@ -1,5 +1,6 @@
 #include "inc/cpu.h"
 #include "inc/ppu.h"
+#include "inc/apu.h"
 #include "inc/platform.h"
 #include "inc/BSlogger.h"
 
@@ -18,7 +19,7 @@ private:
     using Second = std::chrono::duration<double, std::ratio<1> >;
 
     std::chrono::time_point<Clock> m_beg{ Clock::now() };
-    double frameRate{ 1.0 / 60.0 }; //in seconds
+    double frameRate{ 1.0 / 59.7 }; //in seconds
 
 public:
     void reset()
@@ -35,18 +36,23 @@ public:
     }
 };
 
-void frameUpdate(CPU& cpu, PPU& ppu, logger& log, MemoryBus& memory)
+void frameUpdate(CPU& cpu, PPU& ppu, APU& apu, logger& log, MemoryBus& memory)
 {
     int cyclesThisUpdate = 0;
 
     while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
     {
-        int cycles {cpu.interupts()};
+        int cycles {};
+        
+        cycles = cpu.interupts();
+
         if (cpu.isHalted())
             cycles += 4;
+            
         else if (cpu.isStopped())
         {
-            cpu.updateJoypad(); continue;
+            cpu.updateJoypad(); 
+            continue;
         }
         else
             cycles += cpu.cycle();
@@ -54,6 +60,7 @@ void frameUpdate(CPU& cpu, PPU& ppu, logger& log, MemoryBus& memory)
         cyclesThisUpdate += cycles;
         cpu.update(cycles);
         ppu.updateGraphics(cycles);
+        apu.update(cycles);
     }
     ppu.renderScreen();
 }
@@ -93,7 +100,8 @@ int main(int argc, char *argv[])
     memory.loadGame(romFilename, settings.bootRom);
     Platform platform{ memory.getTitle().c_str(),c_VIDEO_WIDTH,c_VIDEO_HEIGHT,2 };
     PPU ppu{ memory,log,platform };
-    CPU cpu{ memory,log,platform,ppu,settings };
+    APU apu{ memory, platform };
+    CPU cpu{ memory,log,platform,ppu,apu,settings };
     
     log(LOG_INFO) << std::hex << "Starting up!" << "\n";
 
@@ -103,7 +111,7 @@ int main(int argc, char *argv[])
         if(timer.nextFrameReady())
         {
             timer.reset();
-            frameUpdate(cpu, ppu, log, memory);
+            frameUpdate(cpu, ppu, apu, log, memory);
         }
     }
 }

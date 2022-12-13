@@ -2,8 +2,8 @@
 #include "inc/bitfuncs.h"
 #include "inc/channels.h"
 
-APU::APU(MemoryBus& memoryRef)
-    : m_Memory {memoryRef}
+APU::APU(MemoryBus& memoryRef, Platform& platformRef)
+    : m_Memory {memoryRef}, m_Platform {platformRef}, m_SampleRate {87}
 {
     m_Channels.emplace_back(new SweepChannel(m_Memory,r_NR10,r_NR11,r_NR12,r_NR13,r_NR14));
     m_Channels.emplace_back(new PulseChannel(m_Memory,r_NR21,r_NR22,r_NR23,r_NR24));
@@ -11,11 +11,87 @@ APU::APU(MemoryBus& memoryRef)
     m_Channels.emplace_back(new NoiseChannel(m_Memory,r_NR41,r_NR42,r_NR43,r_NR44));
 }
 
-
 void APU::update(int clocks)
 {
     for (auto& channel : m_Channels)
         channel->update(clocks);
+
+    m_SampleCounter += clocks;
+    while(m_SampleCounter >= m_SampleRate)
+    {
+        m_SampleCounter -= m_SampleRate;
+        m_sampleBuffer.push_back(sample());
+
+        if (m_sampleBuffer.size() < 1024)
+            continue;
+        else
+            flushBuffer();
+    }
+}
+
+void APU::flushBuffer()
+{
+
+    //do some platform stuff
+
+    //SDL_QueueAudio
+
+
+    m_sampleBuffer.clear();
+}
+
+Sample APU::sample()
+{
+    auto [left, right] = mixer();
+
+    //convert to  raw PCM samples
+    left /= 100;
+    right /= 100;
+    
+
+    return {left, right};
+}
+/**
+ * @brief 
+ * 
+ * @return std::pair<double,double> <Left, Right>
+ */
+Sample APU::mixer()
+{
+    Sample analogOut{};
+
+    byte_t nr51 {m_Memory.readByte(r_NR51)};
+
+    for (int i {0}; i<4; ++i)
+    {
+        double value{};
+        if (m_Channels[i]->dacEnabled())
+        {
+            value = dac(m_Channels[i]->generator());
+            m_LatestChannelOut[i] = value;
+        }
+        else
+            value = fade(i);
+        
+        //right output
+        if (testBit(nr51, i))
+            analogOut.right += value;
+        //left output
+        if (testBit(nr51, 4+i))
+            analogOut.left += value;
+    }
+
+    //scale by master volume
+    byte_t nr50 {m_Memory.readByte(r_NR50)};
+    int rightVolume {extractBits(nr50,0,3) + 1};
+    int leftVolume {extractBits(nr50,4,3) + 1};
+
+    analogOut.left *= leftVolume;
+    analogOut.right *= rightVolume;
+
+    //then each channel goes through HPF
+
+    return analogOut;
 }
 
 /**
@@ -62,51 +138,6 @@ double APU::fade(int channel)
     return val;
 }
 
-
-/**
- * @brief 
- * 
- * @return std::pair<double,double> <Left, Right>
- */
-std::pair<double,double> APU::mixer()
-{
-    std::pair<double,double> analogOut{};
-
-    byte_t nr51 {m_Memory.readByte(r_NR51)};
-
-    for (int i {0}; i<4; ++i)
-    {
-        double value{};
-        if (m_Channels[i]->dacEnabled())
-        {
-            value = dac(m_Channels[i]->generator());
-            m_LatestChannelOut[i] = value;
-        }
-        else
-            value = fade(i);
-        
-        //right output
-        if (testBit(nr51, i))
-            analogOut.second += value;
-        //left output
-        if (testBit(nr51, 4+i))
-            analogOut.first += value;
-    }
-
-    //then scale by master volume
-    byte_t nr50 {m_Memory.readByte(r_NR50)};
-    int rightVolume {extractBits(nr50,0,3) + 1};
-    int leftVolume {extractBits(nr50,4,3) + 1};
-
-    analogOut.first *= leftVolume;
-    analogOut.second *= rightVolume;
-
-    //then each channel goes through HPF
-    
-
-
-    return analogOut;
-}
 
 /**
  * @brief events occour every n ticks, 
