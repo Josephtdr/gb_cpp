@@ -4,9 +4,9 @@
 #include "memoryBus.h"
 #include "channel.h"
 
-const byte_t r_NR52 = 0xFF26; //sound on off (bit 7 global, 0-3=ch 1-4)
-const byte_t r_NR51 = 0xFF25; //sound panning
-const byte_t r_NR50 = 0xFF24; //master volume 1-8, vin panning
+const word_t r_NR52 = 0xFF26; //sound on off (bit 7 global, 0-3=ch 1-4)
+const word_t r_NR51 = 0xFF25; //sound panning
+const word_t r_NR50 = 0xFF24; //master volume 1-8, vin panning
 
 
 
