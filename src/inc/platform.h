@@ -14,11 +14,20 @@ private:
     int m_textureHeight{};
     int m_exit{};
 
+    int m_Playing{};
+
 public:
-    Platform(char const* title, int textureWidth, int textureHeight, int scale);
+    Platform(char const* title, int textureWidth, int textureHeight, int scale
+        
+    );
 	~Platform();
 	
 	void Update(void const* buffer, int pitch);
 	std::pair<int,int> ProcessInput();
     bool getExit() const;
+
+    void updateAudio(void const* buffer, int len);
+    void pauseAudio();
+    void playAudio();
+
 };

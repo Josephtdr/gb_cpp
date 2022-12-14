@@ -5,10 +5,16 @@
 APU::APU(MemoryBus& memoryRef, Platform& platformRef)
     : m_Memory {memoryRef}, m_Platform {platformRef}, m_SampleRate {87}, m_Enabled{true}
 {
-    m_Channels.emplace_back(new SweepChannel(m_Memory,r_NR10,r_NR11,r_NR12,r_NR13,r_NR14));
-    m_Channels.emplace_back(new PulseChannel(m_Memory,r_NR21,r_NR22,r_NR23,r_NR24));
-    m_Channels.emplace_back(new WaveChannel(m_Memory,r_NR30,r_NR31,r_NR32,r_NR33,r_NR34));
-    m_Channels.emplace_back(new NoiseChannel(m_Memory,r_NR41,r_NR42,r_NR43,r_NR44));
+    m_Channels.emplace_back(
+        std::make_unique<SweepChannel>(m_Memory,r_NR10,r_NR11,r_NR12,r_NR13,r_NR14));
+    m_Channels.emplace_back(
+        std::make_unique<PulseChannel>(m_Memory,r_NR21,r_NR22,r_NR23,r_NR24));
+    m_Channels.emplace_back(
+        std::make_unique<WaveChannel>(m_Memory,r_NR30,r_NR31,r_NR32,r_NR33,r_NR34));
+    m_Channels.emplace_back(
+        std::make_unique<NoiseChannel>(m_Memory,r_NR41,r_NR42,r_NR43,r_NR44));
+
+    m_sampleBuffer.reserve(c_SAMPLE_BUFFER_SIZE);
 }
 
 void APU::update(int clocks)
@@ -20,53 +26,33 @@ void APU::update(int clocks)
     while(m_SampleCounter >= m_SampleRate)
     {
         m_SampleCounter -= m_SampleRate;
-        m_sampleBuffer.push_back(sample());
+        sample();
 
-        if (m_sampleBuffer.size() < 1024)
-            continue;
-        else
+        if (m_sampleBuffer.size() >= c_SAMPLE_BUFFER_SIZE)
+        {
             flushBuffer();
+        }
+            
+            
     }
 }
-
-void APU::toggle(byte_t value)
+void APU::sample()
 {
-    m_Enabled = testBit(value, 7);
+    auto [left, right] = mixer();
+    //convert to raw PCM floating point samples
+    left /= 100.f;
+    right /= 100.f;
+    
+    m_sampleBuffer.push_back(left);
+    m_sampleBuffer.push_back(right);
 }
-/**
- * @brief updates a given channels Sound Length enable
- * and retriggers channel if given bits are enabeld
- * @param channelIDX channel 1 is idx 0 etc...
- * @param value 
- */
-void APU::control(int channelIDX, byte_t value)
-{
-    auto& channel = m_Channels[channelIDX];
-    channel->control(value);
-}
-
 void APU::flushBuffer()
 {
-
-    //do some platform stuff
-
-    //SDL_QueueAudio
-
+    m_Platform.updateAudio(m_sampleBuffer.data(), m_sampleBuffer.size());
 
     m_sampleBuffer.clear();
 }
 
-Sample APU::sample()
-{
-    auto [left, right] = mixer();
-
-    //convert to  raw PCM samples
-    left /= 100;
-    right /= 100;
-    
-
-    return {left, right};
-}
 /**
  * @brief 
  * 
@@ -87,8 +73,9 @@ Sample APU::mixer()
             m_LatestChannelOut[i] = value;
         }
         else
+        {
             value = fade(i);
-        
+        }
         //right output
         if (testBit(nr51, i))
             analogOut.right += value;
@@ -117,11 +104,11 @@ Sample APU::mixer()
  * @param waveform 
  * @return int 
  */
-double APU::dac(int waveform)
+float APU::dac(int waveform)
 {
-    static const double maxIn = 15.0;
-    static const double minOut = -1.0;
-    static const double maxOut = 1.0;
+    static const float maxIn = 15.0f;
+    static const float minOut = -1.0f;
+    static const float maxOut = 1.0f;
 
     auto lambda = waveform / maxIn;
     auto out = maxOut + lambda * (minOut-maxOut);
@@ -134,7 +121,7 @@ double APU::dac(int waveform)
  * @param channel 
  * @return double 
  */
-double APU::fade(int channel)
+float APU::fade(int channel)
 {
     auto& val {m_LatestChannelOut[channel]};
     if (val==0)
@@ -142,18 +129,37 @@ double APU::fade(int channel)
 
     if (val < 0)
     {
-        double diff {std::max(.025, val*-.1)};
-        val = std::min(0., val+diff);
+        float diff {std::max(.025f, val*-.1f)};
+        val = std::min(0.f, val+diff);
     }
     else
     {
-        double diff {std::max(.025, val*.1)};
-        val = std::max(0., val-diff);
+        float diff {std::max(.025f, val*.1f)};
+        val = std::max(0.f, val-diff);
     }
     
     return val;
 }
 
+void APU::toggle(byte_t value)
+{
+    m_Enabled = testBit(value, 7);
+    if (m_Enabled)
+        m_Platform.playAudio();
+    else
+        m_Platform.pauseAudio();
+}
+/**
+ * @brief updates a given channels Sound Length enable
+ * and retriggers channel if given bits are enabeld
+ * @param channelIDX channel 1 is idx 0 etc...
+ * @param value 
+ */
+void APU::control(int channelIDX, byte_t value)
+{
+    auto& channel = m_Channels[channelIDX];
+    channel->control(value);
+}
 
 /**
  * @brief events occour every n ticks, 

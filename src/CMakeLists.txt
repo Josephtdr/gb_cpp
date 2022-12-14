@@ -17,6 +17,8 @@ add_executable(${PROJECT_NAME}
     cpu_operations.cpp
     cpu_opcodes.cpp
     ppu.cpp
+    apu.cpp
+    channels.cpp
     bitfuncs.cpp
     platform.cpp
 )

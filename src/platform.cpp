@@ -8,6 +8,29 @@ Platform::Platform(char const* title, int textureWidth, int textureHeight, int s
     window = SDL_CreateWindow(title, 0, 0, m_textureWidth*scale, m_textureHeight*scale, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, m_textureWidth, m_textureHeight);
+
+
+    int SamplesPerSecond = 48000;
+    int bufferSize = 2048;
+    // int ToneHz = 256;
+    // int16 ToneVolume = 3000;
+    // uint32 RunningSampleIndex = 0;
+    // int SquareWavePeriod = SamplesPerSecond / ToneHz;
+    // int HalfSquareWavePeriod = SquareWavePeriod / 2;
+    int BytesPerSample = sizeof(float) * 2;
+
+    int BytesToWrite = bufferSize * BytesPerSample;
+
+
+    SDL_AudioSpec AudioSettings = {0};
+    AudioSettings.freq = SamplesPerSecond;
+    AudioSettings.format = AUDIO_F32SYS;
+    AudioSettings.channels = 2;
+    AudioSettings.samples = bufferSize / 2;
+
+    SDL_OpenAudio(&AudioSettings, 0);
+    
+
 }
 
 Platform::~Platform()
@@ -24,6 +47,28 @@ void Platform::Update(void const* buffer, int pitch)
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, nullptr, nullptr);
     SDL_RenderPresent(renderer);
+}
+
+void Platform::updateAudio(void const* buffer, int len)
+{
+    SDL_QueueAudio(1, buffer, len * sizeof(float));
+}
+
+void Platform::pauseAudio()
+{
+    if (m_Playing)
+    {   
+        m_Playing = false;
+        SDL_PauseAudio(1);
+    }
+}
+void Platform::playAudio()
+{
+    if (!m_Playing)
+    {
+        m_Playing = true;
+        SDL_PauseAudio(0);
+    }
 }
 
 bool Platform::getExit() const

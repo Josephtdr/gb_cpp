@@ -103,6 +103,7 @@ const std::vector<word_t> r_UNMAPPED
 struct Settings {
   bool traceLog {false};
   bool bootRom {false};
+  bool disableAudio{false};
 };
 
 #endif

@@ -21,6 +21,7 @@ void Channel::trigger()
     byte_t nrx1 {m_Memory.readByte(m_NRx1)};
     m_InitialLengthTimer = m_baseLenTimer - extractBits(nrx1, 0, m_lenBitSize);
     bool soundLenEnabled = testBit(m_Memory.readByte(m_NRx4), 6);
+    toggle(true);
 }
 void Channel::control(byte_t value)
 {

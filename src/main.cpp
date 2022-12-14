@@ -11,7 +11,7 @@
 #include <unordered_map> // std::unordered_map
 
 //https://www.learncpp.com/cpp-tutorial/timing-your-code/
-class Timer
+class Vsync
 {
 private:
     // Type aliases to make accessing nested type easier
@@ -36,7 +36,7 @@ public:
     }
 };
 
-void frameUpdate(CPU& cpu, PPU& ppu, APU& apu, logger& log, MemoryBus& memory)
+void frameUpdate(CPU& cpu, PPU& ppu, APU& apu, logger& log, MemoryBus& memory, Settings& settings)
 {
     int cyclesThisUpdate = 0;
 
@@ -60,7 +60,8 @@ void frameUpdate(CPU& cpu, PPU& ppu, APU& apu, logger& log, MemoryBus& memory)
         cyclesThisUpdate += cycles;
         cpu.update(cycles);
         ppu.updateGraphics(cycles);
-        apu.update(cycles);
+        if (!settings.disableAudio)
+            apu.update(cycles);
     }
     ppu.renderScreen();
 }
@@ -73,6 +74,8 @@ const std::unordered_map<std::string, NoArgHandle> NoArgs {
   {"-tl", [](Settings& s) { s.traceLog = true; }},
   {"--bootRom", [](Settings& s) { s.bootRom = true; }},
   {"-br", [](Settings& s) { s.bootRom = true; }},
+  {"--disableAudio", [](Settings& s) { s.disableAudio = true; }},
+  {"-da", [](Settings& s) { s.disableAudio = true; }},
 };
 
 int main(int argc, char *argv[])
@@ -105,13 +108,13 @@ int main(int argc, char *argv[])
     
     log(LOG_INFO) << std::hex << "Starting up!" << "\n";
 
-    Timer timer{};
+    Vsync vsync{};
     while(!platform.getExit())
     {
-        if(timer.nextFrameReady())
+        if(vsync.nextFrameReady())
         {
-            timer.reset();
-            frameUpdate(cpu, ppu, apu, log, memory);
+            vsync.reset();
+            frameUpdate(cpu, ppu, apu, log, memory, settings);
         }
     }
 }

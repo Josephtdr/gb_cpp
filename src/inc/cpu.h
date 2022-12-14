@@ -23,7 +23,6 @@ private:
     APU& m_APU;
     Settings& m_Settings;
     
-
     int m_TimerCounter{}; //Tracks when to throw timer interupts
     int m_DividerCounter{}; //Tracks when to increment Divider Register
     bool m_InteruptsEnabled{}; // IME
@@ -47,36 +46,39 @@ public:
     bool isStopped();
 
 private:
-    int execute(byte_t instructionByte, bool prefixed);
-    void setupTables();
+    int    execute(byte_t instructionByte, bool prefixed);
+    void   setupTables();
     word_t readNextWord();
     byte_t readNextByte();
+    byte_t readAudioRegister(word_t address) const;
+    void   writeAudioRegister(word_t address, byte_t value);
     byte_t readByte(word_t address) const;
-    void writeByte(word_t address, byte_t value);
+    void   writeByte(word_t address, byte_t value);
     
-    void updateTimers(int cycles);
-    void updateDividerRegister(int cycles);
-    bool isClockEnabled() const;
-    void updateClockFreq();
+    void   updateTimers(int cycles);
+    void   updateDividerRegister(int cycles);
+    bool   isClockEnabled() const;
+    void   updateClockFreq();
     byte_t getClockFreq() const;
     
-    void keyDown(int key);
-    void keyUp(int key);
+    void   keyDown(int key);
+    void   keyUp(int key);
     
-    void requestInterupt(int interupt);
-    void performInterupt(int interupt);
+    void   requestInterupt(int interupt);
+    void   performInterupt(int interupt);
 
-    void logOpcode(word_t PC, byte_t opcode, byte_t arg1, byte_t arg2, std::string_view func, std::string_view peram1, std::string_view peram2) const;
-    void initiateDMATransfer(byte_t value);
+    void   logOpcode(word_t PC, byte_t opcode, byte_t arg1, byte_t arg2, std::string_view func, std::string_view peram1, std::string_view peram2) const;
+    void   initiateDMATransfer(byte_t value);
 
     //Opcode Commands
-    void push(word_t value);
+    void   push(word_t value);
     word_t pop();
 
-    byte_t& getRegister(int index);
+    byte_t&          getRegister(int index);
     std::string_view getRegisterStr(int index);
-    std::string byteStr(byte_t byte);
-    std::string wordStr(word_t word);
+    std::string      byteStr(byte_t byte);
+    std::string      wordStr(word_t word);
+    
     int opcode_Translator(byte_t opcode);
     int cpu_restart(const byte_t& opcode);
     int cpu_byteLoad(const byte_t& opcode);
@@ -88,14 +90,14 @@ private:
     };
     std::string_view getJumpTestStr(int type);
     bool testJumpTest(JumpTest type);
-    int jump(int type, byte_t opcode);
-    int call(int type, byte_t opcode);
-    int return_(int type, byte_t opcode);
+    int  jump(int type, byte_t opcode);
+    int  call(int type, byte_t opcode);
+    int  return_(int type, byte_t opcode);
 
-    int cpu_jumpRelative(const byte_t& opcode);
+    int    cpu_jumpRelative(const byte_t& opcode);
     word_t signedAddition(const word_t& target, const byte_t& unsignedData);
 
-    int cpu_byteArithmetic(const byte_t& opcode);
+    int  cpu_byteArithmetic(const byte_t& opcode);
     void byteAdd(const byte_t& data);
     void byteAddWithCarry(const byte_t& data);
     void byteSub(const byte_t& data);
@@ -106,15 +108,15 @@ private:
     void byteCP(const byte_t& data); //compare
     void checkDAA(byte_t& byte);
 
-    int cpu_byteInc(const byte_t& opcode);
-    int cpu_byteDec(const byte_t& opcode);
+    int  cpu_byteInc(const byte_t& opcode);
+    int  cpu_byteDec(const byte_t& opcode);
     void byteINC(byte_t& target); 
     void byteDEC(byte_t& target); 
 
     void wordAdd(word_t& reg, const word_t& addValue);
 
     //CB commands
-    int CBopcode_Translator(byte_t opcode);
+    int  CBopcode_Translator(byte_t opcode);
     
     void cpu_testBit(byte_t& byte, int bit);
     void cpu_resetBit(byte_t& byte, int bit);
@@ -128,9 +130,9 @@ private:
     void cpu_rightShift(byte_t& byte, int);
     void cpu_rightShiftArithmetic(byte_t& byte, int);
 
-    int OP_NOT_IMPLEMTED();
-    int OP_ILLEGAL();
-    int OP_NOT_IMPLEMTED2(const byte_t&);
+    int  OP_NOT_IMPLEMTED();
+    int  OP_ILLEGAL();
+    int  OP_NOT_IMPLEMTED2(const byte_t&);
     //Unique Opcodes
     //byte Loads
     //LD A,n

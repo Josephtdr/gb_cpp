@@ -243,11 +243,13 @@ void CPU::writeAudioRegister(word_t address, byte_t value)
     //registers
     if (address==r_NR14)
     {
+        //TODO: if channel is triggered, dont alter low two bits of the frequency timer
         m_Memory.writeByte(address, value);
         m_APU.control(0,value);
     }
     else if (address==r_NR24)
     {
+        //TODO: if channel is triggered, dont alter low two bits of the frequency timer
         m_Memory.writeByte(address, value);
         m_APU.control(1,value);
     }

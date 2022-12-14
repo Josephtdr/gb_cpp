@@ -6,8 +6,9 @@
 #include "platform.h"
 
 struct Sample{
-    int left; int right;
+    float left; float right;
 };
+const int c_SAMPLE_BUFFER_SIZE = 2048;
 
 class APU
 {
@@ -18,13 +19,13 @@ private:
 
     int m_SampleRate{}; //4194304/48000 = 87 (rounded)
     int m_SampleCounter{};
-    std::vector<Sample> m_sampleBuffer{1024};
+    std::vector<float> m_sampleBuffer{};
 
 
     byte_t m_divAPUCounter{};
     bool m_divTrigger{};
-    std::vector<std::__shared_ptr<Channel>> m_Channels{};
-    std::vector<double> m_LatestChannelOut{}; 
+    std::vector<std::unique_ptr<Channel>> m_Channels{};
+    std::vector<float> m_LatestChannelOut{0,0,0,0}; 
 
 public:
     APU(MemoryBus& memoryRef, Platform& platformRef);
@@ -37,10 +38,10 @@ public:
 private:
     bool soundEnabled();
 
-    double dac(int digitalValue);
-    double fade(int channel);
+    float dac(int digitalValue);
+    float fade(int channel);
 
     Sample mixer();
-    Sample sample();
+    void sample();
     void flushBuffer();
 };
