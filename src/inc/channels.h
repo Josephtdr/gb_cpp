@@ -7,6 +7,7 @@ class Channel
 {
 protected:
     MemoryBus& m_Memory;
+    int m_ChannelIdx{};
     word_t m_NRx1{}; 
     word_t m_NRx2{}; 
     word_t m_NRx3{}; 
@@ -16,14 +17,18 @@ protected:
     int m_lenBitSize{};
     bool m_ChannelEnabled{};
     bool m_DacEnabled{};
+    bool m_SoundLenEnabled{};
 
     Channel(MemoryBus& memoryRef, 
         word_t r1, word_t r2, word_t r3, word_t r4, 
-        int baseLenTimer=64, int lenBitSize=6);
+        int idx, int baseLenTimer=64, int lenBitSize=6);
+
+    void toggle(bool on);
 public: 
     bool channelEnabled() const;
     bool dacEnabled() const;
     void incrementLenTimer();
+    void control(byte_t value);
 
     virtual int generator() = 0;
     virtual void update(int clocks) = 0;
@@ -82,6 +87,7 @@ class SweepChannel : public PulseChannel
 private:
     word_t m_NRx0{}; //
     int m_SweepPace{}; // updates on reset or retrigger
+    int m_SweepCounter{};
 
     void setFrequency(word_t waveLen);
 public:
@@ -98,6 +104,7 @@ private:
 
     int m_sampleIndex{};
     byte_t m_sampleBuffer{};
+    int m_volumeLevel{};
 
 public:
     WaveChannel(MemoryBus& memoryRef, 
@@ -119,27 +126,3 @@ public:
     void update(int clocks) override;
     void trigger() override;
 };
-
-//sweep+pulse
-const word_t r_NR10 = 0xFF10; //sweep
-const word_t r_NR11 = 0xFF11; //length timer & duty cycle
-const word_t r_NR12 = 0xFF12; //volume & envelope
-const word_t r_NR13 = 0xFF13; //wavelength low 
-const word_t r_NR14 = 0xFF14; //wavelength high (0-2) & control
-//pulse
-const word_t r_NR21 = 0xFF16;
-const word_t r_NR22 = 0xFF17;
-const word_t r_NR23 = 0xFF18;
-const word_t r_NR24 = 0xFF19;
-//wave
-const word_t r_NR30 = 0xFF1A; //dac enable
-//TODO: m_memory fucntion, write to here enables disables this dac + channel
-const word_t r_NR31 = 0xFF1B; //length timer
-const word_t r_NR32 = 0xFF1C; //volume 
-const word_t r_NR33 = 0xFF1D; //wavelength low 
-const word_t r_NR34 = 0xFF1E; //wavelength high (0-2) & control
-//noise
-const word_t r_NR41 = 0xFF20; //length timer
-const word_t r_NR42 = 0xFF21; //volume & envelope
-const word_t r_NR43 = 0xFF22; //frequency & randomness 
-const word_t r_NR44 = 0xFF23; //control

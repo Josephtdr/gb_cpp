@@ -3,7 +3,7 @@
 #include "inc/channels.h"
 
 APU::APU(MemoryBus& memoryRef, Platform& platformRef)
-    : m_Memory {memoryRef}, m_Platform {platformRef}, m_SampleRate {87}
+    : m_Memory {memoryRef}, m_Platform {platformRef}, m_SampleRate {87}, m_Enabled{true}
 {
     m_Channels.emplace_back(new SweepChannel(m_Memory,r_NR10,r_NR11,r_NR12,r_NR13,r_NR14));
     m_Channels.emplace_back(new PulseChannel(m_Memory,r_NR21,r_NR22,r_NR23,r_NR24));
@@ -27,6 +27,22 @@ void APU::update(int clocks)
         else
             flushBuffer();
     }
+}
+
+void APU::toggle(byte_t value)
+{
+    m_Enabled = testBit(value, 7);
+}
+/**
+ * @brief updates a given channels Sound Length enable
+ * and retriggers channel if given bits are enabeld
+ * @param channelIDX channel 1 is idx 0 etc...
+ * @param value 
+ */
+void APU::control(int channelIDX, byte_t value)
+{
+    auto& channel = m_Channels[channelIDX];
+    channel->control(value);
 }
 
 void APU::flushBuffer()

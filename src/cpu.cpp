@@ -132,14 +132,47 @@ byte_t CPU::readByte(word_t address) const
     //             "value: " << +value << " address: "<<+address <<"\n";
     //     return value;
     // }  
-    // else
-    // {
+    
+    if (address>=0xFF10 && address < 0xFF40)
+    {
+        return readAudioRegister(address);
+    }
+    else
+    {
         return m_Memory.readByte(address);
-    // }
-    
-    
-        
+    }    
 }
+
+byte_t CPU::readAudioRegister(word_t address) const
+{
+    static const std::vector<byte_t> orList{
+        0x80, 0x3F, 0x00, 0xFF, 0xBF, 
+        0xFF, 0x3F, 0x00, 0xFF, 0xBF, 
+        0x7F, 0xFF, 0x9F, 0xFF, 0xBF, 
+        0xFF, 0xFF, 0x00, 0x00, 0xBF, 
+        0x00, 0x00, 0x70,
+    };
+    //registers
+    if (address>=0xFF10&&address<=0xFF26)
+    {
+        auto orValue {orList[address-0xFF10]};
+        return m_Memory.readByte(address) | orValue;
+    }
+    //unused
+    else if (address>=0xFF27 && address <= 0xFF2F)
+        return 0xFF;
+    //wave ram
+    else
+    {
+        //if channel is active, ignore read
+        auto nr52 {m_Memory.readByte(r_NR52)};
+        if(testBit(nr52,2))
+            return 0xFF;
+        else
+            m_Memory.readByte(address);
+    }
+}
+
 void CPU::writeByte(word_t address, byte_t value)
 {
     // //Vram Area
@@ -172,9 +205,14 @@ void CPU::writeByte(word_t address, byte_t value)
     //         m_log(LOG_ERROR) << "PC: " << +m_PC <<  " writing into WRAM " <<
     //           "value: " << +value << " address: "<<+address <<"\n";
     //     m_Memory.writeByte(address, value);
-    // }  
+    // }
+
+    if (address>=0xFF10 && address < 0xFF40)
+    {
+        writeAudioRegister(address, value);
+    }
     //reset the current scanline if the game tries to write to it
-     if (address == r_DIV)
+    else if (address == r_DIV)
     {
         if (testBit(readByte(r_DIV),4))
             m_APU.incrementDivAPU();
@@ -198,6 +236,57 @@ void CPU::writeByte(word_t address, byte_t value)
     }
     else
         m_Memory.writeByte(address, value);
+}
+
+void CPU::writeAudioRegister(word_t address, byte_t value)
+{
+    //registers
+    if (address==r_NR14)
+    {
+        m_Memory.writeByte(address, value);
+        m_APU.control(0,value);
+    }
+    else if (address==r_NR24)
+    {
+        m_Memory.writeByte(address, value);
+        m_APU.control(1,value);
+    }
+    else if (address==r_NR34)
+    {
+        m_Memory.writeByte(address, value);
+        m_APU.control(2,value);
+    }
+    else if (address==r_NR44)
+    {
+        m_Memory.writeByte(address, value);
+        m_APU.control(3,value);
+    }
+    else if (address==r_NR52)
+    {
+        auto nr52 {m_Memory.readByte(r_NR52)};
+        nr52 &= 0x7F;
+
+        m_Memory.writeByte(address, (value & 80) | nr52);
+        m_APU.toggle(value);
+    }
+    //unused
+    else if (address>=0xFF27 && address<=0xFF2F)
+        return;
+    //wave ram
+    else if (address>=0xFF30 && address<=0xFF3F)
+    {
+        //if channel is active, ignore write
+        auto nr52 {m_Memory.readByte(r_NR52)};
+        if(testBit(nr52,2))
+            return;
+        else
+            m_Memory.writeByte(address, value);
+    }
+    //other
+    else
+    {
+        m_Memory.writeByte(address, value);
+    }
 }
 
 void CPU::updateTimers(int cycles)

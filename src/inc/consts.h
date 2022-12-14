@@ -66,6 +66,34 @@ const word_t r_SPRITE_PALLET2    = 0xFF49; //second sprite colour pallet
 const word_t r_WY     = 0xFF4A; //Window (top left) Y position 
 const word_t r_WX     = 0xFF4B; //Window (top left) X position plus 7
 
+//APU
+const word_t r_NR52 = 0xFF26; //sound on off (bit 7 global, 0-3=ch 1-4)
+const word_t r_NR51 = 0xFF25; //sound panning
+const word_t r_NR50 = 0xFF24; //master volume 1-8, vin panning
+//sweep+pulse
+const word_t r_NR10 = 0xFF10; //sweep
+const word_t r_NR11 = 0xFF11; //length timer & duty cycle
+const word_t r_NR12 = 0xFF12; //volume & envelope
+const word_t r_NR13 = 0xFF13; //wavelength low 
+const word_t r_NR14 = 0xFF14; //wavelength high (0-2) & control
+//pulse
+const word_t r_NR21 = 0xFF16;
+const word_t r_NR22 = 0xFF17;
+const word_t r_NR23 = 0xFF18;
+const word_t r_NR24 = 0xFF19;
+//wave
+const word_t r_NR30 = 0xFF1A; //dac enable
+//TODO: m_memory fucntion, write to here enables disables this dac + channel
+const word_t r_NR31 = 0xFF1B; //length timer
+const word_t r_NR32 = 0xFF1C; //volume 
+const word_t r_NR33 = 0xFF1D; //wavelength low 
+const word_t r_NR34 = 0xFF1E; //wavelength high (0-2) & control
+//noise
+const word_t r_NR41 = 0xFF20; //length timer
+const word_t r_NR42 = 0xFF21; //volume & envelope
+const word_t r_NR43 = 0xFF22; //frequency & randomness 
+const word_t r_NR44 = 0xFF23; //control
+
 const std::vector<word_t> r_UNMAPPED
 {
     0xFF08, 0xFF4D, 0xFF56, 0xFF4F,0xFF51,0xFF52,0xFF53,0xFF54,0xFF55,  

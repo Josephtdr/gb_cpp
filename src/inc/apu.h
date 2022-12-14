@@ -5,11 +5,6 @@
 #include "channels.h"
 #include "platform.h"
 
-const word_t r_NR52 = 0xFF26; //sound on off (bit 7 global, 0-3=ch 1-4)
-const word_t r_NR51 = 0xFF25; //sound panning
-const word_t r_NR50 = 0xFF24; //master volume 1-8, vin panning
-
-
 struct Sample{
     int left; int right;
 };
@@ -19,6 +14,7 @@ class APU
 private:
     MemoryBus& m_Memory;
     Platform& m_Platform;
+    bool m_Enabled{};
 
     int m_SampleRate{}; //4194304/48000 = 87 (rounded)
     int m_SampleCounter{};
@@ -35,6 +31,8 @@ public:
 
     void update(int clocks);
     void incrementDivAPU();
+    void toggle(byte_t value);
+    void control(int channel, byte_t value);
 
 private:
     bool soundEnabled();

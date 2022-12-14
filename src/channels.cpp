@@ -2,9 +2,10 @@
 #include "inc/bitfuncs.h"
 
 Channel::Channel(MemoryBus& memoryRef, 
-    word_t r1, word_t r2, word_t r3, word_t r4,int baseLenTimer, int lenBitSize)
+    word_t r1, word_t r2, word_t r3, word_t r4,
+    int idx,int baseLenTimer, int lenBitSize)
     : m_Memory{memoryRef}, m_NRx1{r1}, m_NRx2{r2}, m_NRx3{r3}, m_NRx4{r4}, 
-      m_baseLenTimer{baseLenTimer}, m_lenBitSize{lenBitSize}
+      m_ChannelIdx{idx}, m_baseLenTimer{baseLenTimer}, m_lenBitSize{lenBitSize}
 {}
 
 bool Channel::dacEnabled() const
@@ -19,17 +20,37 @@ void Channel::trigger()
 {
     byte_t nrx1 {m_Memory.readByte(m_NRx1)};
     m_InitialLengthTimer = m_baseLenTimer - extractBits(nrx1, 0, m_lenBitSize);
+    bool soundLenEnabled = testBit(m_Memory.readByte(m_NRx4), 6);
+}
+void Channel::control(byte_t value)
+{
+    m_SoundLenEnabled = testBit(value, 6);
+    if (testBit(value, 7))
+        trigger();
 }
 void Channel::incrementLenTimer()
 {
-    bool soundLenEnabled = testBit(m_Memory.readByte(m_NRx4), 6);
-    if (!soundLenEnabled)
+    if (!m_SoundLenEnabled)
         return;
 
     --m_InitialLengthTimer;
 
     if (m_InitialLengthTimer <= 0)
-        m_ChannelEnabled = false;
+        toggle(false);
+}
+void Channel::toggle(bool on)
+{
+    if (m_ChannelEnabled!=on)
+    {
+        m_ChannelEnabled = on;
+
+        auto nr52 {m_Memory.readByte(r_NR52)};
+
+        if (on)
+            setBit(nr52, m_ChannelIdx);
+        else
+            resetBit(nr52, m_ChannelIdx);
+    }
 }
 
 //******************************************************************************
@@ -64,7 +85,7 @@ void Envelope::trigger()
 
     bool enable = (m_EnvelopeVolume==0 && !m_EnvelopeIncrease);
     m_DacEnabled = enable;
-    m_ChannelEnabled = enable;
+    toggle(enable);
 }
 
 //******************************************************************************
@@ -98,7 +119,7 @@ bool Timer::updateTimer(int clocks)
 
 //******************************************************************************
 PulseChannel::PulseChannel(MemoryBus& memoryRef, word_t r1, word_t r2, word_t r3, word_t r4)
-    : Channel{memoryRef,r1,r2,r3,r4}, Timer{4}, Envelope{}
+    : Channel{memoryRef,r1,r2,r3,r4,1}, Timer{4}, Envelope{}
 {}
 
 void PulseChannel::trigger()
@@ -138,7 +159,7 @@ void PulseChannel::update(int clocks)
 
 //******************************************************************************
 SweepChannel::SweepChannel(MemoryBus& memoryRef, word_t r0, word_t r1, word_t r2, word_t r3, word_t r4)
-    : Channel{memoryRef,r1,r2,r3,r4}, PulseChannel{memoryRef,r1,r2,r3,r4}, m_NRx0{r0}
+    : Channel{memoryRef,r1,r2,r3,r4,0}, PulseChannel{memoryRef,r1,r2,r3,r4}, m_NRx0{r0}
 {
 }
 
@@ -148,6 +169,7 @@ void SweepChannel::trigger()
 
     byte_t nrx0 {m_Memory.readByte(m_NRx0)};
     m_SweepPace = extractBits(nrx0, 4, 3);
+    m_SweepCounter = m_SweepPace;
 }
 
 void SweepChannel::setFrequency(word_t waveLen)
@@ -164,6 +186,21 @@ void SweepChannel::setFrequency(word_t waveLen)
 
 void SweepChannel::sweepIteration()
 {
+    //dont iterate if pace is 0, but reload to check its not changed
+    if (m_SweepPace == 0)
+    {
+        byte_t nrx0 {m_Memory.readByte(m_NRx0)};
+        m_SweepPace = extractBits(nrx0, 4, 3);
+        m_SweepCounter = m_SweepPace;
+        return;
+    }
+
+    //wait for sweep counter to hit 0 to perform an iteration
+    --m_SweepCounter;
+    if (m_SweepCounter > 0)
+        return;
+    m_SweepCounter = m_SweepPace;
+
     static const word_t c_MAX_CH1_WAVELEN = 0x7FF;
 
     byte_t nr10 {m_Memory.readByte(m_NRx0)};
@@ -179,7 +216,7 @@ void SweepChannel::sweepIteration()
 
         //overflow turns off channel
         if (wavelen > c_MAX_CH1_WAVELEN)
-            m_ChannelEnabled = false;
+            toggle(false);
     }
     else
         wavelen -= (wavelen/divisor);    
@@ -191,7 +228,7 @@ void SweepChannel::sweepIteration()
 //******************************************************************************
 WaveChannel::WaveChannel(MemoryBus& memoryRef, 
         word_t r0, word_t r1, word_t r2, word_t r3, word_t r4)
-    : Channel{memoryRef,r1,r2,r3,r4,256,8}, Timer{2}, m_NRx0{r0}
+    : Channel{memoryRef,r1,r2,r3,r4,2,256,8}, Timer{2}, m_NRx0{r0}
 {}
 
 int WaveChannel::generator()
@@ -199,13 +236,13 @@ int WaveChannel::generator()
     if (!channelEnabled())
         return 0;
     
-    int volumeType = extractBits(m_Memory.readByte(m_NRx2),5,2);
+    
     // muted 
-    if (volumeType==0)
+    if (m_volumeLevel==0)
         return 0;
 
     int digitalVal {m_sampleBuffer};
-    digitalVal = digitalVal >> (volumeType-1);
+    digitalVal = digitalVal >> (m_volumeLevel-1);
 
     return digitalVal;
 }
@@ -219,11 +256,16 @@ void WaveChannel::update(int clocks)
 }
 void WaveChannel::trigger()
 {
+    Channel::trigger();
+
     setPeriod();
+
+    //TODO possibly change on write to address
+    m_volumeLevel = extractBits(m_Memory.readByte(m_NRx2),5,2);
 
     m_sampleIndex = 0;
     m_DacEnabled = true;
-    m_ChannelEnabled = true;
+    toggle(true);
 }
 
 void WaveChannel::readNextWaveForm()
@@ -246,7 +288,7 @@ void WaveChannel::readNextWaveForm()
 
 //******************************************************************************
 NoiseChannel::NoiseChannel(MemoryBus& memoryRef, word_t r1, word_t r2, word_t r3, word_t r4)
-    : Channel{memoryRef,r1,r2,r3,r4}, Envelope{}
+    : Channel{memoryRef,r1,r2,r3,r4,3}, Envelope{}
 {
 }
 
