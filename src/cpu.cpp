@@ -435,7 +435,7 @@ int CPU::interupts()
 void CPU::requestInterupt(int interupt) //0,1,2,4
 {
     assert((interupt>=0&&interupt<5) && "Invalid interupt requested!");
-    byte_t requests = readByte(r_IF);
+    byte_t requests {readByte(r_IF)};
     
     setBit(requests, interupt);
     writeByte(r_IF, requests);
@@ -454,7 +454,7 @@ void CPU::performInterupt(int interupt)
     if (interupt==4) //joypad interupt
         m_Stopped = false;
 
-    byte_t requests = readByte(r_IF);
+    byte_t requests {readByte(r_IF)};
     resetBit(requests, interupt);
     writeByte(r_IF, requests);
 

@@ -9,39 +9,41 @@
 #include "ppu.h"
 #include "apu.h"
 
+#include <functional>
+
 class CPU
 {
-public:
-    Registers m_Registers{};
-    word_t m_PC{};
-    word_t m_SP{};
 private:
-    logger& m_log;
+    Registers  m_Registers{};
+    word_t     m_PC{};
+    word_t     m_SP{};
+
+    logger&    m_log;
     MemoryBus& m_Memory;
-    Platform& m_Platform;
-    PPU& m_PPU;
-    APU& m_APU;
-    Settings& m_Settings;
+    Platform&  m_Platform;
+    PPU&       m_PPU;
+    APU&       m_APU;
+    Settings&  m_Settings;
     
-    int m_TimerCounter{}; //Tracks when to throw timer interupts
-    int m_DividerCounter{}; //Tracks when to increment Divider Register
+    int  m_TimerCounter{}; //Tracks when to throw timer interupts
+    int  m_DividerCounter{}; //Tracks when to increment Divider Register
     bool m_InteruptsEnabled{}; // IME
-    int m_IMEScheduled{}; // 0 none, 1 scheldued for next cycle, 2 enable interupts
+    int  m_IMEScheduled{}; // 0 none, 1 scheldued for next cycle, 2 enable interupts
     bool m_Halted{};
     bool m_haltBug{};
     bool m_Stopped{};
     
-    using opcodeFnPtr = int(CPU::*)();
-    using opcodeFnPtr2 = int(CPU::*)(const byte_t&);
+    using opcodeFnPtr = std::function<int(void)>;
+    using opcodeFnPtr2 = std::function<int(byte_t)>;
     opcodeFnPtr instructionTable[c_INSTRUCTION_TABLE_SIZE]{};
     opcodeFnPtr2 instructionTable2[c_INSTRUCTION_TABLE_SIZE]{};
 
 public:
     CPU(MemoryBus& memoryRef, logger& logRef, Platform& platformRef, PPU& ppuRef, APU& apuRef, Settings& settingsRef);
-    int cycle();
+    int  cycle();
     void update(int cycles);
     void updateJoypad();
-    int interupts();
+    int  interupts();
     bool isHalted();
     bool isStopped();
 
@@ -80,10 +82,10 @@ private:
     std::string      wordStr(word_t word);
     
     int opcode_Translator(byte_t opcode);
-    int cpu_restart(const byte_t& opcode);
-    int cpu_byteLoad(const byte_t& opcode);
+    int cpu_restart(byte_t opcode);
+    int cpu_byteLoad(byte_t opcode);
 
-    int cpu_jump(const byte_t& opcode);
+    int cpu_jump(byte_t opcode);
     enum class JumpTest 
     {
         NotZero, Zero, NotCarry, Carry, Always,  
@@ -94,26 +96,26 @@ private:
     int  call(int type, byte_t opcode);
     int  return_(int type, byte_t opcode);
 
-    int    cpu_jumpRelative(const byte_t& opcode);
-    word_t signedAddition(const word_t& target, const byte_t& unsignedData);
+    int    cpu_jumpRelative(byte_t opcode);
+    word_t signedAddition(word_t target, byte_t unsignedData);
 
-    int  cpu_byteArithmetic(const byte_t& opcode);
-    void byteAdd(const byte_t& data);
-    void byteAddWithCarry(const byte_t& data);
-    void byteSub(const byte_t& data);
-    void byteSubWithCarry(const byte_t& data);
-    void byteAND(const byte_t& data);
-    void byteOR(const byte_t& data);
-    void byteXOR(const byte_t& data);
-    void byteCP(const byte_t& data); //compare
+    int  cpu_byteArithmetic(byte_t opcode);
+    void byteAdd(byte_t data);
+    void byteAddWithCarry(byte_t data);
+    void byteSub(byte_t data);
+    void byteSubWithCarry(byte_t data);
+    void byteAND(byte_t data);
+    void byteOR(byte_t data);
+    void byteXOR(byte_t data);
+    void byteCP(byte_t data); //compare
     void checkDAA(byte_t& byte);
 
-    int  cpu_byteInc(const byte_t& opcode);
-    int  cpu_byteDec(const byte_t& opcode);
+    int  cpu_byteInc(byte_t opcode);
+    int  cpu_byteDec(byte_t opcode);
     void byteINC(byte_t& target); 
     void byteDEC(byte_t& target); 
 
-    void wordAdd(word_t& reg, const word_t& addValue);
+    void wordAdd(word_t& reg, word_t addValue);
 
     //CB commands
     int  CBopcode_Translator(byte_t opcode);
@@ -132,7 +134,7 @@ private:
 
     int  OP_NOT_IMPLEMTED();
     int  OP_ILLEGAL();
-    int  OP_NOT_IMPLEMTED2(const byte_t&);
+    int  OP_NOT_IMPLEMTED2(byte_t);
     //Unique Opcodes
     //byte Loads
     //LD A,n

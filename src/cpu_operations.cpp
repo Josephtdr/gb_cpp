@@ -11,10 +11,8 @@
  */
 word_t CPU::readNextWord()
 {
-    byte_t lsb{ readByte(m_PC) };
-    ++m_PC;
-    byte_t msb{ readByte(m_PC) };
-    ++m_PC;
+    byte_t lsb{ readByte(m_PC++) };
+    byte_t msb{ readByte(m_PC++) };
     
     return (msb << 8) | lsb;
 }
@@ -25,8 +23,7 @@ word_t CPU::readNextWord()
  */
 byte_t CPU::readNextByte()
 {
-    byte_t out{ readByte(m_PC) };
-    ++m_PC;
+    byte_t out{ readByte(m_PC++) };
     return out;
 }
 
@@ -40,10 +37,8 @@ void CPU::push(word_t value)
     byte_t lsb{ static_cast<byte_t>(value & 0xFFu) };
     byte_t msb{ static_cast<byte_t>(value >> 8) };
 
-    --m_SP;
-    writeByte(m_SP, msb);
-    --m_SP;
-    writeByte(m_SP, lsb);
+    writeByte(--m_SP, msb);
+    writeByte(--m_SP, lsb);
 }
 
 /**
@@ -53,13 +48,10 @@ void CPU::push(word_t value)
  */
 word_t CPU::pop()
 {
-    byte_t lsb{ readByte(m_SP) };
-    ++m_SP;
-    byte_t msb{ readByte(m_SP) };
-    ++m_SP;
-    word_t out{ static_cast<word_t>((msb << 8) | lsb) };
+    byte_t lsb{ readByte(m_SP++) };
+    byte_t msb{ readByte(m_SP++) };
 
-    return out;
+    return (msb << 8) | lsb;
 }
 
 
@@ -85,7 +77,7 @@ bool CPU::testJumpTest(JumpTest type)
     }
 }
 
-int CPU::cpu_jumpRelative(const byte_t& opcode)
+int CPU::cpu_jumpRelative(byte_t opcode)
 {
     byte_t unsignedData{ readNextByte() };
     int type{ ((opcode/8)-4) };
@@ -102,7 +94,7 @@ int CPU::cpu_jumpRelative(const byte_t& opcode)
     return 8;
 }
 
-int CPU::cpu_jump(const byte_t& opcode)
+int CPU::cpu_jump(byte_t opcode)
 {
     int funcIdx{ extractBits(opcode,1,2) };
     assert((funcIdx>=0&&funcIdx<3) && "Incorrect funcidx in cpu_jump!");
@@ -163,7 +155,7 @@ int CPU::return_(int type, byte_t opcode)
     return 8;
 }
 
-word_t CPU::signedAddition(const word_t& target, const byte_t& unsignedData)
+word_t CPU::signedAddition(word_t target, byte_t unsignedData)
 {
     word_t out{ target };
     out += static_cast<signed_byte_t>(unsignedData);
@@ -207,7 +199,7 @@ std::string CPU::wordStr(word_t word)
 }
 
 
-int CPU::cpu_restart(const byte_t& opcode)
+int CPU::cpu_restart(byte_t opcode)
 {
     static const std::vector<byte_t> offsetVector
     {
@@ -223,7 +215,7 @@ int CPU::cpu_restart(const byte_t& opcode)
     return 16;
 }
 
-int CPU::cpu_byteLoad(const byte_t& opcode)
+int CPU::cpu_byteLoad(byte_t opcode)
 {
     int dataIndex{ extractBits(opcode,0,3) };
     int targetIndex{ extractBits(opcode,3,3) };
@@ -254,14 +246,14 @@ int CPU::cpu_byteLoad(const byte_t& opcode)
     return ticks;
 }
 
-int CPU::cpu_byteArithmetic(const byte_t& opcode)
+int CPU::cpu_byteArithmetic(byte_t opcode)
 {
-    using arithmeticFunctionPtr = void(CPU::*)(const byte_t&);
-    static const std::vector<std::pair<arithmeticFunctionPtr, std::string>> arithmeticFunction
+    static const std::vector<std::pair<std::function<void(byte_t)>, std::string>> arithmeticFunction
     {
-        {&CPU::byteAdd, "ADD"}, {&CPU::byteAddWithCarry, "ADC"}, {&CPU::byteSub, "SUB"}, 
-        {&CPU::byteSubWithCarry, "SBC"}, {&CPU::byteAND, "AND"}, {&CPU::byteXOR, "XOR"}, 
-        {&CPU::byteOR, "OR"}, {&CPU::byteCP, "CP"}
+        {std::bind(&CPU::byteAdd, this, std::placeholders::_1), "ADD"}, {std::bind(&CPU::byteAddWithCarry, this, std::placeholders::_1), "ADC"}, 
+        {std::bind(&CPU::byteSub, this, std::placeholders::_1), "SUB"}, {std::bind(&CPU::byteSubWithCarry, this, std::placeholders::_1), "SBC"}, 
+        {std::bind(&CPU::byteAND, this, std::placeholders::_1), "AND"}, {std::bind(&CPU::byteXOR, this, std::placeholders::_1), "XOR"}, 
+        {std::bind(&CPU::byteOR, this, std::placeholders::_1), "OR"},   {std::bind(&CPU::byteCP, this, std::placeholders::_1), "CP"}
     };
 
     byte_t data{};
@@ -283,11 +275,11 @@ int CPU::cpu_byteArithmetic(const byte_t& opcode)
     else
         data = getRegister(dataIndex);
 
-    ((*this).*(arithmeticFunction[functionIndex].first))(data);
+    arithmeticFunction[functionIndex].first(data);
     return ticks;
 }
 
-void CPU::byteAdd(const byte_t& data)
+void CPU::byteAdd(byte_t data)
 {
     int ctest{ m_Registers.a + data };
     int htest{ (m_Registers.a&0xF) + (data&0xF) };
@@ -299,7 +291,7 @@ void CPU::byteAdd(const byte_t& data)
     m_Registers.f.carry = ctest >= 0x100;
     m_Registers.f.half_carry = htest >= 0x10;
 }
-void CPU::byteAddWithCarry(const byte_t& data)
+void CPU::byteAddWithCarry(byte_t data)
 {
     int ctest{ m_Registers.a + data + m_Registers.f.carry };
     int htest{ (m_Registers.a&0xF) + (data&0xF) + m_Registers.f.carry };
@@ -311,7 +303,7 @@ void CPU::byteAddWithCarry(const byte_t& data)
     m_Registers.f.carry = ctest >= 0x100;
     m_Registers.f.half_carry = htest >= 0x10;
 }
-void CPU::byteSub(const byte_t& data)
+void CPU::byteSub(byte_t data)
 {
     byte_t unchanged{ m_Registers.a };
     signed int htest{ m_Registers.a & 0xF };
@@ -324,7 +316,7 @@ void CPU::byteSub(const byte_t& data)
     m_Registers.f.carry = unchanged < data ;
     m_Registers.f.half_carry = htest < 0;
 }
-void CPU::byteSubWithCarry(const byte_t& data)
+void CPU::byteSubWithCarry(byte_t data)
 {
     byte_t unchanged{ m_Registers.a };
     int htest{ (m_Registers.a&0xF) - (data&0xF) - m_Registers.f.carry };
@@ -336,7 +328,7 @@ void CPU::byteSubWithCarry(const byte_t& data)
     m_Registers.f.carry = unchanged < (data + m_Registers.f.carry) ;
     m_Registers.f.half_carry = htest < 0;
 }
-void CPU::byteAND(const byte_t& data)
+void CPU::byteAND(byte_t data)
 {
     m_Registers.a &= data;
 
@@ -345,7 +337,7 @@ void CPU::byteAND(const byte_t& data)
     m_Registers.f.subtract = false;
     m_Registers.f.zero = !m_Registers.a;
 }
-void CPU::byteOR(const byte_t& data)
+void CPU::byteOR(byte_t data)
 {
     m_Registers.a |= data;
 
@@ -354,7 +346,7 @@ void CPU::byteOR(const byte_t& data)
     m_Registers.f.subtract = false;
     m_Registers.f.zero = !m_Registers.a;
 }
-void CPU::byteXOR(const byte_t& data)
+void CPU::byteXOR(byte_t data)
 {
     m_Registers.a ^= data;
 
@@ -363,7 +355,7 @@ void CPU::byteXOR(const byte_t& data)
     m_Registers.f.subtract = false;
     m_Registers.f.zero = !m_Registers.a;
 }
-void CPU::byteCP(const byte_t& data)
+void CPU::byteCP(byte_t data)
 {
     signed int htest{ m_Registers.a & 0xF };
     htest -= static_cast<signed int>(data & 0xF);
@@ -374,7 +366,7 @@ void CPU::byteCP(const byte_t& data)
     m_Registers.f.subtract = true;
 }
 
-int CPU::cpu_byteInc(const byte_t& opcode)
+int CPU::cpu_byteInc(byte_t opcode)
 {
     int regIndex{ extractBits(opcode,3,3) };
     logOpcode((m_PC-1), opcode, 0x0, 0x0, "INC",getRegisterStr(regIndex), "");
@@ -393,7 +385,7 @@ int CPU::cpu_byteInc(const byte_t& opcode)
     }
 }
 
-int CPU::cpu_byteDec(const byte_t& opcode)
+int CPU::cpu_byteDec(byte_t opcode)
 {
     int regIndex{ extractBits(opcode,3,3) };
     logOpcode((m_PC-1), opcode, 0x0, 0x0, "DEC",getRegisterStr(regIndex), "");
@@ -439,7 +431,7 @@ void CPU::byteDEC(byte_t& reg)
  * @param reg the reg being altered
  * @param addValue the value to add with
  */
-void CPU::wordAdd(word_t& reg, const word_t& addValue)
+void CPU::wordAdd(word_t& reg, word_t addValue)
 {
     unsigned int ctest{ static_cast<unsigned int>(reg)+static_cast<unsigned int>(addValue) };
     word_t htest{ static_cast<word_t>((reg & 0xFFF) + (addValue & 0xFFF)) };

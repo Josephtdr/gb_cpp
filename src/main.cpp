@@ -38,18 +38,17 @@ public:
 
 void frameUpdate(CPU& cpu, PPU& ppu, APU& apu, logger& log, MemoryBus& memory, Settings& settings)
 {
-    int cyclesThisUpdate = 0;
+    int cyclesThisUpdate {};
+    int cycles {};
 
     while(cyclesThisUpdate < c_MAX_CYCLES_PER_UPDATE)
     {
-        int cycles {};
-        
         cycles = cpu.interupts();
 
-        if (cpu.isHalted())
+        if (cpu.isHalted()) [[unlikely]]
             cycles += 4;
             
-        else if (cpu.isStopped())
+        else if (cpu.isStopped()) [[unlikely]]
         {
             cpu.updateJoypad(); 
             continue;

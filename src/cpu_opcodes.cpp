@@ -9,197 +9,197 @@ void CPU::setupTables()
 {
     for(word_t i {0}; i < c_INSTRUCTION_TABLE_SIZE; ++i)
     {
-        instructionTable[i] = &CPU::OP_NOT_IMPLEMTED;
-        instructionTable2[i] = &CPU::OP_NOT_IMPLEMTED2;
+        instructionTable[i] = std::bind(&CPU::OP_NOT_IMPLEMTED, this);
+        instructionTable2[i] = std::bind(&CPU::OP_NOT_IMPLEMTED2, this, std::placeholders::_1);
     }
 
     for (byte_t i {0x40}; i < 0x80; ++i)
     {
-        instructionTable2[i] = &CPU::cpu_byteLoad;
+        instructionTable2[i] = std::bind(&CPU::cpu_byteLoad, this, std::placeholders::_1);
     }
     for (byte_t i {0x06}; i <= 0x3E; i+=0x8)
     {
-        instructionTable2[i] = &CPU::cpu_byteLoad;
+        instructionTable2[i] = std::bind(&CPU::cpu_byteLoad, this, std::placeholders::_1);
     }
-    instructionTable2[0x76] = &CPU::OP_NOT_IMPLEMTED2; //halt instruction!
+    instructionTable2[0x76] = std::bind(&CPU::OP_NOT_IMPLEMTED2, this, std::placeholders::_1); //halt instruction!
     //LD A,n
-    instructionTable[0x0A] = &CPU::OP_0x0A;
-    instructionTable[0x1A] = &CPU::OP_0x1A;
-    instructionTable[0xFA] = &CPU::OP_0xFA;
+    instructionTable[0x0A] = std::bind(&CPU::OP_0x0A, this);
+    instructionTable[0x1A] = std::bind(&CPU::OP_0x1A, this);
+    instructionTable[0xFA] = std::bind(&CPU::OP_0xFA, this);
     //LD n,A
-    instructionTable[0x02] = &CPU::OP_0x02;
-    instructionTable[0x12] = &CPU::OP_0x12;
-    instructionTable[0xEA] = &CPU::OP_0xEA;
+    instructionTable[0x02] = std::bind(&CPU::OP_0x02, this);
+    instructionTable[0x12] = std::bind(&CPU::OP_0x12, this);
+    instructionTable[0xEA] = std::bind(&CPU::OP_0xEA, this);
     //LD A,(C)
-    instructionTable[0xF2] = &CPU::OP_0xF2;
+    instructionTable[0xF2] = std::bind(&CPU::OP_0xF2, this);
     //LD (C),A
-    instructionTable[0xE2] = &CPU::OP_0xE2;
+    instructionTable[0xE2] = std::bind(&CPU::OP_0xE2, this);
     //LD A,(HL-)
-    instructionTable[0x3A] = &CPU::OP_0x3A;
+    instructionTable[0x3A] = std::bind(&CPU::OP_0x3A, this);
     //LD (HL-),A
-    instructionTable[0x32] = &CPU::OP_0x32;
+    instructionTable[0x32] = std::bind(&CPU::OP_0x32, this);
     //LD A,(HL+)
-    instructionTable[0x2A] = &CPU::OP_0x2A;
+    instructionTable[0x2A] = std::bind(&CPU::OP_0x2A, this);
     //LD (HL+),A
-    instructionTable[0x22] = &CPU::OP_0x22;
+    instructionTable[0x22] = std::bind(&CPU::OP_0x22, this);
     //LDH (n),A
-    instructionTable[0xE0] = &CPU::OP_0xE0;
+    instructionTable[0xE0] = std::bind(&CPU::OP_0xE0, this);
     //LDH A,(n)
-    instructionTable[0xF0] = &CPU::OP_0xF0;
+    instructionTable[0xF0] = std::bind(&CPU::OP_0xF0, this);
     //WordLoads
     //LD n,nn
-    instructionTable[0x01] = &CPU::OP_0x01;
-    instructionTable[0x11] = &CPU::OP_0x11;
-    instructionTable[0x21] = &CPU::OP_0x21;
-    instructionTable[0x31] = &CPU::OP_0x31;
+    instructionTable[0x01] = std::bind(&CPU::OP_0x01, this);
+    instructionTable[0x11] = std::bind(&CPU::OP_0x11, this);
+    instructionTable[0x21] = std::bind(&CPU::OP_0x21, this);
+    instructionTable[0x31] = std::bind(&CPU::OP_0x31, this);
     //LD SP,HL
-    instructionTable[0xF9] = &CPU::OP_0xF9;
+    instructionTable[0xF9] = std::bind(&CPU::OP_0xF9, this);
     //LD HL,SP+n
     //LDHL SP,n
-    instructionTable[0xF8] = &CPU::OP_0xF8;
+    instructionTable[0xF8] = std::bind(&CPU::OP_0xF8, this);
     //LD (nn),SP
-    instructionTable[0x08] = &CPU::OP_0x08;
+    instructionTable[0x08] = std::bind(&CPU::OP_0x08, this);
     //PUSH nn
-    instructionTable[0xF5] = &CPU::OP_0xF5;
-    instructionTable[0xC5] = &CPU::OP_0xC5;
-    instructionTable[0xD5] = &CPU::OP_0xD5;
-    instructionTable[0xE5] = &CPU::OP_0xE5;
+    instructionTable[0xF5] = std::bind(&CPU::OP_0xF5, this);
+    instructionTable[0xC5] = std::bind(&CPU::OP_0xC5, this);
+    instructionTable[0xD5] = std::bind(&CPU::OP_0xD5, this);
+    instructionTable[0xE5] = std::bind(&CPU::OP_0xE5, this);
     //POP nn
-    instructionTable[0xF1] = &CPU::OP_0xF1;
-    instructionTable[0xC1] = &CPU::OP_0xC1;
-    instructionTable[0xD1] = &CPU::OP_0xD1;
-    instructionTable[0xE1] = &CPU::OP_0xE1;
+    instructionTable[0xF1] = std::bind(&CPU::OP_0xF1, this);
+    instructionTable[0xC1] = std::bind(&CPU::OP_0xC1, this);
+    instructionTable[0xD1] = std::bind(&CPU::OP_0xD1, this);
+    instructionTable[0xE1] = std::bind(&CPU::OP_0xE1, this);
     
     //Byte arithmetic with reg A
     for (byte_t i{ 0x80 }; i < 0xC0; ++i)
     {
-        instructionTable2[i] = &CPU::cpu_byteArithmetic;
+        instructionTable2[i] = std::bind(&CPU::cpu_byteArithmetic, this, std::placeholders::_1);
     }
     for (byte_t i{0xC6}; i >= 0xC6; i+=0x8)
     {
-        instructionTable2[i] = &CPU::cpu_byteArithmetic;
+        instructionTable2[i] = std::bind(&CPU::cpu_byteArithmetic, this, std::placeholders::_1);
     }
 
     for (byte_t i{0x04}; i <= 0x3C; i+=0x8)
     {
-        instructionTable2[i] = &CPU::cpu_byteInc;
+        instructionTable2[i] = std::bind(&CPU::cpu_byteInc, this, std::placeholders::_1);
     }
     for (byte_t i{0x05}; i <= 0x3D; i+=0x8)
     {
-        instructionTable2[i] = &CPU::cpu_byteDec;
+        instructionTable2[i] = std::bind(&CPU::cpu_byteDec, this, std::placeholders::_1);
     }
     //Word arithmatic
     //ADD HL,n
-    instructionTable[0x09] = &CPU::OP_0x09;
-    instructionTable[0x19] = &CPU::OP_0x19;
-    instructionTable[0x29] = &CPU::OP_0x29;
-    instructionTable[0x39] = &CPU::OP_0x39;
+    instructionTable[0x09] = std::bind(&CPU::OP_0x09, this);
+    instructionTable[0x19] = std::bind(&CPU::OP_0x19, this);
+    instructionTable[0x29] = std::bind(&CPU::OP_0x29, this);
+    instructionTable[0x39] = std::bind(&CPU::OP_0x39, this);
     //ADD SP,n
-    instructionTable[0xE8] = &CPU::OP_0xE8;
+    instructionTable[0xE8] = std::bind(&CPU::OP_0xE8, this);
     //INC nn
-    instructionTable[0x03] = &CPU::OP_0x03;
-    instructionTable[0x13] = &CPU::OP_0x13;
-    instructionTable[0x23] = &CPU::OP_0x23;
-    instructionTable[0x33] = &CPU::OP_0x33;
+    instructionTable[0x03] = std::bind(&CPU::OP_0x03, this);
+    instructionTable[0x13] = std::bind(&CPU::OP_0x13, this);
+    instructionTable[0x23] = std::bind(&CPU::OP_0x23, this);
+    instructionTable[0x33] = std::bind(&CPU::OP_0x33, this);
     //DEC nn
-    instructionTable[0x0B] = &CPU::OP_0x0B;
-    instructionTable[0x1B] = &CPU::OP_0x1B;
-    instructionTable[0x2B] = &CPU::OP_0x2B;
-    instructionTable[0x3B] = &CPU::OP_0x3B;
+    instructionTable[0x0B] = std::bind(&CPU::OP_0x0B, this);
+    instructionTable[0x1B] = std::bind(&CPU::OP_0x1B, this);
+    instructionTable[0x2B] = std::bind(&CPU::OP_0x2B, this);
+    instructionTable[0x3B] = std::bind(&CPU::OP_0x3B, this);
     //Jumps
     //JP nn
-    instructionTable2[0xC3] = &CPU::cpu_jump;
+    instructionTable2[0xC3] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
     //JP cc,nn
-    instructionTable2[0xC2] = &CPU::cpu_jump;
-    instructionTable2[0xCA] = &CPU::cpu_jump;
-    instructionTable2[0xD2] = &CPU::cpu_jump;
-    instructionTable2[0xDA] = &CPU::cpu_jump;
+    instructionTable2[0xC2] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
+    instructionTable2[0xCA] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
+    instructionTable2[0xD2] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
+    instructionTable2[0xDA] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
     //JP (HL)
-    instructionTable[0xE9] = &CPU::OP_0xE9;
+    instructionTable[0xE9] = std::bind(&CPU::OP_0xE9, this);
     // JR n
     for (byte_t i{0x18}; i <= 0x38; i+=0x8)
     {
-        instructionTable2[i] = &CPU::cpu_jumpRelative;
+        instructionTable2[i] = std::bind(&CPU::cpu_jumpRelative, this, std::placeholders::_1);
     }
     //Calls
     //Call nn
-    instructionTable2[0xCD] = &CPU::cpu_jump;
+    instructionTable2[0xCD] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
     //CALL cc,nn
-    instructionTable2[0xC4] = &CPU::cpu_jump;
-    instructionTable2[0xCC] = &CPU::cpu_jump;
-    instructionTable2[0xD4] = &CPU::cpu_jump;
-    instructionTable2[0xDC] = &CPU::cpu_jump;
+    instructionTable2[0xC4] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
+    instructionTable2[0xCC] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
+    instructionTable2[0xD4] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
+    instructionTable2[0xDC] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
     //Restarts
     //RST n
     for (byte_t i{ 0xC7 }; i >= 0xC7; i+=0x8)
     {
-        instructionTable2[i] = &CPU::cpu_restart;
+        instructionTable2[i] = std::bind(&CPU::cpu_restart, this, std::placeholders::_1);
     }
     //Returns
     //RET
-    instructionTable2[0xC9] = &CPU::cpu_jump;
+    instructionTable2[0xC9] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
     //RET cc
-    instructionTable2[0xC0] = &CPU::cpu_jump;
-    instructionTable2[0xC8] = &CPU::cpu_jump;
-    instructionTable2[0xD0] = &CPU::cpu_jump;
-    instructionTable2[0xD8] = &CPU::cpu_jump;
+    instructionTable2[0xC0] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
+    instructionTable2[0xC8] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
+    instructionTable2[0xD0] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
+    instructionTable2[0xD8] = std::bind(&CPU::cpu_jump, this, std::placeholders::_1);
     //RETI
-    instructionTable[0xD9] = &CPU::OP_0xD9;
+    instructionTable[0xD9] = std::bind(&CPU::OP_0xD9, this);
     //Miscellaneous
     //DAA Decimal adjust register A
-    instructionTable[0x27] = &CPU::OP_0x27;
+    instructionTable[0x27] = std::bind(&CPU::OP_0x27, this);
     //CPL
-    instructionTable[0x2F] = &CPU::OP_0x2F;
+    instructionTable[0x2F] = std::bind(&CPU::OP_0x2F, this);
     //CCF
-    instructionTable[0x3F] = &CPU::OP_0x3F;
+    instructionTable[0x3F] = std::bind(&CPU::OP_0x3F, this);
     //SCF
-    instructionTable[0x37] = &CPU::OP_0x37;
+    instructionTable[0x37] = std::bind(&CPU::OP_0x37, this);
     //NOP
-    instructionTable[0x00] = &CPU::OP_0x00;
+    instructionTable[0x00] = std::bind(&CPU::OP_0x00, this);
     //HALT
-    instructionTable[0x76] = &CPU::OP_0x76;
+    instructionTable[0x76] = std::bind(&CPU::OP_0x76, this);
     //STOP
-    instructionTable[0x10] = &CPU::OP_0x10;
+    instructionTable[0x10] = std::bind(&CPU::OP_0x10, this);
     //DI disable interupts
-    instructionTable[0xF3] = &CPU::OP_0xF3;
+    instructionTable[0xF3] = std::bind(&CPU::OP_0xF3, this);
     //EI enable interupts
-    instructionTable[0xFB] = &CPU::OP_0xFB;
+    instructionTable[0xFB] = std::bind(&CPU::OP_0xFB, this);
     //Roates & Shifts
     //RLCA
-    instructionTable[0x07] = &CPU::OP_0x07;
+    instructionTable[0x07] = std::bind(&CPU::OP_0x07, this);
     //RLA
-    instructionTable[0x17] = &CPU::OP_0x17;
+    instructionTable[0x17] = std::bind(&CPU::OP_0x17, this);
     //RRCA
-    instructionTable[0x0F] = &CPU::OP_0x0F;
+    instructionTable[0x0F] = std::bind(&CPU::OP_0x0F, this);
     //RRA
-    instructionTable[0x1F] = &CPU::OP_0x1F;
+    instructionTable[0x1F] = std::bind(&CPU::OP_0x1F, this);
 
 
-    instructionTable[0xD3] = &CPU::OP_ILLEGAL;
-    instructionTable[0xDB] = &CPU::OP_ILLEGAL;
-    instructionTable[0xDD] = &CPU::OP_ILLEGAL;
-    instructionTable[0xE4] = &CPU::OP_ILLEGAL;
-    instructionTable[0xE3] = &CPU::OP_ILLEGAL;
-    instructionTable[0xEB] = &CPU::OP_ILLEGAL;
-    instructionTable[0xEC] = &CPU::OP_ILLEGAL;
-    instructionTable[0xED] = &CPU::OP_ILLEGAL;
-    instructionTable[0xF3] = &CPU::OP_ILLEGAL;
-    instructionTable[0xFD] = &CPU::OP_ILLEGAL;
-    instructionTable[0xFC] = &CPU::OP_ILLEGAL;
+    instructionTable[0xD3] = std::bind(&CPU::OP_ILLEGAL, this);
+    instructionTable[0xDB] = std::bind(&CPU::OP_ILLEGAL, this);
+    instructionTable[0xDD] = std::bind(&CPU::OP_ILLEGAL, this);
+    instructionTable[0xE4] = std::bind(&CPU::OP_ILLEGAL, this);
+    instructionTable[0xE3] = std::bind(&CPU::OP_ILLEGAL, this);
+    instructionTable[0xEB] = std::bind(&CPU::OP_ILLEGAL, this);
+    instructionTable[0xEC] = std::bind(&CPU::OP_ILLEGAL, this);
+    instructionTable[0xED] = std::bind(&CPU::OP_ILLEGAL, this);
+    instructionTable[0xF3] = std::bind(&CPU::OP_ILLEGAL, this);
+    instructionTable[0xFD] = std::bind(&CPU::OP_ILLEGAL, this);
+    instructionTable[0xFC] = std::bind(&CPU::OP_ILLEGAL, this);
 }
 
 int CPU::OP_NOT_IMPLEMTED() { throw std::runtime_error("OPCODE NOT IMPLEMENTED in table 1!"); }
-int CPU::OP_NOT_IMPLEMTED2(const byte_t& opcode) { return -1; }
+int CPU::OP_NOT_IMPLEMTED2(byte_t opcode) { return -1; }
 int CPU::OP_ILLEGAL() { return 4; }
 
 int CPU::opcode_Translator(byte_t opcode)
 {
-    int cycles{ ((*this).*(instructionTable2[opcode]))(opcode) };
+    int cycles{ instructionTable2[opcode](opcode) };
 
     if (cycles >= 0)
         return cycles;
     else
-        return ((*this).*(instructionTable[opcode]))();
+        return instructionTable[opcode]();
      
 }
 
