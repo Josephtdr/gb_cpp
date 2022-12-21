@@ -17,9 +17,11 @@ private:
     Platform& m_Platform;
     bool m_Enabled{};
 
-    int m_SampleRate{}; //4194304/48000 = 87 (rounded)
+    int m_SampleRate{}; // 4194304/44100 = 95 clocks (truncated)
     int m_SampleCounter{};
     std::vector<float> m_sampleBuffer{};
+    std::vector<Sample> m_RAW_SampleBuffer{};
+    int m_RAW_SamplePointer{};
 
 
     byte_t m_divAPUCounter{};
@@ -31,6 +33,7 @@ public:
     APU(MemoryBus& memoryRef, Platform& platformRef);
 
     void update(int clocks);
+    void renderAudio();
     void incrementDivAPU();
     void toggle(byte_t value);
     void control(int channel, byte_t value);
@@ -42,6 +45,6 @@ private:
     float fade(int channel);
 
     Sample mixer();
-    void sample();
-    void flushBuffer();
+    void takeRawSample();
+    void takeSample();
 };

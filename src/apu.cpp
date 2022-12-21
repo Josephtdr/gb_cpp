@@ -2,8 +2,15 @@
 #include "inc/bitfuncs.h"
 #include "inc/channels.h"
 
+constexpr int c_SAMPLES_PER_FRAME {(44100/60)*2}; //* 2, for each channel
+
 APU::APU(MemoryBus& memoryRef, Platform& platformRef)
-    : m_Memory {memoryRef}, m_Platform {platformRef}, m_SampleRate {87}, m_Enabled{true}
+  : m_Memory {memoryRef}, 
+    m_Platform {platformRef}, 
+    m_SampleRate {4194304/44100},
+    m_SampleCounter {-(m_SampleRate * 4)}, // to enable sampling 1 sample later?
+    m_Enabled {true},
+    m_RAW_SampleBuffer(200)
 {
     m_Channels.emplace_back(
         std::make_unique<SweepChannel>(m_Memory,r_NR10,r_NR11,r_NR12,r_NR13,r_NR14));
@@ -14,7 +21,7 @@ APU::APU(MemoryBus& memoryRef, Platform& platformRef)
     m_Channels.emplace_back(
         std::make_unique<NoiseChannel>(m_Memory,r_NR41,r_NR42,r_NR43,r_NR44));
 
-    m_sampleBuffer.reserve(c_SAMPLE_BUFFER_SIZE);
+    m_sampleBuffer.reserve(c_SAMPLES_PER_FRAME);
 }
 
 void APU::update(int clocks)
@@ -22,35 +29,56 @@ void APU::update(int clocks)
     for (auto& channel : m_Channels)
         channel->update(clocks);
 
+    takeRawSample();
+
     m_SampleCounter += clocks;
     while(m_SampleCounter >= m_SampleRate)
     {
         m_SampleCounter -= m_SampleRate;
-        sample();
-
-        if (m_sampleBuffer.size() >= c_SAMPLE_BUFFER_SIZE)
-        {
-            flushBuffer();
-        }
-            
-            
+        takeSample();
     }
 }
-void APU::sample()
+void APU::takeRawSample()
 {
-    auto [left, right] = mixer();
+    auto sample = mixer();
     //convert to raw PCM floating point samples
-    left /= 100.f;
-    right /= 100.f;
+    sample.left /= 100.f;
+    sample.right /= 100.f;
     
-    m_sampleBuffer.push_back(left);
-    m_sampleBuffer.push_back(right);
+    m_RAW_SampleBuffer[m_RAW_SamplePointer++] = sample;
+    if (m_RAW_SamplePointer >= 200)
+        m_RAW_SamplePointer = 0;
 }
-void APU::flushBuffer()
+
+void APU::takeSample()
+{
+    static std::vector<float> firFilter{
+        -0.000136, -0.000232, 0.000580, 0.000000, -0.001169, 0.000972, 0.001276, -0.002656, -0.000000, 0.004190, -0.003192, -0.003895, 0.007626, 0.000000, -0.010944, 0.008043, 0.009535, -0.018262, -0.000000, 0.025648, -0.018898, -0.022720, 0.044799, 0.000000, -0.071809, 0.060553, 0.092332, -0.301742, 0.400000, -0.301742, 0.092332, 0.060553, -0.071809, 0.000000, 0.044799, -0.022720, -0.018898, 0.025648, -0.000000, -0.018262, 0.009535, 0.008043, -0.010944, 0.000000, 0.007626, -0.003895, -0.003192, 0.004190, -0.000000, -0.002656, 0.001276, 0.000972, -0.001169, 0.000000, 0.000580, -0.000232, -0.000136 
+    };
+
+    int start = (m_RAW_SamplePointer - m_SampleRate + 22);
+    if (start < 0) start += 200;
+
+    Sample sampleOut{};
+
+    for (int i {}; i < 57; ++i)
+    {
+        int index = (start+i) % 200;
+
+        sampleOut.left += m_RAW_SampleBuffer[index].left * firFilter[i];
+        sampleOut.right += m_RAW_SampleBuffer[index].right * firFilter[i];
+    }
+
+    m_sampleBuffer.push_back(sampleOut.left);
+    m_sampleBuffer.push_back(sampleOut.right);
+}
+
+
+void APU::renderAudio()
 {
     m_Platform.updateAudio(m_sampleBuffer.data(), m_sampleBuffer.size());
-
     m_sampleBuffer.clear();
+    m_RAW_SampleBuffer.clear();
 }
 
 /**

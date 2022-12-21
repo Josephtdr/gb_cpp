@@ -11,6 +11,7 @@ include_directories(
 
 add_executable(${PROJECT_NAME} 
     main.cpp
+    emulator.cpp
     registers.cpp
     memoryBus.cpp
     cpu.cpp
@@ -23,7 +24,8 @@ add_executable(${PROJECT_NAME}
     platform.cpp
 )
 
-add_compile_options ("-Odebug --debug -g")
+# add_compile_options ("-Odebug --debug -g")
+# add_compile_options ("-O2 -Ofast")
 
 # target_link_libraries(${PROJECT_NAME} bslogger)
 

@@ -10,23 +10,15 @@ Platform::Platform(char const* title, int textureWidth, int textureHeight, int s
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, m_textureWidth, m_textureHeight);
 
 
-    int SamplesPerSecond = 48000;
-    int bufferSize = 2048;
-    // int ToneHz = 256;
-    // int16 ToneVolume = 3000;
-    // uint32 RunningSampleIndex = 0;
-    // int SquareWavePeriod = SamplesPerSecond / ToneHz;
-    // int HalfSquareWavePeriod = SquareWavePeriod / 2;
-    int BytesPerSample = sizeof(float) * 2;
-
-    int BytesToWrite = bufferSize * BytesPerSample;
+    int SamplesPerSecond = 44100;
+    int bufferSize = 735;
 
 
     SDL_AudioSpec AudioSettings = {0};
     AudioSettings.freq = SamplesPerSecond;
     AudioSettings.format = AUDIO_F32SYS;
     AudioSettings.channels = 2;
-    AudioSettings.samples = bufferSize / 2;
+    AudioSettings.samples = bufferSize;
 
     SDL_OpenAudio(&AudioSettings, 0);
     
